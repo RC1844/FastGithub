@@ -8,3 +8,11 @@
 2. 改下载为跳转到镜像站点
 
 下载地址：https://raw.githubusercontent.com/RC1844/FastGithub/master/FastGithub.js
+
+### 已知的GitHub镜像
+带下载加速的
+1. http://github-mirror.bugkiller.org
+2. https://github.wuyanzheshui.workers.dev
+
+没下载加速的
+1. https://github.com.cnpmjs.org
