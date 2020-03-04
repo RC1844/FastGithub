@@ -6,15 +6,15 @@
 // @description     加速GitHub克隆和下载
 // @match           *://github.com/*
 // @require         http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version         1.0.5
+// @version         1.0.6
 // @grant           GM_addStyle
 // ==/UserScript==
 
 (function () {
   'use strict';
   var loca = window.location.href;
-  var mirror_url1 = 'http://' + 'github-mirror.bugkiller.org';
-  var mirror_url2 = 'https://' + 'github.com.cnpmjs.org';
+  var mirror_url1 = 'https://' + 'github.com.cnpmjs.org';
+  var mirror_url2 = 'http://' + 'github-mirror.bugkiller.org';
   var a = loca.split("/");
   var str1 = '/' + a[3] + '/' + a[4] + '.git';
   var clone_utl1 = mirror_url1 + str1;
