@@ -1,6 +1,6 @@
 // ==UserScript==
 // @icon            https://github.githubassets.com/favicon.ico
-// @name            GitHub 镜像加速下载-码酷博客-改改
+// @name            GitHub 镜像加速下载
 // @namespace       https://github.com/RC1844
 // @author          RC
 // @description     加速GitHub克隆和下载
