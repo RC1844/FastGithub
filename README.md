@@ -12,6 +12,6 @@
 ### 已知的GitHub镜像
 |域名|https|克隆加速|zip加速|releases加速
 |:---:|:----------:|:--------:|:---------:|:---------:|
+|https://github.com.cnpmjs.org|✓|?✓|✗|✗
 |http://github-mirror.bugkiller.org|✗|✓|✗|✓
 |https://github.wuyanzheshui.workers.dev|✓|✗|✓|✓
-|https://github.com.cnpmjs.org|✓|?✓|✗|✗
