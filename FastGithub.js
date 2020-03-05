@@ -7,7 +7,7 @@
 // @include           *://github.com/*
 // @include           *://github*
 // @require         http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version         1.0.9
+// @version         1.0.10
 // @grant           GM_addStyle
 // ==/UserScript==
 
@@ -20,8 +20,7 @@
   var str1 = '/' + a[3] + '/' + a[4] + '.git';
   var clone_utl1 = mirror_url1 + str1;
   var clone_utl2 = mirror_url2 + str1;
-  var qc = a[4].split(".")
-  var str2 = '/' + a[3] + '/' + qc[0];
+  var str2 = window.location.pathname;
   var web_url1 = mirror_url1 + str2;
   var web_url2 = mirror_url2 + str2;
   //$('.mt-2').append('快速克隆通道:<input value="'+str1+'">')
