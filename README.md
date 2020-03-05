@@ -10,9 +10,8 @@
 下载地址：https://raw.githubusercontent.com/RC1844/FastGithub/master/FastGithub.js
 
 ### 已知的GitHub镜像
-带下载加速的
-1. http://github-mirror.bugkiller.org
-2. https://github.wuyanzheshui.workers.dev
-
-没下载加速的
-1. https://github.com.cnpmjs.org
+|域名|https|克隆加速|zip加速|releases加速
+|:---:|:----------:|:--------:|:---------:|:---------:|
+|github-mirror.bugkiller.org|✗|✓|✗|✓
+|https://github.wuyanzheshui.workers.dev|✓|✗|✓|✓
+|github.com.cnpmjs.org|✓|?✓|✗|✗
