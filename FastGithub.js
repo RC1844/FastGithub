@@ -5,9 +5,9 @@
 // @author          RC
 // @description     加速GitHub克隆和下载
 // @include           *://github.com/*
-// @include           *github*
+// @include           *://github*
 // @require         http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version         1.0.8
+// @version         1.0.9
 // @grant           GM_addStyle
 // ==/UserScript==
 
