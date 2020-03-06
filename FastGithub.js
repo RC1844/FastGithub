@@ -37,7 +37,7 @@
           <div>快速克隆2:<input type="text" data-autoselect="" value="${clone_utl2}" aria-label="将此存储库克隆到 ${clone_utl2}"
                   readonly="" style="width:400px"> &nbsp;快速浏览2:<a href="${web_url2}" id="down">跳转</a></div>
           <div><del>快速克隆3:</del><input type="text" data-autoselect="" value="" aria-label="" readonly=""
-                  style="width:400px"> &nbsp;快速浏览2:<a href="${web_url3}" id="down">跳转</a></div>
+                  style="width:400px"> &nbsp;快速浏览3:<a href="${web_url3}" id="down">跳转</a></div>
       </center>
   </div>
   </details>
