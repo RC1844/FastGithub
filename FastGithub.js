@@ -7,7 +7,7 @@
 // @include           *://github.com/*
 // @include           *://github*
 // @require         http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version         1.1.1
+// @version         1.1.2
 // @grant           GM_addStyle
 // ==/UserScript==
 
@@ -50,8 +50,8 @@
       var href = $(this).attr('href');
       var url1 = mirror_url2 + href;
       var url2 = mirror_url3 + href;
-      var span1 = `<a href="${url1}" rel="nofollow"><span class="pl-2 flex-auto min-width-0 text-bold">快速下载1</span></a>&nbsp;`;
-      var span2 = `&nbsp;<a href="${url2}" rel="nofollow"><span class="pl-2 flex-auto min-width-0 text-bold">快速下载2</span></a>`;
+      var span1 = `<li><a href="${url1}" rel="nofollow"><span class="pl-2 flex-auto min-width-0 text-bold">快速下载1</span></a></li>`;
+      var span2 = `<li><a href="${url2}" rel="nofollow"><span class="pl-2 flex-auto min-width-0 text-bold">快速下载2</span></a></li>`;
 
       $(this).after(span2);
       $(this).after(span1);
@@ -61,7 +61,7 @@
     $(this).find('.btn-block,.js-anon-download-zip-link').each(function () {
       var href = $(this).attr('href');
       var url1 = mirror_url3 + href;
-      var span1 = `<a class="btn btn-outline get-repo-btn btn-block" rel="nofollow" data-ga-click="Repository, download zip, location:repo overview"href="${url1}">Fast Download ZIP</a>`;
+      var span1 = `<a class="btn btn-outline get-repo-btn btn-block" rel="nofollow" href="${url1}">Fast Download ZIP</a>`;
 
       $(this).after(span1);
     });
