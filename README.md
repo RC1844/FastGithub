@@ -8,7 +8,7 @@
 2. 改下载为跳转到镜像站点
 3. 提供3个可浏览镜像站点
 4. 增加ZIP镜像下载按钮
-5. （原有）releases镜像下载按钮($\color{red}{releases Source code的快速下载1是没有加速效果的}$)
+5. （原有）releases镜像下载按钮(<font color=red>releases Source code的快速下载1是没有加速效果的</font>)
 
 下载安装地址：https://raw.githubusercontent.com/RC1844/FastGithub/master/FastGithub.js
 
