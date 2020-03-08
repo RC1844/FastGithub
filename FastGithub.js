@@ -7,25 +7,40 @@
 // @include           *://github.com/*
 // @include           *://github*
 // @require         http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version         1.1.2
+// @version         1.1.4
 // @grant           GM_addStyle
 // ==/UserScript==
 
 (function () {
   'use strict';
+
+  //=true为启用，=false为禁用
+  var clone = true;
+  // var clone = false;
+  var depth = true;
+  // var depth = false;
+
   var loca = window.location.href;
   var mirror_url1 = 'https://' + 'github.com.cnpmjs.org';
   var mirror_url2 = 'http://' + 'github-mirror.bugkiller.org';
   var mirror_url3 = 'https://' + 'github.wuyanzheshui.workers.dev';
+  var str1 = '';
+
+  if (clone) {
+    str1 += "git clone ";
+    if (depth) {
+      str1 += "--depth=1 ";
+    }
+  }
+  
   var a = loca.split("/");
-  var str1 = '/' + a[3] + '/' + a[4] + '.git';
-  var clone_utl1 = mirror_url1 + str1;
-  var clone_utl2 = mirror_url2 + str1;
-  var str2 = window.location.pathname;
-  var web_url1 = mirror_url1 + str2;
-  var web_url2 = mirror_url2 + str2;
-  var web_url3 = mirror_url3 + str2;
-  //$('.mt-2').append('快速克隆通道:<input value="'+str1+'">')
+  var str2 = '/' + a[3] + '/' + a[4] + '.git';
+  var clone_utl1 = str1 + mirror_url1 + str2;
+  var clone_utl2 = str1 + mirror_url2 + str2;
+  var str3 = window.location.pathname;
+  var web_url1 = mirror_url1 + str3;
+  var web_url2 = mirror_url2 + str3;
+  var web_url3 = mirror_url3 + str3;
 
   var info = `
   <details class="ment">
@@ -36,7 +51,7 @@
                   readonly="" style="width:400px"> &nbsp;快速浏览1:<a href="${web_url1}" id="down">跳转</a></div>
           <div>快速克隆2:<input type="text" data-autoselect="" value="${clone_utl2}" aria-label="将此存储库克隆到 ${clone_utl2}"
                   readonly="" style="width:400px"> &nbsp;快速浏览2:<a href="${web_url2}" id="down">跳转</a></div>
-          <div><del>快速克隆3:</del><input type="text" data-autoselect="" value="" aria-label="" readonly=""
+          <div><del>快速克隆3:</del><input type="text" data-autoselect="" value="clone、depth命令的插入可手动编辑代码关闭" aria-label="" readonly=""
                   style="width:400px"> &nbsp;快速浏览3:<a href="${web_url3}" id="down">跳转</a></div>
       </center>
   </div>

@@ -8,9 +8,8 @@
 2. 改下载为跳转到镜像站点
 3. 提供3个可浏览镜像站点
 4. 增加ZIP镜像下载按钮
-5. （原有）releases镜像下载按钮(
-<font color="red">releases Source code的快速下载1是没有加速效果的</font>
-)
+5. (原有)releases镜像下载按钮(releases Source code的快速下载1是没有加速效果的)
+6. 在克隆地址处插入克隆命令，不需要的可以编辑代码禁用
 
 下载安装地址：https://raw.githubusercontent.com/RC1844/FastGithub/master/FastGithub.js
 
