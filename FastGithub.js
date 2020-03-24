@@ -8,7 +8,7 @@
 // @include         *://github.com/*
 // @include         *://github*
 // @require         http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version         1.2.1
+// @version         1.2.2
 // @grant           GM_addStyle
 // ==/UserScript==
 
@@ -104,7 +104,7 @@
 
 
   //Download Releases
-  $('.release-entry').each(function () {
+  $('.release-main-section').each(function () {
     $(this).find('.d-flex.Box-body>a').each(function () {
       var href = $(this).attr('href');
       var span = `<div style=" position: absolute;left: 65%;">`;
@@ -116,7 +116,7 @@
       $(this).after(span);
     });
   });
-  $('.release-entry').each(function () {
+  $('.release-main-section').each(function () {
     $(this).find('.d-block.Box-body>a').each(function () {
       var href = $(this).attr('href');
       var span = `<a class="btn btn-outline get-repo-btn" rel="nofollow" href="${mirror_url[1] + href}">快速下载</a>`;

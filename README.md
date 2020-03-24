@@ -7,9 +7,10 @@
 
 该脚本在[GitHub 镜像加速下载-码酷博客-改](https://greasyfork.org/zh-CN/scripts/391911-github-%E9%95%9C%E5%83%8F%E5%8A%A0%E9%80%9F%E4%B8%8B%E8%BD%BD-%E7%A0%81%E9%85%B7%E5%8D%9A%E5%AE%A2-%E6%94%B9)基础上修改：
 
-v1.2.1
+v1.2.1-1.2.2
 1. 移除失效站点
 2. 添加警告（迟来的警告，希望没人遭受损失）
+3. 修复release tag页无法注入问题
 
 v1.2.0
 1. 修复Fast Download ZIP无法注入的bug
