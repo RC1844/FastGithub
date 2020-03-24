@@ -1,6 +1,8 @@
 # FastGithub
 快速跳转GitHub镜像网站的猴油脚本
 
+# 请不要在镜像网站登录账号，若因此造成任何损失本人概不负责
+
 本人并不会js，所以只能改别人的代码
 
 该脚本在[GitHub 镜像加速下载-码酷博客-改](https://greasyfork.org/zh-CN/scripts/391911-github-%E9%95%9C%E5%83%8F%E5%8A%A0%E9%80%9F%E4%B8%8B%E8%BD%BD-%E7%A0%81%E9%85%B7%E5%8D%9A%E5%AE%A2-%E6%94%B9)基础上修改：
@@ -25,6 +27,8 @@ v1.0-1.1.4
 6. 在克隆地址处插入克隆命令，不需要的可以编辑代码禁用
 
 下载安装地址：https://raw.githubusercontent.com/RC1844/FastGithub/master/FastGithub.js
+
+或：https://greasyfork.org/zh-CN/scripts/397419-github-%E9%95%9C%E5%83%8F%E5%8A%A0%E9%80%9F%E4%B8%8B%E8%BD%BD
 
 ### 已知的GitHub镜像(含失效站点)
 |域名|https|克隆加速|zip加速|releases加速|主机服务商|服务器所在地
