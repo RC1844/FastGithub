@@ -8,7 +8,7 @@
 // @include         *://github.com/*
 // @include         *://github*
 // @require         http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version         1.2.0
+// @version         1.2.1
 // @grant           GM_addStyle
 // ==/UserScript==
 
@@ -23,8 +23,8 @@
 
   var mirror_url = new Array();
   mirror_url[0] = 'https://' + 'github.com.cnpmjs.org';
-  mirror_url[1] = 'http://' + 'github-mirror.bugkiller.org';
-  mirror_url[2] = 'https://' + 'github.wuyanzheshui.workers.dev';
+  // mirror_url[1] = 'http://' + 'github-mirror.bugkiller.org';
+  mirror_url[1] = 'https://' + 'github.wuyanzheshui.workers.dev';
 
   var str1 = '';
   if (clone) {
@@ -56,7 +56,10 @@
           <header style="flex: none;padding: 16px; padding-top: 8px;padding-bottom: 8px;">
           <div class=" btn-block"
               style="padding: 4px;border: 1px solid #d1d5da;background-color: #fff3cd;border-top-left-radius: 3px;border-top-right-radius: 3px;"
-              role="alert">clone、depth命令的插入可手动编辑代码关闭</div>`;
+              role="alert">clone、depth命令的插入可手动编辑代码关闭</div>
+              <div class=" btn-block"
+              style="padding: 4px;border: 1px solid #d1d5da;background-color: #fff3cd;border-top-left-radius: 3px;border-top-right-radius: 3px;"
+              role="alert">请不要在镜像网站登录账号，若因此造成任何损失本人概不负责</div>`;
 
   for (let i = 0; i < clone_url.length - 1; i++) {
     info += `<div class="input-group">
@@ -92,7 +95,7 @@
   $('.get-repo-modal-options').each(function () {
     $(this).find("a[rel='nofollow']").each(function () {
       var href = $(this).attr('href');
-      var url1 = mirror_url[2] + href;
+      var url1 = mirror_url[1] + href;
       var span1 = `<a class="flex-1 btn btn-outline get-repo-btn btn-block" rel="nofollow" href="${url1}">Fast Download ZIP</a>`;
 
       $('.get-repo-modal-options').after(span1);
@@ -116,7 +119,7 @@
   $('.release-entry').each(function () {
     $(this).find('.d-block.Box-body>a').each(function () {
       var href = $(this).attr('href');
-      var span = `<a class="btn btn-outline get-repo-btn" rel="nofollow" href="${mirror_url[2] + href}">快速下载</a>`;
+      var span = `<a class="btn btn-outline get-repo-btn" rel="nofollow" href="${mirror_url[1] + href}">快速下载</a>`;
 
       $(this).after(span);
     });

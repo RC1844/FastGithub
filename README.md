@@ -4,6 +4,11 @@
 本人并不会js，所以只能改别人的代码
 
 该脚本在[GitHub 镜像加速下载-码酷博客-改](https://greasyfork.org/zh-CN/scripts/391911-github-%E9%95%9C%E5%83%8F%E5%8A%A0%E9%80%9F%E4%B8%8B%E8%BD%BD-%E7%A0%81%E9%85%B7%E5%8D%9A%E5%AE%A2-%E6%94%B9)基础上修改：
+
+v1.2.1
+1. 移除失效站点
+2. 添加警告（迟来的警告，希望没人遭受损失）
+
 v1.2.0
 1. 修复Fast Download ZIP无法注入的bug
 2. 修复取消一个无效的下载按钮
@@ -22,11 +27,11 @@ v1.0-1.1.4
 下载安装地址：https://raw.githubusercontent.com/RC1844/FastGithub/master/FastGithub.js
 
 ### 已知的GitHub镜像
-|域名|https|克隆加速|zip加速|releases加速
-|:---:|:----------:|:--------:|:---------:|:---------:|
-|https://github.com.cnpmjs.org|✓|?✓|✗|✗
-|http://github-mirror.bugkiller.org|✗|✓|✗|✓
-|https://github.wuyanzheshui.workers.dev|✓|✗|✓|✓
+|域名|https|克隆加速|zip加速|releases加速|主机服务商|服务器所在地
+|:---:|:----------:|:--------:|:---------:|:---------:|:---------:|:---------:|
+|https://github.com.cnpmjs.org|✓|?✓|✗|✗|dnspod|香港
+|~~http://github-mirror.bugkiller.org~~|✗|✓|✗|✓|?|日本
+|https://github.wuyanzheshui.workers.dev|✓|✗|✓|✓|Cloudflare|美国
 
 <figure class="half">
     <img src="REANDME\releases1.png" width="600">
