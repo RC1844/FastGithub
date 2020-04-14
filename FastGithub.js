@@ -8,7 +8,7 @@
 // @include         *://github.com/*
 // @include         *://github*
 // @require         http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version         1.2.2
+// @version         1.2.3
 // @grant           GM_addStyle
 // ==/UserScript==
 
@@ -55,10 +55,10 @@
       <div style="width:500px;margin: 4px 0 16px;font-size: 12px; pointer-events: auto;border: 1px solid #d1d5da;position: absolute;top: 100%;left: 0;z-index: 100;padding-top: 4px;padding-bottom: 4px;background-color: #fff;background-clip: padding-box;border-radius: 4px;box-shadow: 0 1px 5px rgba(27,31,35,.15);">
           <header style="flex: none;padding: 16px; padding-top: 8px;padding-bottom: 8px;">
           <div class=" btn-block"
-              style="padding: 4px;border: 1px solid #d1d5da;background-color: #fff3cd;border-top-left-radius: 3px;border-top-right-radius: 3px;"
+              style="padding: 4px;background-color: #ffffdd;color: #996600;border-top-left-radius: 3px;border-top-right-radius: 3px;"
               role="alert">clone、depth命令的插入可手动编辑代码关闭</div>
               <div class=" btn-block"
-              style="padding: 4px;border: 1px solid #d1d5da;background-color: #fff3cd;border-top-left-radius: 3px;border-top-right-radius: 3px;"
+              style="padding: 4px;background-color: #ffcccc;color: #990000;border-top-left-radius: 3px;border-top-right-radius: 3px;"
               role="alert">请不要在镜像网站登录账号，若因此造成任何损失本人概不负责</div>`;
 
   for (let i = 0; i < clone_url.length - 1; i++) {
