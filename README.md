@@ -12,7 +12,7 @@ v1.2.1-1.2.4
 2. 添加警告（迟来的警告，希望没人遭受损失）
 3. 修复release tag页无法注入问题
 4. 修饰警告信息的显示
-5. 增加一组镜像站点，感谢@KevinZonda 提供的信息，具体请看[issue #1](issues/1)
+5. 增加一组镜像站点，感谢@KevinZonda 提供的信息，具体请看issue #1
 
 v1.2.0
 1. 修复Fast Download ZIP无法注入的bug
