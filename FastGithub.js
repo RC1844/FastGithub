@@ -1,14 +1,15 @@
 // ==UserScript==
 // @icon            https://github.githubassets.com/favicon.ico
-// @name            GitHub 镜像加速下载
+// @name            GitHub 镜像加速访问、下载
 // @namespace       https://github.com/RC1844
 // @author          RC1844
 // @license         MIT License
-// @description     加速GitHub克隆和下载
+// @description     加速GitHub访问、克隆和下载
 // @include         *://github.com/*
 // @include         *://github*
+// @include         *://hub.fastgit.org/*
 // @require         http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version         1.2.3
+// @version         1.2.4
 // @grant           GM_addStyle
 // ==/UserScript==
 
@@ -23,8 +24,8 @@
 
   var mirror_url = new Array();
   mirror_url[0] = 'https://' + 'github.com.cnpmjs.org';
-  // mirror_url[1] = 'http://' + 'github-mirror.bugkiller.org';
-  mirror_url[1] = 'https://' + 'github.wuyanzheshui.workers.dev';
+  mirror_url[1] = 'http://' + 'hub.fastgit.org';
+  mirror_url[2] = 'https://' + 'github.wuyanzheshui.workers.dev';
 
   var str1 = '';
   if (clone) {
@@ -95,8 +96,10 @@
   $('.get-repo-modal-options').each(function () {
     $(this).find("a[rel='nofollow']").each(function () {
       var href = $(this).attr('href');
-      var url1 = mirror_url[1] + href;
-      var span1 = `<a class="flex-1 btn btn-outline get-repo-btn btn-block" rel="nofollow" href="${url1}">Fast Download ZIP</a>`;
+      var url1 = mirror_url[2] + href;
+      var url2 = 'https://release.fastgit.org' + href;
+      var span1 = `<div class="mt-2 d-flex"><a class="flex-1 btn btn-outline get-repo-btn btn-block" rel="nofollow" href="${url1}">Fast Download ZIP1</a>
+                                            <a class="flex-1 btn btn-outline get-repo-btn btn-block" rel="nofollow" href="${url2}">Fast Download ZIP2</a></div>`;
 
       $('.get-repo-modal-options').after(span1);
     });
@@ -108,9 +111,11 @@
     $(this).find('.d-flex.Box-body>a').each(function () {
       var href = $(this).attr('href');
       var span = `<div style=" position: absolute;left: 65%;">`;
-      for (let i = 1; i < mirror_url.length; i++) {
-        span += `<a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow" href="${mirror_url[i] + href}">快速下载${i}</a>`;
-      }
+      // for (let i = 1; i < mirror_url.length; i++) {
+      var i=1;
+        span += `<a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow" href="${mirror_url[2] + href}">快速下载${i}</a>
+                 <a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow" href="${'https://release.fastgit.org' + href}">快速下载${2}</a>`;
+      // }
       span += `</div>`
 
       $(this).after(span);
@@ -119,7 +124,8 @@
   $('.release-main-section').each(function () {
     $(this).find('.d-block.Box-body>a').each(function () {
       var href = $(this).attr('href');
-      var span = `<a class="btn btn-outline get-repo-btn" rel="nofollow" href="${mirror_url[1] + href}">快速下载</a>`;
+      var span = `<a class="btn btn-outline get-repo-btn" rel="nofollow" href="${mirror_url[2] + href}">快速下载1</a>
+                  <a class="btn btn-outline get-repo-btn" rel="nofollow" href="${'https://release.fastgit.org' + href}">快速下载2</a>`;
 
       $(this).after(span);
     });
