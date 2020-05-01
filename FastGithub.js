@@ -97,7 +97,7 @@
     $(this).find("a[rel='nofollow']").each(function () {
       var href = $(this).attr('href');
       var url1 = mirror_url[2] + href;
-      var url2 = 'https://release.fastgit.org' + href;
+      var url2 = 'https://download.fastgit.org' + href;
       var span1 = `<div class="mt-2 d-flex"><a class="flex-1 btn btn-outline get-repo-btn btn-block" rel="nofollow" href="${url1}">Fast Download ZIP1</a>
                                             <a class="flex-1 btn btn-outline get-repo-btn btn-block" rel="nofollow" href="${url2}">Fast Download ZIP2</a></div>`;
 
@@ -114,7 +114,7 @@
       // for (let i = 1; i < mirror_url.length; i++) {
       var i=1;
         span += `<a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow" href="${mirror_url[2] + href}">快速下载${i}</a>
-                 <a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow" href="${'https://release.fastgit.org' + href}">快速下载${2}</a>`;
+                 <a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow" href="${'https://download.fastgit.org' + href}">快速下载${2}</a>`;
       // }
       span += `</div>`
 
@@ -125,7 +125,7 @@
     $(this).find('.d-block.Box-body>a').each(function () {
       var href = $(this).attr('href');
       var span = `<a class="btn btn-outline get-repo-btn" rel="nofollow" href="${mirror_url[2] + href}">快速下载1</a>
-                  <a class="btn btn-outline get-repo-btn" rel="nofollow" href="${'https://release.fastgit.org' + href}">快速下载2</a>`;
+                  <a class="btn btn-outline get-repo-btn" rel="nofollow" href="${'https://download.fastgit.org' + href}">快速下载2</a>`;
 
       $(this).after(span);
     });
