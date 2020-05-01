@@ -9,7 +9,7 @@
 // @include         *://github*
 // @include         *://hub.fastgit.org/*
 // @require         http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version         1.2.4
+// @version         1.2.5
 // @grant           GM_addStyle
 // ==/UserScript==
 
