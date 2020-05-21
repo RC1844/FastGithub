@@ -1,6 +1,6 @@
 // ==UserScript==
 // @icon https://github.githubassets.com/favicon.ico
-// @name GitHub 镜像加速访问、下载
+// @name GitHub 镜像加速访问、下载(修复、增加站点)
 // @namespace https://github.com/RC1844
 // @author RC1844
 // @license MIT License
