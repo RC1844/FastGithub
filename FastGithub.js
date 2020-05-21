@@ -4,7 +4,7 @@
 // @namespace https://github.com/RC1844
 // @author RC1844
 // @license MIT License
-// @description 加速GitHub访问、克隆和下载(修复、增加站点)
+// @description 加速GitHub访问、克隆和下载
 // @include *://github.com/*
 // @include *://github*
 // @include *://hub.fastgit.org/*
