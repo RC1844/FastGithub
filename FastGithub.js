@@ -28,7 +28,7 @@
   mirror_url[2] = 'https://' + 'github.wuyanzheshui.workers.dev';
   mirror_url[3] = 'https://' + 'github.bajins.com';
   mirror_url[4] = 'https://' + 'download.fastgit.org';
-  mirror_url[5] = 'https://' + 'github.wuyanzheshui.workers.dev';
+  mirror_url[5] = 'https://' + 'github.rc1844.workers.dev';
   //添加对应数值即可使用
   var clone_set = [0, 1];
   var mirror_set = [0, 1, 2, 3, 5];
