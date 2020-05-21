@@ -32,7 +32,7 @@
 ### 更新日志
 v1.3.1
 1. 取消新提供的下载站点
-2. 增加自建站点https://github.rc1844.workers.dev/，与https://github.wuyanzheshui.workers.dev相同
+2. 增加自建站点https://github.rc1844.workers.dev ，与https://github.wuyanzheshui.workers.dev 相同
 3. 自建方法请看下方
 
 v1.3.0
