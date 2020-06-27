@@ -17,7 +17,6 @@
 </figure>
 <figure class="half">
     <img src="REANDME\releases3.png" width="600">
-    <img src="REANDME\releases4.png" width="600">
 </figure>
 
 ### 已知的GitHub镜像(含失效站点)
@@ -30,6 +29,12 @@
 |https://doc.fastgit.org|✓|✓|✓|✓|fastgit|香港
 
 ### 更新日志
+
+v1.4.0
+1. 更换插入位置
+2. releases页改为相对布局，不再为对齐而使用绝对布局
+3. 弹出页面再改版，支持手机浏览
+
 v1.3.1
 1. 取消新提供的下载站点
 2. 增加自建站点https://github.rc1844.workers.dev ，与https://github.wuyanzheshui.workers.dev 相同
