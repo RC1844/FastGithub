@@ -22,7 +22,7 @@
 ### 已知的GitHub镜像(含失效站点)
 |域名|https|克隆加速|zip加速|releases加速|主机服务商|服务器所在地
 |:---:|:----------:|:--------:|:---------:|:---------:|:---------:|:---------:|
-|https://github.com.cnpmjs.org|✓|?✓|✗|✗|dnspod|香港
+|https://github.com.cnpmjs.org|✓|✓|✗|✗|dnspod|香港
 |~~http://github-mirror.bugkiller.org~~|✗|✓|✗|✓|?|日本
 |https://github.wuyanzheshui.workers.dev|✓|✗|✓|✓|Cloudflare|美国
 |https://github.bajins.com|✓|✗|?|?|Cloudflare|美国
