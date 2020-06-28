@@ -9,7 +9,7 @@
 // @include *://github*
 // @include *://hub.fastgit.org/*
 // @require http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version 1.4.0
+// @version 1.4.1
 // @grant GM_addStyle
 // ==/UserScript==
 
@@ -139,6 +139,12 @@
               aria-checked="false" rel="nofollow">
               <span class="css-truncate css-truncate-overflow"style="text-align:center;">
                 Github仓库地址，点个赞谢谢
+              </span>
+            </a>
+            <a class="SelectMenu-item" href="https://greasyfork.org/zh-CN/scripts/397419" target="_blank" role="menuitemradio"
+              aria-checked="false" rel="nofollow">
+              <span class="css-truncate css-truncate-overflow"style="text-align:center;">
+              GreasyFork地址，喜欢的可以收藏
               </span>
             </a>
           </div>
