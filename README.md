@@ -9,7 +9,7 @@
 
 下载安装地址：https://raw.githubusercontent.com/RC1844/FastGithub/master/FastGithub.js
 
-或：[Greasyfork](https://greasyfork.org/zh-CN/scripts/397419)
+或：从[Greasyfork](https://greasyfork.org/zh-CN/scripts/397419)安装
 
 <figure class="half">
     <img src="REANDME\releases1.png" width="600">
