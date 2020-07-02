@@ -4,12 +4,12 @@
 // @namespace https://github.com/RC1844
 // @author RC1844
 // @license MIT License
-// @description 镜像访问GitHub、加速克隆和下载，前往项目Github仓库查看免费搭建Github镜像站点方法
+// @description 镜像访问GitHub、加速克隆和下载；适配Github新UI；前往项目Github仓库查看免费搭建Github镜像站点方法
 // @include *://github.com/*
 // @include *://github*
 // @include *://hub.fastgit.org/*
 // @require http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version 1.4.1
+// @version 1.4.2
 // @grant GM_addStyle
 // ==/UserScript==
 
@@ -89,44 +89,43 @@
   for (let i in clone_set) {
     info += `<div class="input-group">
               <input type="text" class="form-control input-monospace input-sm"
-                value="${str1 + mirror_url[clone_set[i]] + str2}" data-autoselect="" readonly="">
+                value="${str1 + mirror_url[clone_set[i]] + str2}" readonly="" data-autoselect="">
               <div class="input-group-button">
-                <clipboard-copy value="${str1 + mirror_url[clone_set[i]] + str2}" class="btn btn-sm">
-                  <svg class="octicon octicon-clippy" viewBox="0 0 14 16" version="1.1" width="14" height="16"
+                <clipboard-copy value="${str1 + mirror_url[clone_set[i]] + str2}" class="btn btn-sm"><svg
+                    class="octicon octicon-clippy" viewBox="0 0 16 16" version="1.1" width="16" height="16"
                     aria-hidden="true">
                     <path fill-rule="evenodd"
-                      d="M2 13h4v1H2v-1zm5-6H2v1h5V7zm2 3V8l-3 3 3 3v-2h5v-2H9zM4.5 9H2v1h2.5V9zM2 12h2.5v-1H2v1zm9 1h1v2c-.02.28-.11.52-.3.7-.19.18-.42.28-.7.3H1c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h3c0-1.11.89-2 2-2 1.11 0 2 .89 2 2h3c.55 0 1 .45 1 1v5h-1V6H1v9h10v-2zM2 5h8c0-.55-.45-1-1-1H8c-.55 0-1-.45-1-1s-.45-1-1-1-1 .45-1 1-.45 1-1 1H3c-.55 0-1 .45-1 1z">
+                      d="M5.75 1a.75.75 0 00-.75.75v3c0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75v-3a.75.75 0 00-.75-.75h-4.5zm.75 3V2.5h3V4h-3zm-2.874-.467a.75.75 0 00-.752-1.298A1.75 1.75 0 002 3.75v9.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0014 13.25v-9.5a1.75 1.75 0 00-.874-1.515.75.75 0 10-.752 1.298.25.25 0 01.126.217v9.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-9.5a.25.25 0 01.126-.217z">
                     </path>
-                  </svg>
-                </clipboard-copy>
+                  </svg></clipboard-copy>
               </div>
             </div>`;
   }
 
   //浏览列表
   for (let i in mirror_set) {
-    info += `<a class="SelectMenu-item" href="${mirror_url[mirror_set[i]] + str3}" target="_blank" role="menuitemradio"
-    aria-checked="false" rel="nofollow">
-    <svg class="octicon octicon-check SelectMenu-icon SelectMenu-icon--check" viewBox="0 0 16 16" version="1.1"
-        width="16" height="16" aria-hidden="true">
-        <path fill-rule="evenodd"
-            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z">
-        </path>
-    </svg>
-    <span class="break-word">镜像浏览${i}</span>
-</a>`
+    info += `<a class="SelectMenu-item" href="${mirror_url[mirror_set[i]] + str3}" target="_blank"
+              role="menuitemradio" aria-checked="false" rel="nofollow">
+              <svg class="octicon octicon-check SelectMenu-icon SelectMenu-icon--check" viewBox="0 0 16 16"
+                version="1.1" width="16" height="16" aria-hidden="true">
+                <path fill-rule="evenodd"
+                  d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z">
+                </path>
+              </svg>
+              <span class="break-word">镜像浏览${i}</span>
+            </a>`
   }
   if (location.hostname != "github.com") {
     info += `<a class="SelectMenu-item" href="https://github.com${str3}" target="_blank" role="menuitemradio"
-    aria-checked="false" rel="nofollow">
-    <svg class="octicon octicon-check SelectMenu-icon SelectMenu-icon--check" viewBox="0 0 16 16" version="1.1"
-        width="16" height="16" aria-hidden="true">
-        <path fill-rule="evenodd"
-            d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z">
-        </path>
-    </svg>
-    <span class="break-word">返回GitHub</span>
-</a>`
+              aria-checked="false" rel="nofollow">
+              <svg class="octicon octicon-check SelectMenu-icon SelectMenu-icon--check" viewBox="0 0 16 16"
+                version="1.1" width="16" height="16" aria-hidden="true">
+                <path fill-rule="evenodd"
+                  d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z">
+                </path>
+              </svg>
+              <span class="break-word">返回GitHub</span>
+            </a>`
   }
 
   info += `
@@ -137,14 +136,14 @@
           <div class="SelectMenu-list">
             <a class="SelectMenu-item" href="https://github.com/RC1844/FastGithub" target="_blank" role="menuitemradio"
               aria-checked="false" rel="nofollow">
-              <span class="css-truncate css-truncate-overflow"style="text-align:center;">
+              <span class="css-truncate css-truncate-overflow" style="text-align:center;">
                 Github仓库地址，点个赞谢谢
               </span>
             </a>
-            <a class="SelectMenu-item" href="https://greasyfork.org/zh-CN/scripts/397419" target="_blank" role="menuitemradio"
-              aria-checked="false" rel="nofollow">
-              <span class="css-truncate css-truncate-overflow"style="text-align:center;">
-              GreasyFork地址，喜欢的可以收藏
+            <a class="SelectMenu-item" href="https://greasyfork.org/zh-CN/scripts/397419" target="_blank"
+              role="menuitemradio" aria-checked="false" rel="nofollow">
+              <span class="css-truncate css-truncate-overflow" style="text-align:center;">
+                GreasyFork地址，喜欢的可以收藏
               </span>
             </a>
           </div>
@@ -158,16 +157,22 @@
 
 
   //Fast Download ZIP
-  $('get-repo-controller > details > div > div > div > div.mt-2.d-flex').each(function () {
-    var span = `<div class="mt-2 d-flex">`;
+  $('ul >li.Box-row.Box-row--hover-gray.p-0').each(function () {
+    var span = `<li class="Box-row p-0">`;
     $(this).find("a[rel='nofollow']").each(function () {
       var href = $(this).attr('href');
       for (let i in download_set) {
-        span += `<a class="btn btn-outline get-repo-btn btn-block" rel="nofollow"
-    href="${mirror_url[download_set[i]] + href}">Download ZIP${i}</a>`;
+        span += `<a class="d-flex flex-items-center text-gray-dark text-bold no-underline Box-row Box-row--hover-gray p-3"
+    rel="nofollow" href="${mirror_url[download_set[i]] + href}">
+    <svg class="octicon octicon-file-zip mr-3" viewBox="0 0 16 16" version="1.1" width="16" height="16"
+      aria-hidden="true">
+      <path fill-rule="evenodd"
+        d="M3.5 1.75a.25.25 0 01.25-.25h3a.75.75 0 000 1.5h.5a.75.75 0 000-1.5h2.086a.25.25 0 01.177.073l2.914 2.914a.25.25 0 01.073.177v8.586a.25.25 0 01-.25.25h-.5a.75.75 0 000 1.5h.5A1.75 1.75 0 0014 13.25V4.664c0-.464-.184-.909-.513-1.237L10.573.513A1.75 1.75 0 009.336 0H3.75A1.75 1.75 0 002 1.75v11.5c0 .649.353 1.214.874 1.515a.75.75 0 10.752-1.298.25.25 0 01-.126-.217V1.75zM8.75 3a.75.75 0 000 1.5h.5a.75.75 0 000-1.5h-.5zM6 5.25a.75.75 0 01.75-.75h.5a.75.75 0 010 1.5h-.5A.75.75 0 016 5.25zm2 1.5A.75.75 0 018.75 6h.5a.75.75 0 010 1.5h-.5A.75.75 0 018 6.75zm-1.25.75a.75.75 0 000 1.5h.5a.75.75 0 000-1.5h-.5zM8 9.75A.75.75 0 018.75 9h.5a.75.75 0 010 1.5h-.5A.75.75 0 018 9.75zm-.75.75a1.75 1.75 0 00-1.75 1.75v3c0 .414.336.75.75.75h2.5a.75.75 0 00.75-.75v-3a1.75 1.75 0 00-1.75-1.75h-.5zM7 12.25a.25.25 0 01.25-.25h.5a.25.25 0 01.25.25v2.25H7v-2.25z">
+      </path>
+    </svg>Fast Download ZIP${i}</a>`;
       }
-      span += `</div>`;
     });
+    span += `</li>`;
     $(this).after(span);
   });
 
