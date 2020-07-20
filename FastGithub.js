@@ -4,12 +4,12 @@
 // @namespace https://github.com/RC1844
 // @author RC1844
 // @license MIT License
-// @description 镜像访问GitHub、加速克隆和下载；适配Github新UI；前往项目Github仓库查看免费搭建Github镜像站点方法
+// @description 镜像访问GitHub、加速克隆和下载；适配Github新UI；增加新克隆站点；前往项目Github仓库查看免费搭建Github镜像站点方法
 // @include *://github.com/*
 // @include *://github*
 // @include *://hub.fastgit.org/*
 // @require http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version 1.4.2
+// @version 1.4.3
 // @grant GM_addStyle
 // ==/UserScript==
 
@@ -29,8 +29,9 @@
   mirror_url[3] = 'https://' + 'github.bajins.com';
   mirror_url[4] = 'https://' + 'download.fastgit.org';
   mirror_url[5] = 'https://' + 'github.rc1844.workers.dev';
-  //添加对应数值即可使用
-  var clone_set = [0, 1];
+  mirror_url[6] = 'https://' + 'gitclone.com/github.com';
+  //添加对应索引即可使用
+  var clone_set = [0, 1, 6];
   var mirror_set = [0, 1, 2, 3, 5];
   var download_set = [2, 4, 5];
 
@@ -144,6 +145,30 @@
               role="menuitemradio" aria-checked="false" rel="nofollow">
               <span class="css-truncate css-truncate-overflow" style="text-align:center;">
                 GreasyFork地址，喜欢的可以收藏
+              </span>
+            </a>
+            <a class="SelectMenu-item" href="https://minhaskamal.github.io/DownGit" target="_blank" role="menuitemradio"
+              aria-checked="false" rel="nofollow">
+              <span class="css-truncate css-truncate-overflow" style="text-align:center;">
+                DownGit
+              </span>
+            </a>
+            <a class="SelectMenu-item" href="https://d.serctl.com/" target="_blank" role="menuitemradio"
+              aria-checked="false" rel="nofollow">
+              <span class="css-truncate css-truncate-overflow" style="text-align:center;">
+                GitHub内容下载站点：d.serctl.com
+              </span>
+            </a>
+            <a class="SelectMenu-item" href="https://gh.isteed.cc/" target="_blank" role="menuitemradio"
+              aria-checked="false" rel="nofollow">
+              <span class="css-truncate css-truncate-overflow" style="text-align:center;">
+                gh-proxy部署站点1
+              </span>
+            </a>
+            <a class="SelectMenu-item" href="https://github.zsxwz.workers.dev/" target="_blank" role="menuitemradio"
+              aria-checked="false" rel="nofollow">
+              <span class="css-truncate css-truncate-overflow" style="text-align:center;">
+                gh-proxy部署站点2
               </span>
             </a>
           </div>
