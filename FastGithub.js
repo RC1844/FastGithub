@@ -48,15 +48,17 @@
   var str3 = window.location.pathname;
 
   //镜像列表
-  var info = `<details class="details-reset details-overlay mr-0 mb-0" id="mirror-menu">
-  <summary class="btn  ml-2 btn-primary" data-hotkey="m" title="Switch branches or tags" aria-haspopup="menu"
+  var info = `<details class="details-reset details-overlay mr-0 mb-0" id="mirror-menu" style="
+    padding-left: 8px;
+">
+  <summary class="btn css-truncate" data-hotkey="m" title="Switch branches or tags" aria-haspopup="menu"
     role="button">
     <span class="css-truncate-target" data-menu-button="">镜像网站</span>
     <span class="dropdown-caret"></span>
   </summary>
 
   <details-menu class="SelectMenu SelectMenu--hasFilter" role="menu">
-    <div class="SelectMenu-modal" style="width: 400px;">
+    <div class="SelectMenu-modal" style="width: 425px;">
 
       <header class="SelectMenu-header">
         <span class="SelectMenu-title">镜像站点与快速克隆</span>
@@ -178,7 +180,7 @@
     </div>
   </details-menu>
 </details>`;
-  $('div.flex-auto.min-width-0.width-fit.mr-3').after(info);
+  $('a.btn.ml-2').before(info);
 
 
   //Fast Download ZIP
@@ -206,10 +208,9 @@
   $('.release-main-section').each(function () {
     $(this).find('.d-flex.Box-body>a').each(function () {
       var href = $(this).attr('href');
-      var span = `<div style="left: 65%;">`;
+      var span = `<div style="position:absolute; left: 65%;">`;
       for (let i in download_set) {
-        span += `<a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow"
-    href="${mirror_url[download_set[i]] + href}">快速下载${i}</a>`;
+        span += `<a class="Label" style="margin-right: 10px;" rel="nofollow" ref="${mirror_url[download_set[i]] + href}">快速下载${i}</a>`;
       }
       span += `</div>`;
       $(this).after(span);
@@ -218,12 +219,12 @@
   $('.release-main-section').each(function () {
     $(this).find('.d-block.Box-body>a').each(function () {
       var href = $(this).attr('href');
-      var span = ``;
+      var span = `<div style="position:absolute; left: 65%;">`;
       for (let i in download_set) {
-        span += `<a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow"
-  href="${mirror_url[download_set[i]] + href}">快速下载${i}</a>`;
+        span += `<a class="Label" style="margin-right: 10px;" rel="nofollow" href="${mirror_url[download_set[i]] + href}">快速下载${i}</a>`;
       }
-      $(this).after(span);
+      span += `</div>`;
+      $(this).append(span);
     });
   });
 
