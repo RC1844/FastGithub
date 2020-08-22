@@ -9,7 +9,7 @@
 // @include *://github*
 // @include *://hub.fastgit.org/*
 // @require http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version 1.4.3
+// @version 1.4.5
 // @grant GM_addStyle
 // ==/UserScript==
 
@@ -201,30 +201,46 @@
     $(this).after(span);
   });
 
-
+  function IsPC() {
+    var userAgentInfo = navigator.userAgent;
+    var Agents = ["Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod"];
+    var flag = true;
+    for (var v = 0; v < Agents.length; v++) {
+      if (userAgentInfo.indexOf(Agents[v]) > 0) {
+        flag = false;
+        break;
+      }
+    }
+    return flag;
+  }
   //Download Releases
   $('.release-main-section').each(function () {
     $(this).find('.d-flex.Box-body>a').each(function () {
       var href = $(this).attr('href');
-      var span = `<div style="left: 65%;">`;
+      var span = `<small>`;
       for (let i in download_set) {
         span += `<a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow"
     href="${mirror_url[download_set[i]] + href}">快速下载${i}</a>`;
       }
-      span += `</div>`;
-      $(this).after(span);
+      span += `</small>`;
+      $(this).next().append(span);
+      if (!IsPC()) {
+        $('.d-flex').removeClass("d-flex");
+      }
     });
-  });
-  $('.release-main-section').each(function () {
+
     $(this).find('.d-block.Box-body>a').each(function () {
       var href = $(this).attr('href');
-      var span = ``;
+      var span = `<small>`;
       for (let i in download_set) {
         span += `<a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow"
   href="${mirror_url[download_set[i]] + href}">快速下载${i}</a>`;
       }
+      span += `</small>`;
       $(this).after(span);
+      $(this).parent().addClass("d-flex flex-justify-between");
     });
+
   });
 
 })();
