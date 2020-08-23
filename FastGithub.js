@@ -1,8 +1,10 @@
 // ==UserScript==
 // @icon https://github.githubassets.com/favicon.ico
 // @name GitHub镜像加速访问、克隆和下载
-// @namespace https://github.com/RC1844
+// @namespace RC1844.FastGithub
 // @author RC1844
+// @homepageURL https://github.com/RC1844/FastGithub
+// @supportURL https://github.com/RC1844/FastGithub/issues
 // @license MIT License
 // @description 镜像访问GitHub、加速克隆和下载；适配Github新UI；增加新克隆站点；前往项目Github仓库查看免费搭建Github镜像站点方法
 // @include *://github.com/*
@@ -234,13 +236,11 @@
       var span = `<small>`;
       for (let i in download_set) {
         span += `<a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow"
-  href="${mirror_url[download_set[i]] + href}">快速下载${i}</a>`;
+        href="${mirror_url[download_set[i]] + href}">快速下载${i}</a>`;
       }
       span += `</small>`;
       $(this).after(span);
       $(this).parent().addClass("d-flex flex-justify-between");
     });
-
   });
-
 })();
