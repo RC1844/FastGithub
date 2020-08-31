@@ -29,12 +29,47 @@
 | https://github.wuyanzheshui.workers.dev |   ✓   |    ✗     |    ✓     |       ✓       | Cloudflare |     美国     |
 |        https://github.bajins.com        |   ✓   |    ✗     |    ?     |       ?       | Cloudflare |     美国     |
 |         https://doc.fastgit.org         |   ✓   |    ✓     |    ✓     |       ✓       |  fastgit   |     香港     |
-|          https://gitclone.com/          |   ✓   |    ✓     |    ✗     |       ✗       |   Aliyun   |     杭州     |
+|          https://gitclone.com           |   ✓   |    ✓     |    ✗     |       ✗       |   Aliyun   |     杭州     |
+|  https://github-speedup.laiczhang.com   |   ✓   |    ✓     |    ✓     |       ✓       | Quadranet  |     美国     |
+
+### 使用 Cloudflare 搭建 Github 镜像(实为代理)
+
+[基础教程](https://github.com/EtherDream/jsproxy/tree/master/cf-worker)
+
+只需要将[基础教程](https://github.com/EtherDream/jsproxy/tree/master/cf-worker)中[index.js](https://raw.githubusercontent.com/EtherDream/jsproxy/master/cf-worker/index.js)的代码：
+
+```
+const ASSET_URL = 'https://etherdream.github.io/jsproxy'
+```
+
+改为
+
+```
+const ASSET_URL = 'https://github.com'
+```
+
+即可
+
+### 相关网站、仓库
+
+[GitClone](https://gitclone.com/)
+
+[gh-proxy](https://github.com/hunshcn/gh-proxy)
+
+[Fast Git](https://fastgit.org/)
+
+[jsproxy](https://github.com/EtherDream/jsproxy)
+
+[zmirror](https://github.com/aploium/zmirror)
 
 ### 更新日志
 
-v1.4.5
+v1.4.5-v1.4.6
+
 1. releases 页按钮终于对齐了，手机浏览更舒服
+2. 增加多个中转站点(由[@smileat2000](https://github.com/smileat2000)于[issues#5](https://github.com/RC1844/FastGithub/issues/5)提供)，增加一个全能站点
+3. 链接增加title属性，提示提供服务站点
+4. 缩减代码
 
 v1.4.0-1.4.3
 
@@ -63,7 +98,7 @@ v1.2.1-1.2.4
 2. 添加警告（迟来的警告，希望没人遭受损失）
 3. 修复 release tag 页无法注入问题
 4. 修饰警告信息的显示
-5. 增加一组镜像站点，感谢[@KevinZonda](https://github.com/KevinZonda)提供的信息，具体请看[issue#1](https://github.com/RC1844/FastGithub/issues/1)
+5. 增加一组镜像站点，感谢[@KevinZonda](https://github.com/KevinZonda)提供的信息，具体请看[issues#1](https://github.com/RC1844/FastGithub/issues/1)
 
 v1.2.0
 
@@ -81,33 +116,3 @@ v1.0-1.1.4
 4. 增加 ZIP 镜像下载按钮
 5. (原有)releases 镜像下载按钮(releases Source code 的快速下载 1 是没有加速效果的)
 6. 在克隆地址处插入克隆命令，不需要的可以编辑代码禁用
-
-### 使用 Cloudflare 搭建 Github 镜像(实为代理)
-
-[基础教程](https://github.com/EtherDream/jsproxy/tree/master/cf-worker)
-
-只需要将基础教程中[index.js](https://raw.githubusercontent.com/EtherDream/jsproxy/master/cf-worker/index.js)的代码：
-
-```
-const ASSET_URL = 'https://etherdream.github.io/jsproxy'
-```
-
-改为
-
-```
-const ASSET_URL = 'https://github.com'
-```
-
-即可
-
-### 相关网站、仓库
-
-[GitClone](https://gitclone.com/)
-
-[gh-proxy](https://github.com/hunshcn/gh-proxy)
-
-[Fast Git](https://fastgit.org/)
-
-[jsproxy](https://github.com/EtherDream/jsproxy)
-
-[zmirror](https://github.com/aploium/zmirror)

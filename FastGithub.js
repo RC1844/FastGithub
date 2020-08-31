@@ -11,12 +11,12 @@
 // @include *://github*
 // @include *://hub.fastgit.org/*
 // @require http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version 1.4.5
+// @version 1.4.6
 // @grant GM_addStyle
 // ==/UserScript==
 
 (function () {
-  'use strict';
+  "use strict";
 
   //=true为启用，=false为禁用
   var clone = true;
@@ -25,34 +25,87 @@
   // var depth = false;
 
   var mirror_url = new Array();
-  mirror_url[0] = 'https://' + 'github.com.cnpmjs.org';
-  mirror_url[1] = 'https://' + 'hub.fastgit.org';
-  mirror_url[2] = 'https://' + 'github.wuyanzheshui.workers.dev';
-  mirror_url[3] = 'https://' + 'github.bajins.com';
-  mirror_url[4] = 'https://' + 'download.fastgit.org';
-  mirror_url[5] = 'https://' + 'github.rc1844.workers.dev';
-  mirror_url[6] = 'https://' + 'gitclone.com/github.com';
+  mirror_url[0] = "https://github.com.cnpmjs.org/";
+  mirror_url[1] = "https://hub.fastgit.org/";
+  mirror_url[2] = "https://github.wuyanzheshui.workers.dev/";
+  mirror_url[3] = "https://github.bajins.com/";
+  mirror_url[4] = "https://download.fastgit.org/";
+  mirror_url[5] = "https://github.rc1844.workers.dev/";
+  mirror_url[6] = "https://gitclone.com/github.com/";
+  mirror_url[7] = "git@git.zhlh6.cn:";
+  mirror_url[8] = "https://github-speedup.laiczhang.com/";
   //添加对应索引即可使用
-  var clone_set = [0, 1, 6];
-  var mirror_set = [0, 1, 2, 3, 5];
-  var download_set = [2, 4, 5];
+  var clone_set = [0, 1, 6, 7, 8];
+  var mirror_set = [0, 1, 2, 3, 5, 8];
+  var download_set = [2, 4, 5, 8];
 
-  var str1 = '';
+  //其他
+  var other_url = new Array();
+  other_url = [
+    {
+      url: "https://github.com/RC1844/FastGithub",
+      name: "脚本Github仓库地址，点个赞谢谢",
+    },
+    {
+      url: "https://greasyfork.org/zh-CN/scripts/397419",
+      name: "GreasyFork地址，希望可以给我评分收藏",
+    },
+    {
+      url: "https://minhaskamal.github.io/DownGit",
+      name: "DownGit",
+    },
+    {
+      url: "https://d.serctl.com/",
+      name: "GitHub中转下载",
+    },
+    {
+      url: "https://github.zhlh6.cn/",
+      name: "加速你的Github",
+    },
+    {
+      url: "http://gitd.cc/",
+      name: "GitHub代下载",
+    },
+    {
+      url: "https://gh.isteed.cc/",
+      name: "gh-proxy部署站点",
+    },
+    {
+      url: "https://github.zsxwz.workers.dev/",
+      name: "gh-proxy部署站点",
+    },
+    {
+      url: "https://gh.api.99988866.xyz/",
+      name: "gh-proxy部署站点",
+    },
+    {
+      url: "https://g.ioiox.com/",
+      name: "gh-proxy部署站点",
+    },
+    {
+      url: "https://gh.sky-and-poem.fun/",
+      name: "gh-proxy部署站点",
+    },
+    // {
+    // url: "",
+    // name: "",
+    // },
+  ];
+  var str1 = "";
   if (clone) {
     str1 += "git clone ";
     if (depth) {
       str1 += "--depth=1 ";
     }
   }
-  var loca = window.location.href;
-  var a = loca.split("/");
-  var str2 = '/' + a[3] + '/' + a[4] + '.git';
+
+  var a = window.location.href.split("/");
+  var str2 = a[3] + "/" + a[4] + ".git";
   var str3 = window.location.pathname;
 
   //镜像列表
   var info = `<details class="details-reset details-overlay mr-0 mb-0" id="mirror-menu">
-  <summary class="btn  ml-2 btn-primary" data-hotkey="m" title="Switch branches or tags" aria-haspopup="menu"
-    role="button">
+  <summary class="btn  ml-2 btn-primary" data-hotkey="m" title="打开列表" aria-haspopup="menu" role="button">
     <span class="css-truncate-target" data-menu-button="">镜像网站</span>
     <span class="dropdown-caret"></span>
   </summary>
@@ -91,12 +144,14 @@
   //克隆列表
   for (let i in clone_set) {
     info += `<div class="input-group">
-              <input type="text" class="form-control input-monospace input-sm"
-                value="${str1 + mirror_url[clone_set[i]] + str2}" readonly="" data-autoselect="">
+              <input type="text" class="form-control input-monospace input-sm" value="${
+      str1 + mirror_url[clone_set[i]] + str2
+      }" readonly="" data-autoselect="">
               <div class="input-group-button">
-                <clipboard-copy value="${str1 + mirror_url[clone_set[i]] + str2}" class="btn btn-sm"><svg
-                    class="octicon octicon-clippy" viewBox="0 0 16 16" version="1.1" width="16" height="16"
-                    aria-hidden="true">
+                <clipboard-copy value="${
+      str1 + mirror_url[clone_set[i]] + str2
+      }" class="btn btn-sm"><svg class="octicon octicon-clippy" viewBox="0 0 16 16" version="1.1" width="16"
+                    height="16" aria-hidden="true">
                     <path fill-rule="evenodd"
                       d="M5.75 1a.75.75 0 00-.75.75v3c0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75v-3a.75.75 0 00-.75-.75h-4.5zm.75 3V2.5h3V4h-3zm-2.874-.467a.75.75 0 00-.752-1.298A1.75 1.75 0 002 3.75v9.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0014 13.25v-9.5a1.75 1.75 0 00-.874-1.515.75.75 0 10-.752 1.298.25.25 0 01.126.217v9.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-9.5a.25.25 0 01.126-.217z">
                     </path>
@@ -107,8 +162,10 @@
 
   //浏览列表
   for (let i in mirror_set) {
-    info += `<a class="SelectMenu-item" href="${mirror_url[mirror_set[i]] + str3}" target="_blank"
-              role="menuitemradio" aria-checked="false" rel="nofollow">
+    info += `<a class="SelectMenu-item" href="${
+      mirror_url[mirror_set[i]] + str3
+      }" target="_blank" role="menuitemradio" aria-checked="false" rel="nofollow" title="${
+      mirror_url[mirror_set[i]]}">
               <svg class="octicon octicon-check SelectMenu-icon SelectMenu-icon--check" viewBox="0 0 16 16"
                 version="1.1" width="16" height="16" aria-hidden="true">
                 <path fill-rule="evenodd"
@@ -116,7 +173,7 @@
                 </path>
               </svg>
               <span class="break-word">镜像浏览${i}</span>
-            </a>`
+            </a>`;
   }
   if (location.hostname != "github.com") {
     info += `<a class="SelectMenu-item" href="https://github.com${str3}" target="_blank" role="menuitemradio"
@@ -128,69 +185,43 @@
                 </path>
               </svg>
               <span class="break-word">返回GitHub</span>
-            </a>`
+            </a>`;
   }
 
   info += `
           </div>
         </div>
-
         <div role="tabpanel" class="d-flex flex-column flex-auto overflow-auto" tabindex="0" hidden="">
           <div class="SelectMenu-list">
-            <a class="SelectMenu-item" href="https://github.com/RC1844/FastGithub" target="_blank" role="menuitemradio"
-              aria-checked="false" rel="nofollow">
-              <span class="css-truncate css-truncate-overflow" style="text-align:center;">
-                Github仓库地址，点个赞谢谢
-              </span>
-            </a>
-            <a class="SelectMenu-item" href="https://greasyfork.org/zh-CN/scripts/397419" target="_blank"
-              role="menuitemradio" aria-checked="false" rel="nofollow">
-              <span class="css-truncate css-truncate-overflow" style="text-align:center;">
-                GreasyFork地址，喜欢的可以收藏
-              </span>
-            </a>
-            <a class="SelectMenu-item" href="https://minhaskamal.github.io/DownGit" target="_blank" role="menuitemradio"
-              aria-checked="false" rel="nofollow">
-              <span class="css-truncate css-truncate-overflow" style="text-align:center;">
-                DownGit
-              </span>
-            </a>
-            <a class="SelectMenu-item" href="https://d.serctl.com/" target="_blank" role="menuitemradio"
-              aria-checked="false" rel="nofollow">
-              <span class="css-truncate css-truncate-overflow" style="text-align:center;">
-                GitHub内容下载站点：d.serctl.com
-              </span>
-            </a>
-            <a class="SelectMenu-item" href="https://gh.isteed.cc/" target="_blank" role="menuitemradio"
-              aria-checked="false" rel="nofollow">
-              <span class="css-truncate css-truncate-overflow" style="text-align:center;">
-                gh-proxy部署站点1
-              </span>
-            </a>
-            <a class="SelectMenu-item" href="https://github.zsxwz.workers.dev/" target="_blank" role="menuitemradio"
-              aria-checked="false" rel="nofollow">
-              <span class="css-truncate css-truncate-overflow" style="text-align:center;">
-                gh-proxy部署站点2
-              </span>
-            </a>
-          </div>
-        </div>
+            `;
 
+  //其他列表
+  other_url.forEach((element) => {
+    info += `<a class="SelectMenu-item" href="${element.url}" target="_blank" 
+    title="${element.url}" role="menuitemradio" aria-checked="false"
+              rel="nofollow">
+              <span class="css-truncate css-truncate-overflow" style="text-align:center;">
+                ${element.name}
+              </span>
+            </a>
+            `;
+  });
+  info += `</div>
+        </div>
       </tab-container>
     </div>
   </details-menu>
 </details>`;
-  $('div.flex-auto.min-width-0.width-fit.mr-3').after(info);
-
+  $("div.flex-auto.min-width-0.width-fit.mr-3").after(info);
 
   //Fast Download ZIP
-  $('ul >li.Box-row.Box-row--hover-gray.p-0').each(function () {
+  $("ul >li.Box-row.Box-row--hover-gray.p-0").each(function () {
     var span = `<li class="Box-row p-0">`;
     $(this).find("a[rel='nofollow']").each(function () {
-      var href = $(this).attr('href');
+      var href = $(this).attr("href");
       for (let i in download_set) {
         span += `<a class="d-flex flex-items-center text-gray-dark text-bold no-underline Box-row Box-row--hover-gray p-3"
-    rel="nofollow" href="${mirror_url[download_set[i]] + href}">
+    rel="nofollow" href="${mirror_url[download_set[i]] + href}" title="${mirror_url[download_set[i]]}">
     <svg class="octicon octicon-file-zip mr-3" viewBox="0 0 16 16" version="1.1" width="16" height="16"
       aria-hidden="true">
       <path fill-rule="evenodd"
@@ -203,9 +234,43 @@
     $(this).after(span);
   });
 
+  //Download Releases
+  $(".release-main-section").each(function () {
+    $(this).find(".d-flex.Box-body>a").each(function () {
+      var href = $(this).attr("href");
+      $(this).next().append(DownloadHref(href));
+      if (!IsPC()) {
+        $(".d-flex").removeClass("d-flex");
+      }
+    });
+
+    $(this).find(".d-block.Box-body>a").each(function () {
+      var href = $(this).attr("href");
+      $(this).after(DownloadHref(href));
+      $(this).parent().addClass("d-flex flex-justify-between");
+    });
+  });
+
+  function DownloadHref(href) {
+    var span = `<small>`;
+    for (let i in download_set) {
+      span += `<a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow"
+      href="${mirror_url[download_set[i]] + href}" title="${mirror_url[download_set[i]]}">快速下载${i}</a>`;
+    }
+    span += `</small>`;
+    return span;
+  }
+
   function IsPC() {
     var userAgentInfo = navigator.userAgent;
-    var Agents = ["Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod"];
+    var Agents = [
+      "Android",
+      "iPhone",
+      "SymbianOS",
+      "Windows Phone",
+      "iPad",
+      "iPod",
+    ];
     var flag = true;
     for (var v = 0; v < Agents.length; v++) {
       if (userAgentInfo.indexOf(Agents[v]) > 0) {
@@ -215,32 +280,4 @@
     }
     return flag;
   }
-  //Download Releases
-  $('.release-main-section').each(function () {
-    $(this).find('.d-flex.Box-body>a').each(function () {
-      var href = $(this).attr('href');
-      var span = `<small>`;
-      for (let i in download_set) {
-        span += `<a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow"
-    href="${mirror_url[download_set[i]] + href}">快速下载${i}</a>`;
-      }
-      span += `</small>`;
-      $(this).next().append(span);
-      if (!IsPC()) {
-        $('.d-flex').removeClass("d-flex");
-      }
-    });
-
-    $(this).find('.d-block.Box-body>a').each(function () {
-      var href = $(this).attr('href');
-      var span = `<small>`;
-      for (let i in download_set) {
-        span += `<a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow"
-        href="${mirror_url[download_set[i]] + href}">快速下载${i}</a>`;
-      }
-      span += `</small>`;
-      $(this).after(span);
-      $(this).parent().addClass("d-flex flex-justify-between");
-    });
-  });
 })();
