@@ -8,7 +8,7 @@
 
 该脚本在[GitHub 镜像加速下载-码酷博客-改](https://greasyfork.org/zh-CN/scripts/391911)基础上修改：
 
-下载安装地址：https://raw.githubusercontent.com/RC1844/FastGithub/master/FastGithub.js
+下载安装地址：<https://raw.githubusercontent.com/RC1844/FastGithub/master/FastGithub.js>
 
 或：从[Greasyfork](https://greasyfork.org/zh-CN/scripts/397419)安装
 
@@ -22,15 +22,15 @@
 
 ### 已知的 GitHub 镜像(含失效站点)
 
-|                  域名                   | https | 克隆加速 | zip 加速 | releases 加速 | 主机服务商 | 服务器所在地 |
-| :-------------------------------------: | :---: | :------: | :------: | :-----------: | :--------: | :----------: |
-|      https://github.com.cnpmjs.org      |   ✓   |    ✓     |    ✗     |       ✗       |   dnspod   |     香港     |
-| ~~http://github-mirror.bugkiller.org~~  |   ✗   |    ✓     |    ✗     |       ✓       |     ?      |     日本     |
-| https://github.wuyanzheshui.workers.dev |   ✓   |    ✗     |    ✓     |       ✓       | Cloudflare |     美国     |
-|        https://github.bajins.com        |   ✓   |    ✗     |    ?     |       ?       | Cloudflare |     美国     |
-|         https://doc.fastgit.org         |   ✓   |    ✓     |    ✓     |       ✓       |  fastgit   |     香港     |
-|          https://gitclone.com           |   ✓   |    ✓     |    ✗     |       ✗       |   Aliyun   |     杭州     |
-|  https://github-speedup.laiczhang.com   |   ✓   |    ✓     |    ✓     |       ✓       | Quadranet  |     美国     |
+|                   域名                    | https | 克隆加速 | zip 加速 | releases 加速 | 主机服务商 | 服务器所在地 |
+| :---------------------------------------: | :---: | :------: | :------: | :-----------: | :--------: | :----------: |
+|      <https://github.com.cnpmjs.org>      |   ✓   |    ✓     |    ✗     |       ✗       |   dnspod   |     香港     |
+| ~~<http://github-mirror.bugkiller.org>~~  |   ✗   |    ✓     |    ✗     |       ✓       |     ?      |     日本     |
+| <https://github.wuyanzheshui.workers.dev> |   ✓   |    ✗     |    ✓     |       ✓       | Cloudflare |     美国     |
+|        <https://github.bajins.com>        |   ✓   |    ✗     |    ?     |       ?       | Cloudflare |     美国     |
+|         <https://doc.fastgit.org>         |   ✓   |    ✓     |    ✓     |       ✓       |  fastgit   |     香港     |
+|          <https://gitclone.com>           |   ✓   |    ✓     |    ✗     |       ✗       |   Aliyun   |     杭州     |
+|  <https://github-speedup.laiczhang.com>   |   ✓   |    ✓     |    ✓     |       ✓       | Quadranet  |     美国     |
 
 ### 使用 Cloudflare 搭建 Github 镜像(实为代理)
 
@@ -68,7 +68,7 @@ v1.4.5-v1.4.6
 
 1. releases 页按钮终于对齐了，手机浏览更舒服
 2. 增加多个中转站点(由[@smileat2000](https://github.com/smileat2000)于[issues#5](https://github.com/RC1844/FastGithub/issues/5)提供)，增加一个全能站点
-3. 链接增加title属性，提示提供服务站点
+3. 链接增加 title 属性，提示提供服务站点
 4. 缩减代码
 
 v1.4.0-1.4.3
@@ -83,7 +83,7 @@ v1.4.0-1.4.3
 v1.3.1
 
 1. 取消新提供的下载站点
-2. 增加自建站点https://github.rc1844.workers.dev ，与https://github.wuyanzheshui.workers.dev 相同
+2. 增加自建站点<https://github.rc1844.workers.dev> ，与<https://github.wuyanzheshui.workers.dev> 相同
 3. 自建方法请看下方
 
 v1.3.0
