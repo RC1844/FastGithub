@@ -2,13 +2,17 @@
 
 快速跳转 GitHub 镜像网站的猴油脚本
 
-# 请不要在镜像网站登录账号，若因此造成任何损失本人概不负责
+## 请不要在镜像网站登录账号，若因此造成任何损失本人概不负责
 
 本人并不会 js，所以只能改别人的代码
 
 该脚本在[GitHub 镜像加速下载-码酷博客-改](https://greasyfork.org/zh-CN/scripts/391911)基础上修改：
 
-下载安装地址：<https://raw.githubusercontent.com/RC1844/FastGithub/master/FastGithub.js>
+下载安装地址：
+
+<https://raw.githubusercontent.com/RC1844/FastGithub/master/FastGithub.js>
+
+<https://download.fastgit.org/RC1844/FastGithub/master/FastGithub.js>(无法下载安装的请使用该链接)
 
 或：从[Greasyfork](https://greasyfork.org/zh-CN/scripts/397419)安装
 
@@ -20,7 +24,7 @@
     <img src="REANDME\releases3.png">
 </figure>
 
-### 已知的 GitHub 镜像(含失效站点)
+## 已知的 GitHub 镜像(含失效站点)
 
 |                   域名                    | https | 克隆加速 | zip 加速 | releases 加速 | 主机服务商 | 服务器所在地 |
 | :---------------------------------------: | :---: | :------: | :------: | :-----------: | :--------: | :----------: |
@@ -32,25 +36,25 @@
 |          <https://gitclone.com>           |   ✓   |    ✓     |    ✗     |       ✗       |   Aliyun   |     杭州     |
 |  <https://github-speedup.laiczhang.com>   |   ✓   |    ✓     |    ✓     |       ✓       | Quadranet  |     美国     |
 
-### 使用 Cloudflare 搭建 Github 镜像(实为代理)
+## 使用 Cloudflare 搭建 Github 镜像(实为代理)
 
 [基础教程](https://github.com/EtherDream/jsproxy/tree/master/cf-worker)
 
 只需要将[基础教程](https://github.com/EtherDream/jsproxy/tree/master/cf-worker)中[index.js](https://raw.githubusercontent.com/EtherDream/jsproxy/master/cf-worker/index.js)的代码：
 
-```
+```js
 const ASSET_URL = 'https://etherdream.github.io/jsproxy'
 ```
 
 改为
 
-```
+```js
 const ASSET_URL = 'https://github.com'
 ```
 
 即可
 
-### 相关网站、仓库
+## 相关网站、仓库
 
 [GitClone](https://gitclone.com/)
 
@@ -62,14 +66,15 @@ const ASSET_URL = 'https://github.com'
 
 [zmirror](https://github.com/aploium/zmirror)
 
-### 更新日志
+## 更新日志
 
-v1.4.5-v1.4.6
+v1.4.5-v1.4.7
 
 1. releases 页按钮终于对齐了，手机浏览更舒服
 2. 增加多个中转站点(由[@smileat2000](https://github.com/smileat2000)于[issues#5](https://github.com/RC1844/FastGithub/issues/5)提供)，增加一个全能站点
 3. 链接增加 title 属性，提示提供服务站点
 4. 缩减代码
+5. 修复手机端 releases 页面，部分插入失败问题
 
 v1.4.0-1.4.3
 

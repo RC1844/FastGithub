@@ -11,7 +11,7 @@
 // @include *://github*
 // @include *://hub.fastgit.org/*
 // @require http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version 1.4.6
+// @version 1.4.7
 // @grant GM_addStyle
 // ==/UserScript==
 
@@ -41,51 +41,40 @@
 
   //其他
   var other_url = new Array();
-  other_url = [
-    {
-      url: "https://github.com/RC1844/FastGithub",
-      name: "脚本Github仓库地址，点个赞谢谢",
-    },
-    {
-      url: "https://greasyfork.org/zh-CN/scripts/397419",
-      name: "GreasyFork地址，希望可以给我评分收藏",
-    },
-    {
-      url: "https://minhaskamal.github.io/DownGit",
-      name: "DownGit",
-    },
-    {
-      url: "https://d.serctl.com/",
-      name: "GitHub中转下载",
-    },
-    {
-      url: "https://github.zhlh6.cn/",
-      name: "加速你的Github",
-    },
-    {
-      url: "http://gitd.cc/",
-      name: "GitHub代下载",
-    },
-    {
-      url: "https://gh.isteed.cc/",
-      name: "gh-proxy部署站点",
-    },
-    {
-      url: "https://github.zsxwz.workers.dev/",
-      name: "gh-proxy部署站点",
-    },
-    {
-      url: "https://gh.api.99988866.xyz/",
-      name: "gh-proxy部署站点",
-    },
-    {
-      url: "https://g.ioiox.com/",
-      name: "gh-proxy部署站点",
-    },
-    {
-      url: "https://gh.sky-and-poem.fun/",
-      name: "gh-proxy部署站点",
-    },
+  other_url = [{
+    url: "https://github.com/RC1844/FastGithub",
+    name: "脚本Github仓库地址，点个赞谢谢",
+  }, {
+    url: "https://greasyfork.org/zh-CN/scripts/397419",
+    name: "GreasyFork地址，希望可以给我评分收藏",
+  }, {
+    url: "https://minhaskamal.github.io/DownGit",
+    name: "DownGit",
+  }, {
+    url: "https://d.serctl.com/",
+    name: "GitHub中转下载",
+  }, {
+    url: "https://github.zhlh6.cn/",
+    name: "加速你的Github",
+  }, {
+    url: "http://gitd.cc/",
+    name: "GitHub代下载",
+  }, {
+    url: "https://gh.isteed.cc/",
+    name: "gh-proxy部署站点",
+  }, {
+    url: "https://github.zsxwz.workers.dev/",
+    name: "gh-proxy部署站点",
+  }, {
+    url: "https://gh.api.99988866.xyz/",
+    name: "gh-proxy部署站点",
+  }, {
+    url: "https://g.ioiox.com/",
+    name: "gh-proxy部署站点",
+  }, {
+    url: "https://gh.sky-and-poem.fun/",
+    name: "gh-proxy部署站点",
+  },
     // {
     // url: "",
     // name: "",
@@ -235,8 +224,8 @@
   });
 
   //Download Releases
-  $(".release-main-section").each(function () {
-    $(this).find(".d-flex.Box-body>a").each(function () {
+  $(".Box--condensed").each(function () {
+    $(this).find(".flex-items-center>a").each(function () {
       var href = $(this).attr("href");
       $(this).next().append(DownloadHref(href));
       if (!IsPC()) {
@@ -247,7 +236,7 @@
     $(this).find(".d-block.Box-body>a").each(function () {
       var href = $(this).attr("href");
       $(this).after(DownloadHref(href));
-      $(this).parent().addClass("d-flex flex-justify-between");
+      $(this).parent().addClass("d-flex  flex-justify-between");
     });
   });
 
