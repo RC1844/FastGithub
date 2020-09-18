@@ -8,7 +8,7 @@
 
 该脚本在[GitHub 镜像加速下载-码酷博客-改](https://greasyfork.org/zh-CN/scripts/391911)基础上修改：
 
-## [[预览效果]](REANDME\README.md)
+## [[预览效果]](REANDME/README.md)
 
 下载安装地址：
 
