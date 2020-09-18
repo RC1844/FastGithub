@@ -11,7 +11,7 @@
 // @include *://github*
 // @include *://hub.fastgit.org/*
 // @require http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version 1.4.7
+// @version 1.5.0
 // @grant GM_addStyle
 // ==/UserScript==
 
@@ -27,18 +27,18 @@
   var mirror_url = new Array();
   mirror_url[0] = "https://github.com.cnpmjs.org/";
   mirror_url[1] = "https://hub.fastgit.org/";
-  mirror_url[2] = "https://github.wuyanzheshui.workers.dev/";
+  mirror_url[2] = "https://github.wuyanzheshui.workers.dev";
   mirror_url[3] = "https://github.bajins.com/";
-  mirror_url[4] = "https://download.fastgit.org/";
-  mirror_url[5] = "https://github.rc1844.workers.dev/";
+  mirror_url[4] = "https://download.fastgit.org";
+  mirror_url[5] = "https://github.rc1844.workers.dev";
   mirror_url[6] = "https://gitclone.com/github.com/";
   mirror_url[7] = "git@git.zhlh6.cn:";
   mirror_url[8] = "https://github-speedup.laiczhang.com/";
   //添加对应索引即可使用
-  var clone_set = [0, 1, 6, 7, 8];
-  var mirror_set = [0, 1, 2, 3, 5, 8];
-  var download_set = [2, 4, 5, 8];
-
+  var clone_set = [1, 8, 0, 6, 7];
+  var mirror_set = [1, 8, 0, 3, 2, 5];
+  var download_set = [4, 8, 2, 5];
+  var raw_set = [1, 8, 3, 2, 5];
   //其他
   var other_url = new Array();
   other_url = [{
@@ -93,7 +93,10 @@
   var str3 = window.location.pathname;
 
   //镜像列表
-  var info = `<details class="details-reset details-overlay mr-0 mb-0" id="mirror-menu">
+  // $("div.flex-auto.min-width-0.width-fit.mr-3")
+  $("h1.flex-wrap.break-word.text-normal")
+    .each(function () {
+      var info = `<details class="details-reset details-overlay mr-0 mb-0" id="mirror-menu">
   <summary class="btn  ml-2 btn-primary" data-hotkey="m" title="打开列表" aria-haspopup="menu" role="button">
     <span class="css-truncate-target" data-menu-button="">镜像网站</span>
     <span class="dropdown-caret"></span>
@@ -130,16 +133,14 @@
               style="padding: 4px;background-color: #ffcccc;color: #990000;border-top-left-radius: 3px;border-top-right-radius: 3px;"
               role="alert">请不要在镜像网站登录账号，若因此造成任何损失本人概不负责</div>`;
 
-  //克隆列表
-  for (let i in clone_set) {
-    info += `<div class="input-group">
-              <input type="text" class="form-control input-monospace input-sm" value="${
-      str1 + mirror_url[clone_set[i]] + str2
-      }" readonly="" data-autoselect="">
+      //克隆列表
+      for (let i in clone_set) {
+        info += `<div class="input-group">
+              <input type="text" class="form-control input-monospace input-sm" value="${str1 + mirror_url[clone_set[i]] + str2
+          }" readonly="" data-autoselect="">
               <div class="input-group-button">
-                <clipboard-copy value="${
-      str1 + mirror_url[clone_set[i]] + str2
-      }" class="btn btn-sm"><svg class="octicon octicon-clippy" viewBox="0 0 16 16" version="1.1" width="16"
+                <clipboard-copy value="${str1 + mirror_url[clone_set[i]] + str2
+          }" class="btn btn-sm"><svg class="octicon octicon-clippy" viewBox="0 0 16 16" version="1.1" width="16"
                     height="16" aria-hidden="true">
                     <path fill-rule="evenodd"
                       d="M5.75 1a.75.75 0 00-.75.75v3c0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75v-3a.75.75 0 00-.75-.75h-4.5zm.75 3V2.5h3V4h-3zm-2.874-.467a.75.75 0 00-.752-1.298A1.75 1.75 0 002 3.75v9.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0014 13.25v-9.5a1.75 1.75 0 00-.874-1.515.75.75 0 10-.752 1.298.25.25 0 01.126.217v9.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-9.5a.25.25 0 01.126-.217z">
@@ -147,14 +148,12 @@
                   </svg></clipboard-copy>
               </div>
             </div>`;
-  }
+      }
 
-  //浏览列表
-  for (let i in mirror_set) {
-    info += `<a class="SelectMenu-item" href="${
-      mirror_url[mirror_set[i]] + str3
-      }" target="_blank" role="menuitemradio" aria-checked="false" rel="nofollow" title="${
-      mirror_url[mirror_set[i]]}">
+      //浏览列表
+      for (let i in mirror_set) {
+        info += `<a class="SelectMenu-item" href="${mirror_url[mirror_set[i]] + str3
+          }" target="_blank" role="menuitemradio" aria-checked="false" rel="nofollow" title="${mirror_url[mirror_set[i]]}">
               <svg class="octicon octicon-check SelectMenu-icon SelectMenu-icon--check" viewBox="0 0 16 16"
                 version="1.1" width="16" height="16" aria-hidden="true">
                 <path fill-rule="evenodd"
@@ -163,9 +162,9 @@
               </svg>
               <span class="break-word">镜像浏览${i}</span>
             </a>`;
-  }
-  if (location.hostname != "github.com") {
-    info += `<a class="SelectMenu-item" href="https://github.com${str3}" target="_blank" role="menuitemradio"
+      }
+      if (location.hostname != "github.com") {
+        info += `<a class="SelectMenu-item" href="https://github.com${str3}" target="_blank" role="menuitemradio"
               aria-checked="false" rel="nofollow">
               <svg class="octicon octicon-check SelectMenu-icon SelectMenu-icon--check" viewBox="0 0 16 16"
                 version="1.1" width="16" height="16" aria-hidden="true">
@@ -175,18 +174,18 @@
               </svg>
               <span class="break-word">返回GitHub</span>
             </a>`;
-  }
+      }
 
-  info += `
+      info += `
           </div>
         </div>
         <div role="tabpanel" class="d-flex flex-column flex-auto overflow-auto" tabindex="0" hidden="">
           <div class="SelectMenu-list">
             `;
 
-  //其他列表
-  other_url.forEach((element) => {
-    info += `<a class="SelectMenu-item" href="${element.url}" target="_blank" 
+      //其他列表
+      other_url.forEach((element) => {
+        info += `<a class="SelectMenu-item" href="${element.url}" target="_blank" 
     title="${element.url}" role="menuitemradio" aria-checked="false"
               rel="nofollow">
               <span class="css-truncate css-truncate-overflow" style="text-align:center;">
@@ -194,59 +193,80 @@
               </span>
             </a>
             `;
-  });
-  info += `</div>
+      });
+      info += `</div>
         </div>
       </tab-container>
     </div>
   </details-menu>
 </details>`;
-  $("div.flex-auto.min-width-0.width-fit.mr-3").after(info);
+      $(this).append(info);
+    });
 
   //Fast Download ZIP
-  $("ul >li.Box-row.Box-row--hover-gray.p-0").each(function () {
-    var span = `<li class="Box-row p-0">`;
-    $(this).find("a[rel='nofollow']").each(function () {
-      var href = $(this).attr("href");
-      for (let i in download_set) {
-        span += `<a class="d-flex flex-items-center text-gray-dark text-bold no-underline Box-row Box-row--hover-gray p-3"
-    rel="nofollow" href="${mirror_url[download_set[i]] + href}" title="${mirror_url[download_set[i]]}">
-    <svg class="octicon octicon-file-zip mr-3" viewBox="0 0 16 16" version="1.1" width="16" height="16"
-      aria-hidden="true">
-      <path fill-rule="evenodd"
-        d="M3.5 1.75a.25.25 0 01.25-.25h3a.75.75 0 000 1.5h.5a.75.75 0 000-1.5h2.086a.25.25 0 01.177.073l2.914 2.914a.25.25 0 01.073.177v8.586a.25.25 0 01-.25.25h-.5a.75.75 0 000 1.5h.5A1.75 1.75 0 0014 13.25V4.664c0-.464-.184-.909-.513-1.237L10.573.513A1.75 1.75 0 009.336 0H3.75A1.75 1.75 0 002 1.75v11.5c0 .649.353 1.214.874 1.515a.75.75 0 10.752-1.298.25.25 0 01-.126-.217V1.75zM8.75 3a.75.75 0 000 1.5h.5a.75.75 0 000-1.5h-.5zM6 5.25a.75.75 0 01.75-.75h.5a.75.75 0 010 1.5h-.5A.75.75 0 016 5.25zm2 1.5A.75.75 0 018.75 6h.5a.75.75 0 010 1.5h-.5A.75.75 0 018 6.75zm-1.25.75a.75.75 0 000 1.5h.5a.75.75 0 000-1.5h-.5zM8 9.75A.75.75 0 018.75 9h.5a.75.75 0 010 1.5h-.5A.75.75 0 018 9.75zm-.75.75a1.75 1.75 0 00-1.75 1.75v3c0 .414.336.75.75.75h2.5a.75.75 0 00.75-.75v-3a1.75 1.75 0 00-1.75-1.75h-.5zM7 12.25a.25.25 0 01.25-.25h.5a.25.25 0 01.25.25v2.25H7v-2.25z">
-      </path>
-    </svg>Fast Download ZIP${i}</a>`;
+  $("a[data-open-app='link']").each(function () {
+    var span = $(`<li class="Box-row p-0"></li>`);
+    var href = $(this).attr("href");
+    var clone = $(this).clone().removeAttr("data-hydro-click data-hydro-click-hmac data-ga-click");
+    clone.addClass("Box-row Box-row--hover-gray");
+    for (const i in download_set) {
+      if (download_set.hasOwnProperty(i)) {
+        const element = download_set[i];
+        var span1 = clone.clone();
+        span1.attr({ "href": mirror_url[element] + href, "title": mirror_url[element] });
+        span1.html(span1.html().replace("Download ZIP", `Fast Download ZIP${i}`))
+        span = span.clone().append(span1)
       }
-    });
-    span += `</li>`;
-    $(this).after(span);
+    }
+    $(this).parent().after(span);
   });
 
   //Download Releases
   $(".Box--condensed").each(function () {
     $(this).find(".flex-items-center>a").each(function () {
       var href = $(this).attr("href");
-      $(this).next().append(DownloadHref(href));
+      var span = "";
       if (!IsPC()) {
-        $(".d-flex").removeClass("d-flex");
+        span = `<div style="text-align: right;">` + DownloadHref(href) + `</div>`
+      } else {
+        span = `<small style="text-align: right;">` + DownloadHref(href) + `</small>`
       }
+      $(this).next().append(span);
     });
-
+    if (!IsPC()) {
+      $(this).find(".d-flex").removeClass("d-flex");
+    }
     $(this).find(".d-block.Box-body>a").each(function () {
       var href = $(this).attr("href");
-      $(this).after(DownloadHref(href));
+      $(this).after(`<small style="text-align: right;">` + DownloadHref(href) + `</small>`);
       $(this).parent().addClass("d-flex  flex-justify-between");
     });
   });
 
+  // Raw
+  $("#raw-url").each(function () {
+    var href = $(this).attr("href");
+    var text = $(this).text()
+    for (const i in raw_set) {
+      if (raw_set.hasOwnProperty(i)) {
+        const element = raw_set[i];
+        var span = $(this).clone().removeAttr("id");
+        span.attr({
+          "href": mirror_url[element] + href,
+          "title": mirror_url[element]
+        })
+        span.text(text + i)
+        $(this).before(span);
+      }
+    }
+  });
+
   function DownloadHref(href) {
-    var span = `<small>`;
+    var span = "";
     for (let i in download_set) {
       span += `<a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow"
       href="${mirror_url[download_set[i]] + href}" title="${mirror_url[download_set[i]]}">快速下载${i}</a>`;
     }
-    span += `</small>`;
     return span;
   }
 

@@ -8,6 +8,8 @@
 
 该脚本在[GitHub 镜像加速下载-码酷博客-改](https://greasyfork.org/zh-CN/scripts/391911)基础上修改：
 
+## [[预览效果]](REANDME\README.md)
+
 下载安装地址：
 
 <https://raw.githubusercontent.com/RC1844/FastGithub/master/FastGithub.js>
@@ -15,14 +17,6 @@
 <https://download.fastgit.org/RC1844/FastGithub/master/FastGithub.js>(无法下载安装的请使用该链接)
 
 或：从[Greasyfork](https://greasyfork.org/zh-CN/scripts/397419)安装
-
-<figure class="half">
-    <img src="REANDME\releases2.png">
-    <img src="REANDME\releases1.png">
-</figure>
-<figure class="half">
-    <img src="REANDME\releases3.png">
-</figure>
 
 ## 已知的 GitHub 镜像(含失效站点)
 
@@ -43,13 +37,13 @@
 只需要将[基础教程](https://github.com/EtherDream/jsproxy/tree/master/cf-worker)中[index.js](https://raw.githubusercontent.com/EtherDream/jsproxy/master/cf-worker/index.js)的代码：
 
 ```js
-const ASSET_URL = 'https://etherdream.github.io/jsproxy'
+const ASSET_URL = "https://etherdream.github.io/jsproxy";
 ```
 
 改为
 
 ```js
-const ASSET_URL = 'https://github.com'
+const ASSET_URL = "https://github.com";
 ```
 
 即可
@@ -67,6 +61,13 @@ const ASSET_URL = 'https://github.com'
 [zmirror](https://github.com/aploium/zmirror)
 
 ## 更新日志
+
+v1.5.0
+
+1. 增加对 Raw 按钮的镜像
+2. 缩减 HTML 代码，使用 js 拷贝
+3. 更换镜像网站按钮的插入位置
+4. 调整插入次序，速度快的在先
 
 v1.4.5-v1.4.7
 
