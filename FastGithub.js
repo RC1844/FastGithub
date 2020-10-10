@@ -38,7 +38,7 @@
   var clone_set = [1, 8, 0, 6, 7];
   var mirror_set = [1, 8, 0, 3, 2, 5];
   var download_set = [4, 8, 2, 5];
-  var raw_set = [1, 8, 3, 2, 5];
+  var raw_set = [1, 3, 2, 5];
   //其他
   var other_url = new Array();
   other_url = [{
