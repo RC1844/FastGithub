@@ -16,7 +16,7 @@
 
 <https://raw.githubusercontent.com/RC1844/FastGithub/master/FastGithub.js>
 
-<https://download.fastgit.org/RC1844/FastGithub/master/FastGithub.js>(无法下载安装的请使用该链接)
+<https://raw.fastgit.org/RC1844/FastGithub/master/FastGithub.js>(无法下载安装的请使用该链接)
 
 或：从[Greasyfork](https://greasyfork.org/zh-CN/scripts/397419)安装
 
