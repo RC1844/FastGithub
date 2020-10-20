@@ -64,6 +64,11 @@ const ASSET_URL = "https://github.com";
 
 ## 更新日志
 
+v1.5.1
+
+1. 增加站点jsDelivr，更换自有站点域名(租期1年，不知道有没有加成)
+2. 为了添加jsDelivr而添加函数拖慢性能
+
 v1.5.0
 
 1. 增加对 Raw 按钮的镜像
