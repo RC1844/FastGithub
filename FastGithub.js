@@ -41,7 +41,7 @@
   MirrorUrl[6] = "https://gitclone.com/github.com";
   MirrorUrl[7] = "git@git.zhlh6.cn:";
   MirrorUrl[8] = "https://github-speedup.laiczhang.com";
-  MirrorUrl[9] = "https://cdn.jsdelivr.net/gh/";
+  MirrorUrl[9] = "https://cdn.jsdelivr.net/gh";
   //添加对应索引即可使用
   var CloneSet = [1, 8, 0, 6];
   var MirrorSet = [1, 8, 0, 3, 2, 5];
@@ -154,7 +154,13 @@
     for (let i in CloneSet) {
       info += listHtml(MirrorUrl[MirrorSet[i]] + str3, `镜像浏览${i}`);
     }
-    info += listHtml(MirrorUrl[9] + a[3] + "/" + a[4] + "/", "jsDelivr");
+    if (a.length == 5 || str3.includes("/tree/") || str3.includes("/blob/")) {
+      var Html = MirrorUrl[9] + str3.replace("/tree/", "@").replace("/blob/", "@");
+      if (!str3.includes("/blob/")) {
+        Html += "/";
+      }
+      info += listHtml(Html, "jsDelivr");
+    }
     if (location.hostname != "github.com") {
       info += listHtml(`https://github.com${str3}`, "返回GitHub");
     }
@@ -257,11 +263,20 @@
         span.attr({
           href: MirrorUrl[element] + href,
           title: MirrorUrl[element],
+          target: "_blank",
         });
         span.text(text + i);
         $(this).before(span);
       }
     }
+    var span = $(this).clone().removeAttr("id");
+    span.attr({
+      href: MirrorUrl[9] + href.replace("/raw/", "@"),
+      title: MirrorUrl[9],
+      target: "_blank",
+    });
+    span.text("jsDelivr");
+    $(this).before(span);
   });
 
   function downloadHref(href) {
