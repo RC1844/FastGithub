@@ -64,6 +64,11 @@ const ASSET_URL = "https://github.com";
 
 ## 更新日志
 
+v1.5.2
+
+1. 从隔壁（Github 增强 - 高速下载）偷师使用$(document).on(）; 方法
+2. 由于上一点，所以代码结构又大改
+
 v1.5.1
 
 1. 增加站点jsDelivr，更换自有站点域名(租期1年，不知道有没有加成)

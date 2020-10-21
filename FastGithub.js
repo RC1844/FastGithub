@@ -1,33 +1,32 @@
 // ==UserScript==
-// @icon https://github.githubassets.com/favicon.ico
-// @name GitHub镜像加速访问、克隆和下载
-// @namespace RC1844.FastGithub
-// @author RC1844
-// @homepageURL https://github.com/RC1844/FastGithub
-// @supportURL https://github.com/RC1844/FastGithub/issues
-// @license MIT License
-// @description 镜像访问GitHub、加速克隆和下载；适配Github新UI；增加新克隆站点；前往项目Github仓库查看免费搭建Github镜像站点方法
-// @include *://github.com/*
-// @include *://github*
-// @include *://hub.fastgit.org/*
-// @require http://cdn.bootcss.com/jquery/1.8.3/jquery.min.js
-// @version 1.5.1
-// @grant GM_addStyle
+// @icon          https://github.githubassets.com/favicon.ico
+// @name          GitHub镜像加速访问、克隆和下载
+// @namespace     RC1844.FastGithub
+// @author        RC1844
+// @homepageURL   https://github.com/RC1844/FastGithub
+// @supportURL    https://github.com/RC1844/FastGithub/issues
+// @license       MIT License
+// @description   镜像访问GitHub、加速克隆和下载；适配Github新UI；增加新克隆站点；前往项目Github仓库查看免费搭建Github镜像站点方法
+// @include       *://github.com/*
+// @include       *://github*
+// @include       *://hub.fastgit.org/*
+// @require       https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
+// @version       1.5.2
+// @run-at        document-end
+// @grant         GM_addStyle
 // ==/UserScript==
 
 (function () {
-  "use strict";
-
   //=true为启用，=false为禁用
   var clone = true;
   // var clone = false;
   var depth = true;
   // var depth = false;
-  var str1 = "";
+  var Setting = "";
   if (clone) {
-    str1 += "git clone ";
+    Setting += "git clone ";
     if (depth) {
-      str1 += "--depth=1 ";
+      Setting += "--depth=1 ";
     }
   }
 
@@ -47,6 +46,7 @@
   var MirrorSet = [1, 8, 0, 3, 2, 5];
   var DownloadSet = [4, 8, 2, 5];
   var RawSet = [1, 3, 2, 5];
+
   //其他
   var OtherUrl = new Array();
   OtherUrl = [
@@ -95,18 +95,162 @@
       name: "gh-proxy部署站点",
     },
     // {
-    // url: "",
-    // name: "",
+    // url: "", name: "",
     // },
   ];
+  var CloneList = addCloneList();
+  var OtherList = addOtherList();
+  addMenus(CloneList + addBrowseList() + OtherList);
+  addReleasesList();
+  addRawList();
+  addDownloadZip();
+  $(document).on("pjax:success", function (evt) {
+    addRawList();
+    addMenus(CloneList + addBrowseList() + OtherList);
+    addDownloadZip();
+  });
+  /**
+   * 添加Raw列表
+   */
+  function addRawList() {
+    $("#raw-url").each(function () {
+      var href = $(this).attr("href");
+      var text = $(this).text();
+      for (const i in RawSet) {
+        if (RawSet.hasOwnProperty(i)) {
+          const element = RawSet[i];
+          var span = $(this).clone().removeAttr("id");
+          span.attr({
+            href: MirrorUrl[element] + href,
+            title: MirrorUrl[element],
+            target: "_blank",
+          });
+          span.text(text + i);
+          $(this).before(span);
+        }
+      }
+      var span = $(this).clone().removeAttr("id");
+      span.attr({
+        href: MirrorUrl[9] + href.replace("/raw/", "@"),
+        title: MirrorUrl[9],
+        target: "_blank",
+      });
+      span.text("jsDelivr");
+      $(this).before(span);
+    });
+  }
 
-  var a = window.location.href.split("/");
-  var str2 = a[3] + "/" + a[4] + ".git";
-  var str3 = window.location.pathname;
+  /**
+   * Fast Download ZIP
+   */
+  function addDownloadZip() {
+    $("a[data-open-app='link']").each(function () {
+      var span = $(`<li class="Box-row p-0"></li>`);
+      var href = $(this).attr("href");
+      var clone = $(this)
+        .clone()
+        .removeAttr("data-hydro-click data-hydro-click-hmac data-ga-click");
+      clone.addClass("Box-row Box-row--hover-gray");
+      for (const i in DownloadSet) {
+        if (DownloadSet.hasOwnProperty(i)) {
+          const element = DownloadSet[i];
+          var span1 = clone.clone();
+          span1.attr({
+            href: MirrorUrl[element] + href,
+            title: MirrorUrl[element],
+          });
+          span1.html(
+            span1.html().replace("Download ZIP", `Fast Download ZIP${i}`)
+          );
+          span = span.clone().append(span1);
+        }
+      }
+      $(this).parent().after(span);
+    });
+  }
+  /**
+   * 添加Releases列表
+   */
+  function addReleasesList() {
+    $(".Box--condensed").each(function () {
+      $(this)
+        .find(".flex-items-center>a")
+        .each(function () {
+          var href = $(this).attr("href");
+          var span = "";
+          if (!IsPC()) {
+            span =
+              `<div style="text-align: right;">` +
+              downloadHref(href) +
+              `</div>`;
+          } else {
+            span =
+              `<small style="text-align: right;">` +
+              downloadHref(href) +
+              `</small>`;
+          }
+          $(this).next().append(span);
+        });
+      if (!IsPC()) {
+        $(this).find(".d-flex").removeClass("d-flex");
+      }
+      $(this)
+        .find(".d-block.Box-body>a")
+        .each(function () {
+          var href = $(this).attr("href");
+          $(this).after(
+            `<small style="text-align: right;">` +
+            downloadHref(href) +
+            `</small>`
+          );
+          $(this).parent().addClass("d-flex flex-justify-between");
+        });
 
-  //镜像列表
-  // $("div.flex-auto.min-width-0.width-fit.mr-3")
-  $("h1.flex-wrap.break-word.text-normal").each(function () {
+      function downloadHref(href) {
+        var span = "";
+        for (let i in DownloadSet) {
+          span += `<a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow" href="${MirrorUrl[DownloadSet[i]] + href
+            }" title="${MirrorUrl[DownloadSet[i]]}">快速下载${i}</a>`;
+        }
+        return span;
+      }
+      /**
+       * 检测是否为移动端
+       */
+      function IsPC() {
+        var userAgentInfo = navigator.userAgent;
+        var Agents = [
+          "Android",
+          "iPhone",
+          "SymbianOS",
+          "Windows Phone",
+          "iPad",
+          "iPod",
+        ];
+        var flag = true;
+        for (var v = 0; v < Agents.length; v++) {
+          if (userAgentInfo.indexOf(Agents[v]) > 0) {
+            flag = false;
+            break;
+          }
+        }
+        return flag;
+      }
+    });
+  }
+  /**
+   * 添加菜单列表
+   */
+  function addMenus(info) {
+    // $("div.flex-auto.min-width-0.width-fit.mr-3")
+    $("h1.flex-wrap.break-word.text-normal").append(info);
+  }
+  /**
+   * 添加克隆列表
+   */
+  function addCloneList() {
+    var href = window.location.href.split("/");
+    var git = href[3] + "/" + href[4] + ".git";
     var info = `<details class="details-reset details-overlay mr-0 mb-0" id="mirror-menu">
   <summary class="btn  ml-2 btn-primary" data-hotkey="m" title="打开列表" aria-haspopup="menu" role="button">
     <span class="css-truncate-target" data-menu-button="">镜像网站</span>
@@ -143,168 +287,83 @@
             <div class=" btn-block"
               style="padding: 4px;background-color: #ffcccc;color: #990000;border-top-left-radius: 3px;border-top-right-radius: 3px;"
               role="alert">请不要在镜像网站登录账号，若因此造成任何损失本人概不负责</div> `;
-
     //克隆列表
     for (let i in CloneSet) {
-      info += cloneHtml(str1 + MirrorUrl[CloneSet[i]] + "/" + str2);
+      info += cloneHtml(Setting + MirrorUrl[CloneSet[i]] + "/" + git);
     }
-    info += cloneHtml(str1 + MirrorUrl[7] + str2);
-
-    //浏览列表
+    info += cloneHtml(Setting + MirrorUrl[7] + git);
+    function cloneHtml(Url) {
+      return `<div class="input-group">
+              <input type="text" class="form-control input-monospace input-sm" value="${Url}" readonly=""
+                data-autoselect="">
+              <div class="input-group-button">
+                <clipboard-copy value="${Url}" class="btn btn-sm"><svg class="octicon octicon-clippy"
+                    viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                      d="M5.75 1a.75.75 0 00-.75.75v3c0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75v-3a.75.75 0 00-.75-.75h-4.5zm.75 3V2.5h3V4h-3zm-2.874-.467a.75.75 0 00-.752-1.298A1.75 1.75 0 002 3.75v9.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0014 13.25v-9.5a1.75 1.75 0 00-.874-1.515.75.75 0 10-.752 1.298.25.25 0 01.126.217v9.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-9.5a.25.25 0 01.126-.217z">
+                    </path>
+                  </svg></clipboard-copy>
+              </div>
+            </div>`;
+    }
+    return info;
+  }
+  /**
+   * 添加镜像浏览列表
+   */
+  function addBrowseList() {
+    var info = ``;
+    var href = window.location.href.split("/");
+    var path = window.location.pathname;
     for (let i in CloneSet) {
-      info += listHtml(MirrorUrl[MirrorSet[i]] + str3, `镜像浏览${i}`);
+      info += listHtml(MirrorUrl[MirrorSet[i]] + path, `镜像浏览${i}`);
     }
-    if (a.length == 5 || str3.includes("/tree/") || str3.includes("/blob/")) {
-      var Html = MirrorUrl[9] + str3.replace("/tree/", "@").replace("/blob/", "@");
-      if (!str3.includes("/blob/")) {
+    if (
+      href.length == 5 ||
+      path.includes("/tree/") ||
+      path.includes("/blob/")
+    ) {
+      var Html =
+        MirrorUrl[9] + path.replace("/tree/", "@").replace("/blob/", "@");
+      if (!path.includes("/blob/")) {
         Html += "/";
       }
       info += listHtml(Html, "jsDelivr");
     }
     if (location.hostname != "github.com") {
-      info += listHtml(`https://github.com${str3}`, "返回GitHub");
+      info += listHtml(`https://github.com${path}`, "返回GitHub");
     }
+    return info;
+  }
 
-    info += `
+  /**
+   * 添加其他列表
+   */
+  function addOtherList() {
+    var info = `
           </div>
         </div>
         <div role="tabpanel" class="d-flex flex-column flex-auto overflow-auto" tabindex="0" hidden="">
           <div class="SelectMenu-list">
             `;
-
     //其他列表
     OtherUrl.forEach((element) => {
       info += listHtml(element.url, element.name);
     });
-
     info += `</div>
         </div>
       </tab-container>
     </div>
   </details-menu>
 </details>`;
-
-    function cloneHtml(Url) {
-      return `<div class="input-group">
-  <input type="text" class="form-control input-monospace input-sm" value="${Url}" readonly="" data-autoselect="">
-  <div class="input-group-button">
-    <clipboard-copy value="${Url}" class="btn btn-sm"><svg class="octicon octicon-clippy" viewBox="0 0 16 16"
-        version="1.1" width="16" height="16" aria-hidden="true">
-        <path fill-rule="evenodd"
-          d="M5.75 1a.75.75 0 00-.75.75v3c0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75v-3a.75.75 0 00-.75-.75h-4.5zm.75 3V2.5h3V4h-3zm-2.874-.467a.75.75 0 00-.752-1.298A1.75 1.75 0 002 3.75v9.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0014 13.25v-9.5a1.75 1.75 0 00-.874-1.515.75.75 0 10-.752 1.298.25.25 0 01.126.217v9.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-9.5a.25.25 0 01.126-.217z">
-        </path>
-      </svg></clipboard-copy>
-  </div>
-</div>`;
-    }
-
-    function listHtml(Url, Name) {
-      return `<a class="SelectMenu-item" href="${Url}" target="_blank" title="${Url}" role="menuitemradio"
+    return info;
+  }
+  function listHtml(Url, Name) {
+    return `<a class="SelectMenu-item" href="${Url}" target="_blank" title="${Url}" role="menuitemradio"
   aria-checked="false" rel="nofollow">
   <span class="css-truncate css-truncate-overflow" style="text-align:center;">
     ${Name}
   </span>
 </a>`;
-    }
-
-    $(this).append(info);
-  });
-  //Fast Download ZIP
-  $("a[data-open-app='link']").each(function () {
-    var span = $(`<li class="Box-row p-0"></li>`);
-    var href = $(this).attr("href");
-    var clone = $(this).clone().removeAttr("data-hydro-click data-hydro-click-hmac data-ga-click");
-    clone.addClass("Box-row Box-row--hover-gray");
-    for (const i in DownloadSet) {
-      if (DownloadSet.hasOwnProperty(i)) {
-        const element = DownloadSet[i];
-        var span1 = clone.clone();
-        span1.attr({
-          href: MirrorUrl[element] + href,
-          title: MirrorUrl[element],
-        });
-        span1.html(span1.html().replace("Download ZIP", `Fast Download ZIP${i}`));
-        span = span.clone().append(span1);
-      }
-    }
-    $(this).parent().after(span);
-  });
-
-  //Download Releases
-  $(".Box--condensed").each(function () {
-    $(this).find(".flex-items-center>a").each(function () {
-      var href = $(this).attr("href");
-      var span = "";
-      if (isMobile()) {
-        span = `<div style="text-align: right;">` + downloadHref(href) + `</div>`;
-      } else {
-        span = `<small style="text-align: right;">` + downloadHref(href) + `</small>`;
-      }
-      $(this).next().append(span);
-    });
-    if (isMobile()) {
-      $(this).find(".d-flex").removeClass("d-flex");
-    }
-    $(this).find(".d-block.Box-body>a").each(function () {
-      var href = $(this).attr("href");
-      $(this).after(`<small style="text-align: right;">` + downloadHref(href) + `</small>`);
-      $(this).parent().addClass("d-flex flex-justify-between");
-    });
-  });
-
-  // Raw
-  $("#raw-url").each(function () {
-    var href = $(this).attr("href");
-    var text = $(this).text();
-    for (const i in RawSet) {
-      if (RawSet.hasOwnProperty(i)) {
-        const element = RawSet[i];
-        var span = $(this).clone().removeAttr("id");
-        span.attr({
-          href: MirrorUrl[element] + href,
-          title: MirrorUrl[element],
-          target: "_blank",
-        });
-        span.text(text + i);
-        $(this).before(span);
-      }
-    }
-    var span = $(this).clone().removeAttr("id");
-    span.attr({
-      href: MirrorUrl[9] + href.replace("/raw/", "@"),
-      title: MirrorUrl[9],
-      target: "_blank",
-    });
-    span.text("jsDelivr");
-    $(this).before(span);
-  });
-
-  function downloadHref(href) {
-    var span = "";
-    for (let i in DownloadSet) {
-      span += `<a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow" href="${MirrorUrl[DownloadSet[i]] + href
-        }" title="${MirrorUrl[DownloadSet[i]]}">快速下载${i}</a>`;
-    }
-    return span;
-  }
-
-  async function isMobile() {
-    var userAgent = navigator.userAgent;
-    console.log(userAgent);
-    let agents = [
-      "Android",
-      "iPhone",
-      "SymbianOS",
-      "Windows Phone",
-      "iPad",
-      "iPod",
-    ];
-    for (let agent of agents) {
-      if (userAgent.indexOf(agent) > 0) {
-        console.log(agent);
-        return true;
-      }
-    }
-    return false;
   }
 })();
