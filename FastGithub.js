@@ -11,7 +11,7 @@
 // @include       *://github*
 // @include       *://hub.fastgit.org/*
 // @require       https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
-// @version       1.5.2
+// @version       1.5.3
 // @run-at        document-end
 // @grant         GM_addStyle
 // ==/UserScript==
@@ -30,84 +30,51 @@
     }
   }
 
-  var MirrorUrl = new Array();
-  MirrorUrl[0] = "https://github.com.cnpmjs.org";
-  MirrorUrl[1] = "https://hub.fastgit.org";
-  MirrorUrl[2] = "https://github.wuyanzheshui.workers.dev";
-  MirrorUrl[3] = "https://github.bajins.com";
-  MirrorUrl[4] = "https://download.fastgit.org";
-  MirrorUrl[5] = "https://github.rc1844.ml";
-  MirrorUrl[6] = "https://gitclone.com/github.com";
-  MirrorUrl[7] = "git@git.zhlh6.cn:";
-  MirrorUrl[8] = "https://github-speedup.laiczhang.com";
-  MirrorUrl[9] = "https://cdn.jsdelivr.net/gh";
+  var MirrorUrl = new Array();//["Url", "Name", "Tip"]
+  MirrorUrl[0] = ["https://github.com.cnpmjs.org", "Cnpmjs", ""];
+  MirrorUrl[1] = ["https://hub.fastgit.org", "Fastgit", ""];
+  MirrorUrl[2] = ["https://github.wuyanzheshui.workers.dev", "CF加速 1", "每日10万次调用上限"];
+  MirrorUrl[3] = ["https://github.bajins.com", "Bajins", "Bajins个人站点"];
+  MirrorUrl[4] = ["https://download.fastgit.org", "Fastgit", ""];
+  MirrorUrl[5] = ["https://github.rc1844.ml", "CF加速 2", MirrorUrl[2][2]];
+  MirrorUrl[6] = ["https://gitclone.com/github.com", "GitClone", ""];
+  MirrorUrl[7] = ["git@git.zhlh6.cn:", "加速你的Github", "利用ucloud提供的GlobalSSH"];
+  MirrorUrl[8] = ["https://github-speedup.laiczhang.com", "laiczhang", ""];
+  MirrorUrl[9] = ["https://cdn.jsdelivr.net/gh", "jsDelivr", "项目当前分支总文件大小不可超过 50MB"];
+  MirrorUrl[10] = ["https://g.ioiox.com/https://github.com", "Ioiox", "CN2 GIA 线路"];
+  MirrorUrl[11] = ["https://download.fastgit.org", "Fastgit", ""];
   //添加对应索引即可使用
-  var CloneSet = [1, 8, 0, 6];
+  var CloneSet = [1, 8, 0, 6, 10];
   var MirrorSet = [1, 8, 0, 3, 2, 5];
-  var DownloadSet = [4, 8, 2, 5];
-  var RawSet = [1, 3, 2, 5];
+  var DownloadSet = [4, 8, 2, 5, 10];
+  var RawSet = [11, 3, 2, 5];
 
   //其他
   var OtherUrl = new Array();
   OtherUrl = [
-    {
-      url: "https://github.com/RC1844/FastGithub",
-      name: "脚本Github仓库地址，点个赞谢谢",
-    },
-    {
-      url: "https://greasyfork.org/zh-CN/scripts/397419",
-      name: "GreasyFork地址，希望可以给我评分收藏",
-    },
-    {
-      url: "https://minhaskamal.github.io/DownGit",
-      name: "DownGit",
-    },
-    {
-      url: "https://d.serctl.com/",
-      name: "GitHub中转下载",
-    },
-    {
-      url: "https://github.zhlh6.cn/",
-      name: "加速你的Github",
-    },
-    {
-      url: "http://gitd.cc/",
-      name: "GitHub代下载",
-    },
-    {
-      url: "https://gh.isteed.cc/",
-      name: "gh-proxy部署站点",
-    },
-    {
-      url: "https://github.zsxwz.workers.dev/",
-      name: "gh-proxy部署站点",
-    },
-    {
-      url: "https://gh.api.99988866.xyz/",
-      name: "gh-proxy部署站点",
-    },
-    {
-      url: "https://g.ioiox.com/",
-      name: "gh-proxy部署站点",
-    },
-    {
-      url: "https://gh.sky-and-poem.fun/",
-      name: "gh-proxy部署站点",
-    },
-    // {
-    // url: "", name: "",
-    // },
+    ["https://github.com/RC1844/FastGithub", "脚本Github仓库地址，点个赞谢谢"],
+    ["https://greasyfork.org/zh-CN/scripts/397419", "GreasyFork地址，希望可以给我评分收藏"],
+    ["https://minhaskamal.github.io/DownGit", "DownGit"],
+    ["https://gitclone.com", "GitClone"],
+    ["https://d.serctl.com", "GitHub中转下载"],
+    ["https://github.zhlh6.cn/", "加速你的Github"],
+    ["http://gitd.cc", "GitHub代下服务"],
+    ["https://gh.isteed.cc", "gh-proxy部署站点"],
+    ["https://github.zsxwz.workers.dev", "gh-proxy部署站点"],
+    ["https://gh.api.99988866.xyz", "gh-proxy部署站点"],
+    ["https://gh.sky-and-poem.fun", "gh-proxy部署站点"],
   ];
   var CloneList = addCloneList();
   var OtherList = addOtherList();
   addMenus(CloneList + addBrowseList() + OtherList);
   addReleasesList();
-  addRawList();
   addDownloadZip();
-  $(document).on("pjax:success", function (evt) {
-    addRawList();
+  addRawList();
+  $(document).on("pjax:success", function () {
     addMenus(CloneList + addBrowseList() + OtherList);
     addDownloadZip();
+    addReleasesList();
+    addRawList();
   });
   /**
    * 添加Raw列表
@@ -115,27 +82,23 @@
   function addRawList() {
     $("#raw-url").each(function () {
       var href = $(this).attr("href");
-      var text = $(this).text();
-      for (const i in RawSet) {
-        if (RawSet.hasOwnProperty(i)) {
-          const element = RawSet[i];
-          var span = $(this).clone().removeAttr("id");
-          span.attr({
-            href: MirrorUrl[element] + href,
-            title: MirrorUrl[element],
-            target: "_blank",
-          });
-          span.text(text + i);
-          $(this).before(span);
-        }
-      }
+      RawSet.forEach((element) => {
+        var span = $(this).clone().removeAttr("id");
+        span.attr({
+          href: MirrorUrl[element][0] + href,
+          title: MirrorUrl[element][2],
+          target: "_blank",
+        });
+        span.text(MirrorUrl[element][1]);
+        $(this).before(span);
+      });
       var span = $(this).clone().removeAttr("id");
       span.attr({
-        href: MirrorUrl[9] + href.replace("/raw/", "@"),
-        title: MirrorUrl[9],
+        href: MirrorUrl[9][0] + href.replace("/raw/", "@"),
+        title: MirrorUrl[9][2],
         target: "_blank",
       });
-      span.text("jsDelivr");
+      span.text(MirrorUrl[9][1]);
       $(this).before(span);
     });
   }
@@ -151,20 +114,17 @@
         .clone()
         .removeAttr("data-hydro-click data-hydro-click-hmac data-ga-click");
       clone.addClass("Box-row Box-row--hover-gray");
-      for (const i in DownloadSet) {
-        if (DownloadSet.hasOwnProperty(i)) {
-          const element = DownloadSet[i];
-          var span1 = clone.clone();
-          span1.attr({
-            href: MirrorUrl[element] + href,
-            title: MirrorUrl[element],
-          });
-          span1.html(
-            span1.html().replace("Download ZIP", `Fast Download ZIP${i}`)
-          );
-          span = span.clone().append(span1);
-        }
-      }
+      DownloadSet.forEach((element) => {
+        var span1 = clone.clone();
+        span1.attr({
+          href: MirrorUrl[element][0] + href,
+          title: MirrorUrl[element][2],
+        });
+        span1.html(
+          span1.html().replace("Download ZIP", `Download ZIP(${MirrorUrl[element][1]})`)
+        );
+        span = span.clone().append(span1);
+      });
       $(this).parent().after(span);
     });
   }
@@ -208,10 +168,10 @@
 
       function downloadHref(href) {
         var span = "";
-        for (let i in DownloadSet) {
-          span += `<a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow" href="${MirrorUrl[DownloadSet[i]] + href
-            }" title="${MirrorUrl[DownloadSet[i]]}">快速下载${i}</a>`;
-        }
+        DownloadSet.forEach((element) => {
+          span += `<a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow" href="${MirrorUrl[element][0] + href
+            }" title="${MirrorUrl[element][2]}">${MirrorUrl[element][1]}</a>`;
+        });
         return span;
       }
       /**
@@ -228,7 +188,8 @@
           "iPod",
         ];
         var flag = true;
-        for (var v = 0; v < Agents.length; v++) {
+        const len = Agents.length;
+        for (var v = 0; v < len; v++) {
           if (userAgentInfo.indexOf(Agents[v]) > 0) {
             flag = false;
             break;
@@ -253,7 +214,7 @@
     var git = href[3] + "/" + href[4] + ".git";
     var info = `<details class="details-reset details-overlay mr-0 mb-0" id="mirror-menu">
   <summary class="btn  ml-2 btn-primary" data-hotkey="m" title="打开列表" aria-haspopup="menu" role="button">
-    <span class="css-truncate-target" data-menu-button="">镜像网站</span>
+    <span class="css-truncate-target" data-menu-button="">克隆与镜像</span>
     <span class="dropdown-caret"></span>
   </summary>
 
@@ -288,12 +249,13 @@
               style="padding: 4px;background-color: #ffcccc;color: #990000;border-top-left-radius: 3px;border-top-right-radius: 3px;"
               role="alert">请不要在镜像网站登录账号，若因此造成任何损失本人概不负责</div> `;
     //克隆列表
-    for (let i in CloneSet) {
-      info += cloneHtml(Setting + MirrorUrl[CloneSet[i]] + "/" + git);
-    }
-    info += cloneHtml(Setting + MirrorUrl[7] + git);
-    function cloneHtml(Url) {
-      return `<div class="input-group">
+    CloneSet.forEach((element) => {
+      info += cloneHtml(Setting + MirrorUrl[element][0] + "/" + git, MirrorUrl[element][1]);
+    });
+    info += cloneHtml(Setting + MirrorUrl[7][0] + git, MirrorUrl[7][1]);
+    info += cloneHtml("git remote set-url origin https://github.com/" + git, "还原GitHub仓库地址");
+    function cloneHtml(Url, Tip) {
+      return `<div class="input-group" title="${Tip}">
               <input type="text" class="form-control input-monospace input-sm" value="${Url}" readonly=""
                 data-autoselect="">
               <div class="input-group-button">
@@ -315,20 +277,20 @@
     var info = ``;
     var href = window.location.href.split("/");
     var path = window.location.pathname;
-    for (let i in CloneSet) {
-      info += listHtml(MirrorUrl[MirrorSet[i]] + path, `镜像浏览${i}`);
-    }
+    MirrorSet.forEach((element) => {
+      info += listHtml(MirrorUrl[element][0] + path, `镜像浏览(${MirrorUrl[element][1]})`, MirrorUrl[element][2]);
+    });
     if (
       href.length == 5 ||
       path.includes("/tree/") ||
       path.includes("/blob/")
     ) {
       var Html =
-        MirrorUrl[9] + path.replace("/tree/", "@").replace("/blob/", "@");
+        MirrorUrl[9][0] + path.replace("/tree/", "@").replace("/blob/", "@");
       if (!path.includes("/blob/")) {
         Html += "/";
       }
-      info += listHtml(Html, "jsDelivr");
+      info += listHtml(Html, `镜像浏览(${MirrorUrl[9][1]})`, MirrorUrl[9][2]);
     }
     if (location.hostname != "github.com") {
       info += listHtml(`https://github.com${path}`, "返回GitHub");
@@ -348,7 +310,7 @@
             `;
     //其他列表
     OtherUrl.forEach((element) => {
-      info += listHtml(element.url, element.name);
+      info += listHtml(element[0], element[1]);
     });
     info += `</div>
         </div>
@@ -358,8 +320,8 @@
 </details>`;
     return info;
   }
-  function listHtml(Url, Name) {
-    return `<a class="SelectMenu-item" href="${Url}" target="_blank" title="${Url}" role="menuitemradio"
+  function listHtml(Url, Name, Tip = "") {
+    return `<a class="SelectMenu-item" href="${Url}" target="_blank" title="${Tip}" role="menuitemradio"
   aria-checked="false" rel="nofollow">
   <span class="css-truncate css-truncate-overflow" style="text-align:center;">
     ${Name}
