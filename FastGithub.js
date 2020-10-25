@@ -1,12 +1,12 @@
 // ==UserScript==
 // @icon          https://github.githubassets.com/favicon.ico
-// @name          GitHub镜像加速访问、克隆和下载
+// @name          FastGithub 镜像加速访问、克隆和下载
 // @namespace     RC1844.FastGithub
 // @author        RC1844
 // @homepageURL   https://github.com/RC1844/FastGithub
 // @supportURL    https://github.com/RC1844/FastGithub/issues
 // @license       MIT License
-// @description   镜像访问GitHub、加速克隆和下载；适配Github新UI；增加新克隆站点；前往项目Github仓库查看免费搭建Github镜像站点方法
+// @description   镜像访问GitHub，极速Clone、Release/Raw/Zip加速；十几个站点可供选择；前往项目Github仓库查看免费搭建Github镜像站点方法
 // @include       *://github.com/*
 // @include       *://github*
 // @include       *://hub.fastgit.org/*
