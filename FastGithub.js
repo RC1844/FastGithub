@@ -11,7 +11,7 @@
 // @include       *://github*
 // @include       *://hub.fastgit.org/*
 // @require       https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
-// @version       1.5.3
+// @version       1.5.4
 // @run-at        document-end
 // @grant         GM_addStyle
 // ==/UserScript==
@@ -42,12 +42,13 @@
   MirrorUrl[8] = ["https://github-speedup.laiczhang.com", "laiczhang", ""];
   MirrorUrl[9] = ["https://cdn.jsdelivr.net/gh", "jsDelivr", "项目当前分支总文件大小不可超过 50MB"];
   MirrorUrl[10] = ["https://g.ioiox.com/https://github.com", "Ioiox", "CN2 GIA 线路"];
-  MirrorUrl[11] = ["https://download.fastgit.org", "Fastgit", ""];
+  MirrorUrl[11] = ["https://raw.fastgit.org", "Fastgit", ""];
+  MirrorUrl[12] = ["https://cdn.staticaly.com/gh", "Statically", "只能浏览图片和源代码文件，文件大小限制为30MB"]
   //添加对应索引即可使用
   var CloneSet = [1, 8, 0, 6, 10];
   var MirrorSet = [1, 8, 0, 3, 2, 5];
   var DownloadSet = [4, 8, 2, 5, 10];
-  var RawSet = [11, 3, 2, 5];
+  var RawSet = [3, 2, 5];
 
   //其他
   var OtherUrl = new Array();
@@ -59,10 +60,10 @@
     ["https://d.serctl.com", "GitHub中转下载"],
     ["https://github.zhlh6.cn/", "加速你的Github"],
     ["http://gitd.cc", "GitHub代下服务"],
-    ["https://gh.isteed.cc", "gh-proxy部署站点"],
-    ["https://github.zsxwz.workers.dev", "gh-proxy部署站点"],
-    ["https://gh.api.99988866.xyz", "gh-proxy部署站点"],
-    ["https://gh.sky-and-poem.fun", "gh-proxy部署站点"],
+    ["https://gh.isteed.cc", "gh-proxy部署站点1"],
+    ["https://github.zsxwz.workers.dev", "gh-proxy部署站点2"],
+    ["https://gh.api.99988866.xyz", "gh-proxy部署站点3"],
+    ["https://gh.sky-and-poem.fun", "gh-proxy部署站点4"],
   ];
   var CloneList = addCloneList();
   var OtherList = addOtherList();
@@ -82,24 +83,23 @@
   function addRawList() {
     $("#raw-url").each(function () {
       var href = $(this).attr("href");
+      rawHtml(11, MirrorUrl[11][0] + href.replace("/raw", ""));
       RawSet.forEach((element) => {
-        var span = $(this).clone().removeAttr("id");
+        rawHtml(element, MirrorUrl[element][0] + href);
+      });
+      rawHtml(9, MirrorUrl[9][0] + href.replace("/raw/", "@"));
+      rawHtml(12, MirrorUrl[12][0] + href.replace("/raw", ""));
+
+      function rawHtml(element, Url) {
+        var span = $("#raw-url").clone().removeAttr("id");
         span.attr({
-          href: MirrorUrl[element][0] + href,
+          href: Url,
           title: MirrorUrl[element][2],
           target: "_blank",
         });
         span.text(MirrorUrl[element][1]);
-        $(this).before(span);
-      });
-      var span = $(this).clone().removeAttr("id");
-      span.attr({
-        href: MirrorUrl[9][0] + href.replace("/raw/", "@"),
-        title: MirrorUrl[9][2],
-        target: "_blank",
-      });
-      span.text(MirrorUrl[9][1]);
-      $(this).before(span);
+        $("#raw-url").before(span);
+      }
     });
   }
 
@@ -140,7 +140,7 @@
           var span = "";
           if (!IsPC()) {
             span =
-              `<div style="text-align: right;">` +
+              `<div style="text-align: right; float: right">` +
               downloadHref(href) +
               `</div>`;
           } else {
