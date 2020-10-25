@@ -13,7 +13,6 @@
 // @require       https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
 // @version       1.5.4
 // @run-at        document-end
-// @grant         GM_addStyle
 // ==/UserScript==
 
 (function () {
@@ -31,18 +30,18 @@
   }
 
   var MirrorUrl = new Array();//["Url", "Name", "Tip"]
-  MirrorUrl[0] = ["https://github.com.cnpmjs.org", "Cnpmjs", ""];
-  MirrorUrl[1] = ["https://hub.fastgit.org", "Fastgit", ""];
+  MirrorUrl[0] = ["https://github.com.cnpmjs.org", "Cnpmjs", "由cnpmjs.org提供"];
+  MirrorUrl[1] = ["https://hub.fastgit.org", "FastGit", "由KevinZonda推动的FastGit项目，目前项目资金不足，接受捐赠中"];
   MirrorUrl[2] = ["https://github.wuyanzheshui.workers.dev", "CF加速 1", "每日10万次调用上限"];
-  MirrorUrl[3] = ["https://github.bajins.com", "Bajins", "Bajins个人站点"];
-  MirrorUrl[4] = ["https://download.fastgit.org", "Fastgit", ""];
+  MirrorUrl[3] = ["https://github.bajins.com", "Bajins", "Bajins的个人站点"];
+  MirrorUrl[4] = ["https://download.fastgit.org", "FastGit", MirrorUrl[1][2]];
   MirrorUrl[5] = ["https://github.rc1844.ml", "CF加速 2", MirrorUrl[2][2]];
-  MirrorUrl[6] = ["https://gitclone.com/github.com", "GitClone", ""];
+  MirrorUrl[6] = ["https://gitclone.com/github.com", "GitClone", "GitHub缓存加速网站，1元开会员尽享极速"];
   MirrorUrl[7] = ["git@git.zhlh6.cn:", "加速你的Github", "利用ucloud提供的GlobalSSH"];
-  MirrorUrl[8] = ["https://github-speedup.laiczhang.com", "laiczhang", ""];
+  MirrorUrl[8] = ["https://github-speedup.laiczhang.com", "laiczhang", "laiczhang的个人站点"];
   MirrorUrl[9] = ["https://cdn.jsdelivr.net/gh", "jsDelivr", "项目当前分支总文件大小不可超过 50MB"];
   MirrorUrl[10] = ["https://g.ioiox.com/https://github.com", "Ioiox", "CN2 GIA 线路"];
-  MirrorUrl[11] = ["https://raw.fastgit.org", "Fastgit", ""];
+  MirrorUrl[11] = ["https://raw.fastgit.org", "FastGit", MirrorUrl[1][2]];
   MirrorUrl[12] = ["https://cdn.staticaly.com/gh", "Statically", "只能浏览图片和源代码文件，文件大小限制为30MB"]
   //添加对应索引即可使用
   var CloneSet = [1, 8, 0, 6, 10];
@@ -55,8 +54,9 @@
   OtherUrl = [
     ["https://github.com/RC1844/FastGithub", "脚本Github仓库地址，点个赞谢谢"],
     ["https://greasyfork.org/zh-CN/scripts/397419", "GreasyFork地址，希望可以给我评分收藏"],
+    ["https://doc.fastgit.org/", "FastGit，资金不足，接受捐赠中"],
     ["https://minhaskamal.github.io/DownGit", "DownGit"],
-    ["https://gitclone.com", "GitClone"],
+    ["https://gitclone.com", "GitClone，1元开会员"],
     ["https://d.serctl.com", "GitHub中转下载"],
     ["https://github.zhlh6.cn/", "加速你的Github"],
     ["http://gitd.cc", "GitHub代下服务"],
