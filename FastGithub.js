@@ -32,10 +32,10 @@
   var MirrorUrl = new Array();//["Url", "Name", "Tip"]
   MirrorUrl[0] = ["https://github.com.cnpmjs.org", "Cnpmjs", "由cnpmjs.org提供"];
   MirrorUrl[1] = ["https://hub.fastgit.org", "FastGit", "由KevinZonda推动的FastGit项目，目前项目资金不足，接受捐赠中"];
-  MirrorUrl[2] = ["https://github.wuyanzheshui.workers.dev", "CF加速 1", "每日10万次调用上限"];
+  MirrorUrl[2] = ["https://github.wuyanzheshui.workers.dev", "CF加速 1", "每日10万次调用上限，由wuyanzheshui提供"];
   MirrorUrl[3] = ["https://github.bajins.com", "Bajins", "Bajins的个人站点"];
   MirrorUrl[4] = ["https://download.fastgit.org", "FastGit", MirrorUrl[1][2]];
-  MirrorUrl[5] = ["https://github.rc1844.ml", "CF加速 2", MirrorUrl[2][2]];
+  MirrorUrl[5] = ["https://github.rc1844.ml", "CF加速 2", "每日10万次调用上限，由RC1844提供"];
   MirrorUrl[6] = ["https://gitclone.com/github.com", "GitClone", "GitHub缓存加速网站，1元开会员尽享极速"];
   MirrorUrl[7] = ["git@git.zhlh6.cn:", "加速你的Github", "利用ucloud提供的GlobalSSH"];
   MirrorUrl[8] = ["https://github-speedup.laiczhang.com", "laiczhang", "laiczhang的个人站点"];
@@ -224,7 +224,7 @@
       <header class="SelectMenu-header">
         <span class="SelectMenu-title">镜像站点与快速克隆</span>
         <button class="SelectMenu-closeButton" type="button" data-toggle-for="mirror-menu"><svg aria-label="Close menu"
-            class="octicon octicon-x" viewBox="0 0 16 16" version="1.1" width="16" height="16" role="img">
+            class="octicon octicon-x" width="16" height="16" role="img">
             <path fill-rule="evenodd"
               d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z">
             </path>
@@ -234,20 +234,20 @@
       <tab-container class="d-flex flex-column js-branches-tags-tabs" style="min-height: 0;">
 
         <div class="SelectMenu-tabs" role="tablist">
-          <button class="SelectMenu-tab" type="button" data-filter-placeholder="Find or create a branch…" role="tab"
+          <button class="SelectMenu-tab" type="button" role="tab"
             aria-selected="true" tabindex="0">主要</button>
-          <button class="SelectMenu-tab" type="button" data-filter-placeholder="Find a tag" role="tab"
+          <button class="SelectMenu-tab" type="button" role="tab"
             aria-selected="false" tabindex="-1">其他</button>
         </div>
 
         <div role="tabpanel" class="d-flex flex-column flex-auto overflow-auto" tabindex="0">
           <div class="SelectMenu-list" data-filter-list="">
-            <div class=" btn-block"
-              style="padding: 4px;background-color: #ffffdd;color: #996600;border-top-left-radius: 3px;border-top-right-radius: 3px;"
-              role="alert">clone、depth命令的插入可手动编辑代码关闭</div>
-            <div class=" btn-block"
-              style="padding: 4px;background-color: #ffcccc;color: #990000;border-top-left-radius: 3px;border-top-right-radius: 3px;"
-              role="alert">请不要在镜像网站登录账号，若因此造成任何损失本人概不负责</div> `;
+            <div class="btn-block"
+              style="padding: 4px;background-color: #ffffdd;color: #996600;" role="alert">
+              clone、depth命令的插入可手动编辑代码关闭</div>
+            <div class="btn-block flash-error"
+              style="padding: 4px;color: #990000;" role="alert">
+              请不要在镜像网站登录账号，若因此造成任何损失本人概不负责</div> `;
     //克隆列表
     CloneSet.forEach((element) => {
       info += cloneHtml(Setting + MirrorUrl[element][0] + "/" + git, MirrorUrl[element][1]);
