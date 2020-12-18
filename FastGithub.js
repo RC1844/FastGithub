@@ -11,7 +11,7 @@
 // @include       *://github*
 // @include       *://hub.fastgit.org/*
 // @require       https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
-// @version       1.5.4
+// @version       1.5.5
 // @run-at        document-end
 // ==/UserScript==
 
@@ -35,7 +35,7 @@
   MirrorUrl[2] = ["https://github.wuyanzheshui.workers.dev", "CF加速 1", "每日10万次调用上限，由wuyanzheshui提供"];
   MirrorUrl[3] = ["https://github.bajins.com", "Bajins", "Bajins的个人站点"];
   MirrorUrl[4] = ["https://download.fastgit.org", "FastGit", MirrorUrl[1][2]];
-  MirrorUrl[5] = ["https://github.rc1844.ml", "CF加速 2", "每日10万次调用上限，由RC1844提供"];
+  MirrorUrl[5] = ["https://github.rc1844.workers.dev", "CF加速 2", "每日10万次调用上限，由RC1844提供"];
   MirrorUrl[6] = ["https://gitclone.com/github.com", "GitClone", "GitHub缓存加速网站，1元开会员尽享极速"];
   MirrorUrl[7] = ["git@git.zhlh6.cn:", "加速你的Github", "利用ucloud提供的GlobalSSH"];
   MirrorUrl[8] = ["https://github-speedup.laiczhang.com", "laiczhang", "laiczhang的个人站点"];
@@ -43,11 +43,13 @@
   MirrorUrl[10] = ["https://g.ioiox.com/https://github.com", "Ioiox", "CN2 GIA 线路"];
   MirrorUrl[11] = ["https://raw.fastgit.org", "FastGit", MirrorUrl[1][2]];
   MirrorUrl[12] = ["https://cdn.staticaly.com/gh", "Statically", "只能浏览图片和源代码文件，文件大小限制为30MB"]
+  MirrorUrl[13] = ["https://github.iapk.cc", "IAPK", "IAPK工具箱·Github下载器"]
+  MirrorUrl[14] = ["https://iapk.cc/github?url=https://github.com", "IAPK", "IAPK工具箱·Github下载器"]
   //添加对应索引即可使用
   var CloneSet = [1, 8, 0, 6, 10];
-  var MirrorSet = [1, 8, 0, 3, 2, 5];
-  var DownloadSet = [4, 8, 2, 5, 10];
-  var RawSet = [3, 2, 5];
+  var MirrorSet = [1, 8, 0, 3, 13, 2, 5];
+  var DownloadSet = [4, 8, 2, 5, 10, 14];
+  var RawSet = [3, 2, 5, 14];
 
   //其他
   var OtherUrl = new Array();
@@ -58,6 +60,7 @@
     ["https://minhaskamal.github.io/DownGit", "DownGit"],
     ["https://gitclone.com", "GitClone，1元开会员"],
     ["https://d.serctl.com", "GitHub中转下载"],
+    ["https://iapk.cc/github", "IAPK工具箱·Github下载器"],
     ["https://github.zhlh6.cn/", "加速你的Github"],
     ["http://gitd.cc", "GitHub代下服务"],
     ["https://gh.isteed.cc", "gh-proxy部署站点1"],

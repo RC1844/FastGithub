@@ -6,9 +6,9 @@
 
 ## 请不要在镜像网站登录账号，若因此造成任何损失本人概不负责
 
-本人并不会 js，所以只能改别人的代码
+本人并不会 js(现在会一点点了)，所以只能改别人的代码
 
-该脚本在[GitHub 镜像加速下载-码酷博客-改](https://greasyfork.org/zh-CN/scripts/391911)基础上修改：
+该脚本在[GitHub 镜像加速下载-码酷博客-改](https://greasyfork.org/zh-CN/scripts/391911)基础上修改(已经面目全非了)。
 
 ## [[预览效果]](REANDME/README.md)
 
@@ -64,11 +64,15 @@ const ASSET_URL = "https://github.com";
 
 ## 更新日志
 
+v1.5.5
+
+1. 增加站点IAPK工具箱:<https://iapk.cc/github>,该站点由[酷友@QZrom玩机](http://www.coolapk.com/u/2889405)提供，可使用镜像浏览与文件下载。
+
 v1.5.3-v1.5.4
 
 1. 所有按钮改为镜像站点的名字，部分有描述提示
 2. 效率性能进一步下降
-3. 增加站点<https://cdn.staticaly.com>
+3. 增加站点:<https://cdn.staticaly.com>
 4. 为手机端增加一些修饰，让网页更美观
 5. 修复部分 Raw 按钮失效问题
 6. 更换 addRawList()函数的结构
@@ -112,7 +116,7 @@ v1.4.0-1.4.3
 v1.3.1
 
 1. 取消新提供的下载站点
-2. 增加自建站点<https://github.rc1844.workers.dev> ，与<https://github.wuyanzheshui.workers.dev> 相同
+2. 增加自建站点:<https://github.rc1844.workers.dev> ，与<https://github.wuyanzheshui.workers.dev> 相同
 3. 自建方法请看下方
 
 v1.3.0
