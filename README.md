@@ -64,9 +64,13 @@ const ASSET_URL = "https://github.com";
 
 ## 更新日志
 
+v1.5.6
+
+1. 小修
+
 v1.5.5
 
-1. 增加站点IAPK工具箱:<https://iapk.cc/github>,该站点由[酷友@QZrom玩机](http://www.coolapk.com/u/2889405)提供，可使用镜像浏览与文件下载。
+1. 增加站点 IAPK 工具箱:<https://iapk.cc/github>,该站点由[酷友@QZrom 玩机](http://www.coolapk.com/u/2889405)提供，可使用镜像浏览与文件下载。
 
 v1.5.3-v1.5.4
 

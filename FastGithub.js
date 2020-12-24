@@ -11,7 +11,7 @@
 // @include       *://github*
 // @include       *://hub.fastgit.org/*
 // @require       https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
-// @version       1.5.5
+// @version       1.5.6
 // @run-at        document-end
 // ==/UserScript==
 
@@ -70,16 +70,20 @@
   ];
   var CloneList = addCloneList();
   var OtherList = addOtherList();
-  addMenus(CloneList + addBrowseList() + OtherList);
-  addReleasesList();
-  addDownloadZip();
-  addRawList();
+  var isPC = IsPC();
+  run();
   $(document).on("pjax:success", function () {
-    addMenus(CloneList + addBrowseList() + OtherList);
-    addDownloadZip();
-    addReleasesList();
-    addRawList();
+    run();
   });
+
+  function run() {
+    addMenus(CloneList + addBrowseList() + OtherList);
+    addReleasesList();
+    if (isPC) {
+      addDownloadZip();
+    }
+    addRawList();
+  }
   /**
    * 添加Raw列表
    */
@@ -141,7 +145,7 @@
         .each(function () {
           var href = $(this).attr("href");
           var span = "";
-          if (!IsPC()) {
+          if (!isPC) {
             span =
               `<div style="text-align: right; float: right">` +
               downloadHref(href) +
@@ -154,7 +158,7 @@
           }
           $(this).next().append(span);
         });
-      if (!IsPC()) {
+      if (!isPC) {
         $(this).find(".d-flex").removeClass("d-flex");
       }
       $(this)
@@ -177,30 +181,30 @@
         });
         return span;
       }
-      /**
-       * 检测是否为移动端
-       */
-      function IsPC() {
-        var userAgentInfo = navigator.userAgent;
-        var Agents = [
-          "Android",
-          "iPhone",
-          "SymbianOS",
-          "Windows Phone",
-          "iPad",
-          "iPod",
-        ];
-        var flag = true;
-        const len = Agents.length;
-        for (var v = 0; v < len; v++) {
-          if (userAgentInfo.indexOf(Agents[v]) > 0) {
-            flag = false;
-            break;
-          }
-        }
-        return flag;
-      }
     });
+  }
+  /**
+  * 检测是否为PC端
+  */
+  function IsPC() {
+    var userAgentInfo = navigator.userAgent;
+    var Agents = [
+      "Android",
+      "iPhone",
+      "SymbianOS",
+      "Windows Phone",
+      "iPad",
+      "iPod",
+    ];
+    var flag = true;
+    const len = Agents.length;
+    for (var v = 0; v < len; v++) {
+      if (userAgentInfo.indexOf(Agents[v]) > 0) {
+        flag = false;
+        break;
+      }
+    }
+    return flag;
   }
   /**
    * 添加菜单列表
