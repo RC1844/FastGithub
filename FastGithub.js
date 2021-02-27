@@ -11,7 +11,7 @@
 // @include       *://github*
 // @include       *://hub.fastgit.org/*
 // @require       https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
-// @version       1.5.7
+// @version       1.5.8
 // @run-at        document-end
 // ==/UserScript==
 
@@ -49,7 +49,7 @@
   //添加对应索引即可使用
   var CloneSet = [1, 8, 0, 6, 10];
   var MirrorSet = [1, 8, 0, 3, 13, 2, 5, 15];
-  var DownloadSet = [4, 8, 2, 5, 10, 15, 14];
+  var DownloadSet = [4, 8, 2, 5, 15, 10, 14];
   var RawSet = [3, 2, 5, 15, 14];
 
   //其他
@@ -83,10 +83,10 @@
 
   function run() {
     addMenus(CloneList + addBrowseList() + OtherList);
-    addReleasesList();
-    if (isPC) {
+    if (location.pathname.split("/")[3] == "releases")
+      addReleasesList();
+    if (isPC)
       addDownloadZip();
-    }
     addRawList();
   }
   /**
@@ -146,9 +146,7 @@
   function addReleasesList() {
     $(".Box--condensed").find("[href]").each(function () {
       var href = $(this).attr("href");
-      $(this).parent().after(`<div class="Box-body" >` +
-        downloadHref(href) +
-        `</div>`);
+      $(this).parent().after(`<div class="Box-body" >` + downloadHref(href) + `</div>`);
       $(this).parent().removeClass("Box-body");
 
       function downloadHref(href) {
