@@ -11,7 +11,7 @@
 // @include       *://github*
 // @include       *://hub.fastgit.org/*
 // @require       https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
-// @version       1.5.6
+// @version       1.5.7
 // @run-at        document-end
 // ==/UserScript==
 
@@ -45,11 +45,12 @@
   MirrorUrl[12] = ["https://cdn.staticaly.com/gh", "Statically", "只能浏览图片和源代码文件，文件大小限制为30MB"]
   MirrorUrl[13] = ["https://github.iapk.cc", "IAPK", "IAPK工具箱·Github下载器"]
   MirrorUrl[14] = ["https://iapk.cc/github?url=https://github.com", "IAPK", "IAPK工具箱·Github下载器"]
+  MirrorUrl[15] = ["https://gh.haval.gq", "CF加速 3", "每日10万次调用上限，由Ecalose提供"]
   //添加对应索引即可使用
   var CloneSet = [1, 8, 0, 6, 10];
-  var MirrorSet = [1, 8, 0, 3, 13, 2, 5];
-  var DownloadSet = [4, 8, 2, 5, 10, 14];
-  var RawSet = [3, 2, 5, 14];
+  var MirrorSet = [1, 8, 0, 3, 13, 2, 5, 15];
+  var DownloadSet = [4, 8, 2, 5, 10, 15, 14];
+  var RawSet = [3, 2, 5, 15, 14];
 
   //其他
   var OtherUrl = new Array();
@@ -58,21 +59,25 @@
     ["https://greasyfork.org/zh-CN/scripts/397419", "GreasyFork地址，希望可以给我评分收藏"],
     ["https://doc.fastgit.org/", "FastGit，资金不足，接受捐赠中"],
     ["https://minhaskamal.github.io/DownGit", "DownGit"],
+    ["https://zhoudaxiaa.gitee.io", "DownGit 周大侠啊"],
     ["https://gitclone.com", "GitClone，1元开会员"],
     ["https://d.serctl.com", "GitHub中转下载"],
     ["https://iapk.cc/github", "IAPK工具箱·Github下载器"],
+    ["https://toolwa.com", "孟坤工具箱"],
     ["https://github.zhlh6.cn/", "加速你的Github"],
     ["http://gitd.cc", "GitHub代下服务"],
     ["https://gh.isteed.cc", "gh-proxy部署站点1"],
     ["https://github.zsxwz.workers.dev", "gh-proxy部署站点2"],
     ["https://gh.api.99988866.xyz", "gh-proxy部署站点3"],
     ["https://gh.sky-and-poem.fun", "gh-proxy部署站点4"],
+    ["https://github.b15.me", "gh-proxy部署站点5"],
   ];
   var CloneList = addCloneList();
   var OtherList = addOtherList();
   var isPC = IsPC();
   run();
   $(document).on("pjax:success", function () {
+    $("#mirror-menu").remove();
     run();
   });
 
@@ -139,39 +144,12 @@
    * 添加Releases列表
    */
   function addReleasesList() {
-    $(".Box--condensed").each(function () {
-      $(this)
-        .find(".flex-items-center>a")
-        .each(function () {
-          var href = $(this).attr("href");
-          var span = "";
-          if (!isPC) {
-            span =
-              `<div style="text-align: right; float: right">` +
-              downloadHref(href) +
-              `</div>`;
-          } else {
-            span =
-              `<small style="text-align: right;">` +
-              downloadHref(href) +
-              `</small>`;
-          }
-          $(this).next().append(span);
-        });
-      if (!isPC) {
-        $(this).find(".d-flex").removeClass("d-flex");
-      }
-      $(this)
-        .find(".d-block.Box-body>a")
-        .each(function () {
-          var href = $(this).attr("href");
-          $(this).after(
-            `<small style="text-align: right;">` +
-            downloadHref(href) +
-            `</small>`
-          );
-          $(this).parent().addClass("d-flex flex-justify-between");
-        });
+    $(".Box--condensed").find("[href]").each(function () {
+      var href = $(this).attr("href");
+      $(this).parent().after(`<div class="Box-body" >` +
+        downloadHref(href) +
+        `</div>`);
+      $(this).parent().removeClass("Box-body");
 
       function downloadHref(href) {
         var span = "";

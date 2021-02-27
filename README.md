@@ -64,6 +64,12 @@ const ASSET_URL = "https://github.com";
 
 ## 更新日志
 
+v1.5.7
+
+1. 修复GitHub网页变更产生的bug
+2. 解决困扰已久的releases页样式对齐问题
+3. 增加一个cf站点，增加一些带下站点
+
 v1.5.6
 
 1. 小修
