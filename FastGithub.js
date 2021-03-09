@@ -11,7 +11,7 @@
 // @include       *://github*
 // @include       *://hub.fastgit.org/*
 // @require       https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
-// @version       1.5.8
+// @version       1.5.9
 // @run-at        document-end
 // ==/UserScript==
 
@@ -47,9 +47,9 @@
   MirrorUrl[14] = ["https://iapk.cc/github?url=https://github.com", "IAPK", "IAPK工具箱·Github下载器"]
   MirrorUrl[15] = ["https://gh.haval.gq", "CF加速 3", "每日10万次调用上限，由Ecalose提供"]
   //添加对应索引即可使用
-  var CloneSet = [1, 8, 0, 6, 10];
-  var MirrorSet = [1, 8, 0, 3, 13, 2, 5, 15];
-  var DownloadSet = [4, 8, 2, 5, 15, 10, 14];
+  var CloneSet = [1, 0, 6, 10];
+  var MirrorSet = [1, 0, 3, 13, 2, 5, 15];
+  var DownloadSet = [4, 2, 5, 15, 10, 14];
   var RawSet = [3, 2, 5, 15, 14];
 
   //其他
@@ -152,8 +152,11 @@
       function downloadHref(href) {
         var span = "";
         DownloadSet.forEach((element) => {
-          span += `<a class="flex-1 btn btn-outline get-repo-btn" rel="nofollow" href="${MirrorUrl[element][0] + href
-            }" title="${MirrorUrl[element][2]}">${MirrorUrl[element][1]}</a>`;
+          span += `<a class="flex-1 btn btn-outline get-repo-btn BtnGroup-item"
+                    style="float: none; border-color: var(--color-btn-outline-text);"
+                    rel="nofollow"
+                    href="${MirrorUrl[element][0] + href}"
+                    title="${MirrorUrl[element][2]}">${MirrorUrl[element][1]}</a>`;
         });
         return span;
       }
@@ -288,7 +291,8 @@
     var info = `
           </div>
         </div>
-        <div role="tabpanel" class="d-flex flex-column flex-auto overflow-auto" tabindex="0" hidden="">
+        <div role="tabpanel" class="d-flex flex-column flex-auto overflow-auto"
+          tabindex="0" hidden="">
           <div class="SelectMenu-list">
             `;
     //其他列表
@@ -304,9 +308,12 @@
     return info;
   }
   function listHtml(Url, Name, Tip = "") {
-    return `<a class="SelectMenu-item" href="${Url}" target="_blank" title="${Tip}" role="menuitemradio"
-  aria-checked="false" rel="nofollow">
-  <span class="css-truncate css-truncate-overflow" style="text-align:center;">
+    return `<a class="SelectMenu-item"
+              href="${Url}" target="_blank"
+              title="${Tip}" role="menuitemradio"
+              aria-checked="false" rel="nofollow">
+            <span class="css-truncate css-truncate-overflow"
+              style="text-align:center;">
     ${Name}
   </span>
 </a>`;

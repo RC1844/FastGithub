@@ -22,15 +22,15 @@
 
 ## 已知的 GitHub 镜像(含失效站点)
 
-|                   域名                    | https | 克隆加速 | zip 加速 | releases 加速 | 主机服务商 | 服务器所在地 |
-| :---------------------------------------: | :---: | :------: | :------: | :-----------: | :--------: | :----------: |
-|      <https://github.com.cnpmjs.org>      |   ✓   |    ✓     |    ✗     |       ✗       |   dnspod   |     香港     |
-| ~~<http://github-mirror.bugkiller.org>~~  |   ✗   |    ✓     |    ✗     |       ✓       |     ?      |     日本     |
-| <https://github.wuyanzheshui.workers.dev> |   ✓   |    ✗     |    ✓     |       ✓       | Cloudflare |     美国     |
-|        <https://github.bajins.com>        |   ✓   |    ✗     |    ?     |       ?       | Cloudflare |     美国     |
-|         <https://doc.fastgit.org>         |   ✓   |    ✓     |    ✓     |       ✓       |  fastgit   |     香港     |
-|          <https://gitclone.com>           |   ✓   |    ✓     |    ✗     |       ✗       |   Aliyun   |     杭州     |
-|  <https://github-speedup.laiczhang.com>   |   ✓   |    ✓     |    ✓     |       ✓       | Quadranet  |     美国     |
+|                    域名                    | https | 克隆加速 | zip 加速 | releases 加速 | 主机服务商 | 服务器所在地 |
+| :----------------------------------------: | :---: | :------: | :------: | :-----------: | :--------: | :----------: |
+|      <https://github.com.cnpmjs.org>       |   ✓   |    ✓     |    ✗     |       ✗       |   dnspod   |     香港     |
+|  ~~<http://github-mirror.bugkiller.org>~~  |   ✗   |    ✓     |    ✗     |       ✓       |     ?      |     日本     |
+| <https://github.wuyanzheshui.workers.dev>  |   ✓   |    ✗     |    ✓     |       ✓       | Cloudflare |     美国     |
+|        <https://github.bajins.com>         |   ✓   |    ✗     |    ?     |       ?       | Cloudflare |     美国     |
+|         <https://doc.fastgit.org>          |   ✓   |    ✓     |    ✓     |       ✓       |  fastgit   |     香港     |
+|           <https://gitclone.com>           |   ✓   |    ✓     |    ✗     |       ✗       |   Aliyun   |     杭州     |
+| ~~<https://github-speedup.laiczhang.com>~~ |   ✓   |    ✓     |    ✓     |       ✓       | Quadranet  |     美国     |
 
 ## 使用 Cloudflare 搭建 Github 镜像(实为代理)
 
@@ -63,6 +63,11 @@ const ASSET_URL = "https://github.com";
 [zmirror](https://github.com/aploium/zmirror)
 
 ## 更新日志
+
+v1.5.9
+
+1. 增加 releases 页下载按钮的样式(好认一点)
+2. laiczhang 站点似乎已失效，现禁用，你可以手动编辑 xxxSet 添加
 
 v1.5.8
 
