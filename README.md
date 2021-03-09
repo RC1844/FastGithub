@@ -67,7 +67,8 @@ const ASSET_URL = "https://github.com";
 v1.5.9
 
 1. 增加 releases 页下载按钮的样式(好认一点)
-2. laiczhang 站点似乎已失效，现禁用，你可以手动编辑 xxxSet 添加
+2. 修复菜单双滚动条问题
+3. laiczhang 站点似乎已失效，现禁用，你可以手动编辑 xxxSet 添加
 
 v1.5.8
 

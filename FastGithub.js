@@ -217,7 +217,7 @@
           </svg></button>
       </header>
 
-      <tab-container class="d-flex flex-column js-branches-tags-tabs" style="min-height: 0;">
+      <tab-container class="flex-column js-branches-tags-tabs" style="min-height: 0;">
 
         <div class="SelectMenu-tabs" role="tablist">
           <button class="SelectMenu-tab" type="button" role="tab"
@@ -291,7 +291,7 @@
     var info = `
           </div>
         </div>
-        <div role="tabpanel" class="d-flex flex-column flex-auto overflow-auto"
+        <div role="tabpanel" class="flex-column flex-auto overflow-auto"
           tabindex="0" hidden="">
           <div class="SelectMenu-list">
             `;
