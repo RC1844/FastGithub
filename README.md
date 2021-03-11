@@ -64,6 +64,10 @@ const ASSET_URL = "https://github.com";
 
 ## 更新日志
 
+v1.6.0
+
+1. 修复上一版本写的bug，菜单无法滚动问题
+
 v1.5.9
 
 1. 增加 releases 页下载按钮的样式(好认一点)

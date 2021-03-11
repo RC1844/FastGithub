@@ -11,7 +11,7 @@
 // @include       *://github*
 // @include       *://hub.fastgit.org/*
 // @require       https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
-// @version       1.5.9
+// @version       1.6.0
 // @run-at        document-end
 // ==/UserScript==
 
@@ -217,7 +217,7 @@
           </svg></button>
       </header>
 
-      <tab-container class="flex-column js-branches-tags-tabs" style="min-height: 0;">
+      <tab-container class="d-flex flex-column js-branches-tags-tabs" style="min-height: 0;">
 
         <div class="SelectMenu-tabs" role="tablist">
           <button class="SelectMenu-tab" type="button" role="tab"
@@ -226,7 +226,7 @@
             aria-selected="false" tabindex="-1">其他</button>
         </div>
 
-        <div role="tabpanel" class="d-flex flex-column flex-auto overflow-auto" tabindex="0">
+        <div role="tabpanel" class="flex-column flex-auto overflow-auto" tabindex="0">
           <div class="SelectMenu-list" data-filter-list="">
             <div class="btn-block"
               style="padding: 4px;background-color: #ffffdd;color: #996600;" role="alert">
