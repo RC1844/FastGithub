@@ -11,7 +11,7 @@
 // @include       *://github*
 // @include       *://hub.fastgit.org/*
 // @require       https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
-// @version       1.6.0
+// @version       1.6.1
 // @run-at        document-end
 // ==/UserScript==
 
@@ -40,15 +40,15 @@
   MirrorUrl[7] = ["git@git.zhlh6.cn:", "加速你的Github", "利用ucloud提供的GlobalSSH"];
   MirrorUrl[8] = ["https://github-speedup.laiczhang.com", "laiczhang", "laiczhang的个人站点"];
   MirrorUrl[9] = ["https://cdn.jsdelivr.net/gh", "jsDelivr", "项目当前分支总文件大小不可超过 50MB"];
-  MirrorUrl[10] = ["https://g.ioiox.com/https://github.com", "Ioiox", "CN2 GIA 线路"];
+  MirrorUrl[10] = ["https://ghproxy.com/https://github.com", "Ioiox", "CN2 GIA 线路"];
   MirrorUrl[11] = ["https://raw.fastgit.org", "FastGit", MirrorUrl[1][2]];
   MirrorUrl[12] = ["https://cdn.staticaly.com/gh", "Statically", "只能浏览图片和源代码文件，文件大小限制为30MB"]
-  MirrorUrl[13] = ["https://github.iapk.cc", "IAPK", "IAPK工具箱·Github下载器"]
+  // MirrorUrl[13] = ["https://github.iapk.cc", "IAPK", "IAPK工具箱·Github下载器"]
   MirrorUrl[14] = ["https://iapk.cc/github?url=https://github.com", "IAPK", "IAPK工具箱·Github下载器"]
   MirrorUrl[15] = ["https://gh.haval.gq", "CF加速 3", "每日10万次调用上限，由Ecalose提供"]
   //添加对应索引即可使用
   var CloneSet = [1, 0, 6, 10];
-  var MirrorSet = [1, 0, 3, 13, 2, 5, 15];
+  var MirrorSet = [1, 0, 3, 2, 5, 15];
   var DownloadSet = [4, 2, 5, 15, 10, 14];
   var RawSet = [3, 2, 5, 15, 14];
 
@@ -62,7 +62,7 @@
     ["https://zhoudaxiaa.gitee.io", "DownGit 周大侠啊"],
     ["https://gitclone.com", "GitClone，1元开会员"],
     ["https://d.serctl.com", "GitHub中转下载"],
-    ["https://iapk.cc/github", "IAPK工具箱·Github下载器"],
+    // ["https://iapk.cc/github", "IAPK工具箱·Github下载器"],
     ["https://toolwa.com", "孟坤工具箱"],
     ["https://github.zhlh6.cn/", "加速你的Github"],
     ["http://gitd.cc", "GitHub代下服务"],
