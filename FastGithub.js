@@ -11,7 +11,7 @@
 // @include       *://github*
 // @include       *://hub.fastgit.org/*
 // @require       https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
-// @version       1.6.1
+// @version       1.6.2
 // @run-at        document-end
 // ==/UserScript==
 
@@ -190,7 +190,7 @@
    */
   function addMenus(info) {
     // $("div.flex-auto.min-width-0.width-fit.mr-3")
-    $("h1.flex-wrap.break-word.text-normal").append(info);
+    $("h1.wb-break-word").append(info);
   }
   /**
    * 添加克隆列表
