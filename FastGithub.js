@@ -11,7 +11,7 @@
 // @include       *://github*
 // @include       *://hub.fastgit.org/*
 // @require       https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
-// @version       1.6.2
+// @version       1.6.3
 // @run-at        document-end
 // ==/UserScript==
 
@@ -31,7 +31,7 @@
 
   var MirrorUrl = new Array();//["Url", "Name", "Tip"]
   MirrorUrl[0] = ["https://github.com.cnpmjs.org", "Cnpmjs", "由cnpmjs.org提供"];
-  MirrorUrl[1] = ["https://hub.fastgit.org", "FastGit", "由KevinZonda推动的FastGit项目，目前项目资金不足，接受捐赠中"];
+  MirrorUrl[1] = ["https://hub.fastgit.org", "FastGit", "由KevinZonda推动的FastGit项目，请仔细甄别"];
   MirrorUrl[2] = ["https://github.wuyanzheshui.workers.dev", "CF加速 1", "每日10万次调用上限，由wuyanzheshui提供"];
   MirrorUrl[3] = ["https://github.bajins.com", "Bajins", "Bajins的个人站点"];
   MirrorUrl[4] = ["https://download.fastgit.org", "FastGit", MirrorUrl[1][2]];
@@ -57,12 +57,13 @@
   OtherUrl = [
     ["https://github.com/RC1844/FastGithub", "脚本Github仓库地址，点个赞谢谢"],
     ["https://greasyfork.org/zh-CN/scripts/397419", "GreasyFork地址，希望可以给我评分收藏"],
-    ["https://doc.fastgit.org/", "FastGit，资金不足，接受捐赠中"],
+    ["https://doc.fastgit.org/", "FastGit，请仔细甄别"],
     ["https://minhaskamal.github.io/DownGit", "DownGit"],
     ["https://zhoudaxiaa.gitee.io", "DownGit 周大侠啊"],
     ["https://gitclone.com", "GitClone，1元开会员"],
     ["https://d.serctl.com", "GitHub中转下载"],
-    // ["https://iapk.cc/github", "IAPK工具箱·Github下载器"],
+    ["https://gitee.com/organizations/mirrors/projects", "Gitee 极速下载"],
+    ["https://codechina.csdn.net/mirrors","CSDN Mirrors 镜像仓库"],
     ["https://toolwa.com", "孟坤工具箱"],
     ["https://github.zhlh6.cn/", "加速你的Github"],
     ["http://gitd.cc", "GitHub代下服务"],
@@ -71,6 +72,8 @@
     ["https://gh.api.99988866.xyz", "gh-proxy部署站点3"],
     ["https://gh.sky-and-poem.fun", "gh-proxy部署站点4"],
     ["https://github.b15.me", "gh-proxy部署站点5"],
+    ["https://github.xxyyzz.workers.dev", "gh-proxy部署站点6"],
+    ["https://gh.argv.cc", "gh-proxy部署站点6"],
   ];
   var CloneList = addCloneList();
   var OtherList = addOtherList();
