@@ -64,6 +64,10 @@ const ASSET_URL = "https://github.com";
 
 ## 更新日志
 
+v1.6.4
+
+1. 修复依赖: jquery
+
 v1.6.3
 
 1. 更新提示，增加其他站点
