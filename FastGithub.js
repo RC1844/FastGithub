@@ -193,7 +193,7 @@
    */
   function addMenus(info) {
     // $("div.flex-auto.min-width-0.width-fit.mr-3")
-    $("h1.wb-break-word").append(info);
+    $("h2.wb-break-word").append(info);
   }
   /**
    * 添加克隆列表
