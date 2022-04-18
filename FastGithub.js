@@ -6,17 +6,16 @@
 // @homepageURL   https://github.com/RC1844/FastGithub
 // @supportURL    https://github.com/RC1844/FastGithub/issues
 // @license       MIT License
-// @description   镜像访问GitHub，极速Clone、Release/Raw/Zip加速；十几个站点可供选择；前往项目Github仓库查看免费搭建Github镜像站点方法
+// @description   镜像访问GitHub,极速Clone、Release/Raw/Zip加速；十几个站点可供选择；前往项目Github仓库查看免费搭建Github镜像站点方法
 // @include       *://github.com/*
 // @include       *://github*
-// @include       *://hub.fastgit.org/*
+// @include       *://hub.fastgit.xyz/*
 // @require       https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
-// @version       1.6.3
-// @run-at        document-end
+// @version       1.6.4
 // ==/UserScript==
 
 (function () {
-  //=true为启用，=false为禁用
+  //=true为启用,=false为禁用
   var clone = true;
   // var clone = false;
   var depth = true;
@@ -31,39 +30,40 @@
 
   var MirrorUrl = new Array();//["Url", "Name", "Tip"]
   MirrorUrl[0] = ["https://github.com.cnpmjs.org", "Cnpmjs", "由cnpmjs.org提供"];
-  MirrorUrl[1] = ["https://hub.fastgit.org", "FastGit", "由KevinZonda推动的FastGit项目，请仔细甄别"];
-  MirrorUrl[2] = ["https://github.wuyanzheshui.workers.dev", "CF加速 1", "每日10万次调用上限，由wuyanzheshui提供"];
+  MirrorUrl[1] = ["https://hub.fastgit.xyz", "FastGit", "由@KevinZonda推动的FastGit项目,请仔细甄别"];
+  MirrorUrl[2] = ["https://github.wuyanzheshui.workers.dev", "CF加速 1", "每日10万次调用上限,由wuyanzheshui提供"];
   MirrorUrl[3] = ["https://github.bajins.com", "Bajins", "Bajins的个人站点"];
   MirrorUrl[4] = ["https://download.fastgit.org", "FastGit", MirrorUrl[1][2]];
-  MirrorUrl[5] = ["https://github.rc1844.workers.dev", "CF加速 2", "每日10万次调用上限，由RC1844提供"];
-  MirrorUrl[6] = ["https://gitclone.com/github.com", "GitClone", "GitHub缓存加速网站，1元开会员尽享极速"];
+  MirrorUrl[5] = ["https://github.rc1844.workers.dev", "CF加速 2", "每日10万次调用上限,由@RC1844提供"];
+  MirrorUrl[6] = ["https://gitclone.com/github.com", "GitClone", "GitHub缓存加速网站,1元开会员尽享极速"];
   MirrorUrl[7] = ["git@git.zhlh6.cn:", "加速你的Github", "利用ucloud提供的GlobalSSH"];
   MirrorUrl[8] = ["https://github-speedup.laiczhang.com", "laiczhang", "laiczhang的个人站点"];
   MirrorUrl[9] = ["https://cdn.jsdelivr.net/gh", "jsDelivr", "项目当前分支总文件大小不可超过 50MB"];
   MirrorUrl[10] = ["https://ghproxy.com/https://github.com", "Ioiox", "CN2 GIA 线路"];
   MirrorUrl[11] = ["https://raw.fastgit.org", "FastGit", MirrorUrl[1][2]];
-  MirrorUrl[12] = ["https://cdn.staticaly.com/gh", "Statically", "只能浏览图片和源代码文件，文件大小限制为30MB"]
-  // MirrorUrl[13] = ["https://github.iapk.cc", "IAPK", "IAPK工具箱·Github下载器"]
-  MirrorUrl[14] = ["https://iapk.cc/github?url=https://github.com", "IAPK", "IAPK工具箱·Github下载器"]
-  MirrorUrl[15] = ["https://gh.haval.gq", "CF加速 3", "每日10万次调用上限，由Ecalose提供"]
+  MirrorUrl[12] = ["https://cdn.staticaly.com/gh", "Statically", "只能浏览图片和源代码文件,文件大小限制为30MB"]
+  MirrorUrl[13] = ["git@ssh.fastgit.org", "FastGit", "MirrorUrl[1][2]"]
+  // MirrorUrl[14] = ["https://iapk.cc/github?url=https://github.com", "IAPK", "IAPK工具箱·Github下载器"]
+  // MirrorUrl[15] = ["https://gh.haval.gq", "CF加速 3", "每日10万次调用上限,由@Ecalose提供"]
+  MirrorUrl[16] = ["https://cors.zme.ink/https://github.com", "netnr", "由@netnr提供"]
   //添加对应索引即可使用
-  var CloneSet = [1, 0, 6, 10];
-  var MirrorSet = [1, 0, 3, 2, 5, 15];
-  var DownloadSet = [4, 2, 5, 15, 10, 14];
-  var RawSet = [3, 2, 5, 15, 14];
+  var CloneSet = [1, 13, 0, 6, 10];
+  var MirrorSet = [1, 0, 3, 2, 5, 16];
+  var DownloadSet = [4, 2, 5, 10];
+  var RawSet = [3, 2, 5];
 
   //其他
   var OtherUrl = new Array();
   OtherUrl = [
-    ["https://github.com/RC1844/FastGithub", "脚本Github仓库地址，点个赞谢谢"],
-    ["https://greasyfork.org/zh-CN/scripts/397419", "GreasyFork地址，希望可以给我评分收藏"],
-    ["https://doc.fastgit.org/", "FastGit，请仔细甄别"],
+    ["https://github.com/RC1844/FastGithub", "脚本Github仓库地址,点个赞谢谢"],
+    ["https://greasyfork.org/zh-CN/scripts/397419", "GreasyFork地址,希望可以给我评分收藏"],
+    ["https://doc.fastgit.org/", "FastGit,请仔细甄别"],
     ["https://minhaskamal.github.io/DownGit", "DownGit"],
     ["https://zhoudaxiaa.gitee.io", "DownGit 周大侠啊"],
-    ["https://gitclone.com", "GitClone，1元开会员"],
+    ["https://gitclone.com", "GitClone,1元开会员"],
     ["https://d.serctl.com", "GitHub中转下载"],
     ["https://gitee.com/organizations/mirrors/projects", "Gitee 极速下载"],
-    ["https://codechina.csdn.net/mirrors","CSDN Mirrors 镜像仓库"],
+    ["https://codechina.csdn.net/mirrors", "CSDN Mirrors 镜像仓库"],
     ["https://toolwa.com", "孟坤工具箱"],
     ["https://github.zhlh6.cn/", "加速你的Github"],
     ["http://gitd.cc", "GitHub代下服务"],
@@ -138,7 +138,7 @@
         span1.html(
           span1.html().replace("Download ZIP", `Download ZIP(${MirrorUrl[element][1]})`)
         );
-        span = span.clone().append(span1);
+        span.append(span1);
       });
       $(this).parent().after(span);
     });
@@ -192,8 +192,7 @@
    * 添加菜单列表
    */
   function addMenus(info) {
-    // $("div.flex-auto.min-width-0.width-fit.mr-3")
-    $("h1.wb-break-word").append(info);
+    $(".Label--secondary").after(info);
   }
   /**
    * 添加克隆列表
@@ -236,7 +235,10 @@
               clone、depth命令的插入可手动编辑代码关闭</div>
             <div class="btn-block flash-error"
               style="padding: 4px;color: #990000;" role="alert">
-              请不要在镜像网站登录账号，若因此造成任何损失本人概不负责</div> `;
+              请不要在镜像网站登录账号,若因此造成任何损失本人概不负责</div> `;
+
+    /* var cloneHtmlStr = $(".input-group:last").clone().addClass("notranslate");
+     cloneHtmlStr.find("clipboard-copy").removeAttr("data-hydro-click data-hydro-click-hmac");*/
     //克隆列表
     CloneSet.forEach((element) => {
       info += cloneHtml(Setting + MirrorUrl[element][0] + "/" + git, MirrorUrl[element][1]);
@@ -244,7 +246,11 @@
     info += cloneHtml(Setting + MirrorUrl[7][0] + git, MirrorUrl[7][1]);
     info += cloneHtml("git remote set-url origin https://github.com/" + git, "还原GitHub仓库地址");
     function cloneHtml(Url, Tip) {
-      return `<div class="input-group" title="${Tip}">
+      /* var str = cloneHtmlStr.clone();
+       str.children("input").attr({ value: Url });
+       str.find("clipboard-copy").attr({ value: Url });
+       return `<div class="input-group notranslate" title="${Tip}">${str.html()}</div>`;*/
+      return `<div class="input-group notranslate" title="${Tip}">
               <input type="text" class="form-control input-monospace input-sm" value="${Url}" readonly=""
                 data-autoselect="">
               <div class="input-group-button">
@@ -259,6 +265,8 @@
     }
     return info;
   }
+
+
   /**
    * 添加镜像浏览列表
    */
