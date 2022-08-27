@@ -10,8 +10,8 @@
 // @include       *://github.com/*
 // @include       *://github*
 // @include       *://hub.fastgit.xyz/*
-// @require       https://cdn.bootcdn.net/ajax/libs/jquery/3.4.1/jquery.min.js
-// @version       1.6.4
+// @require       https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.slim.min.js
+// @version       1.6.5
 // ==/UserScript==
 
 (function () {
@@ -78,20 +78,27 @@
   var CloneList = addCloneList();
   var OtherList = addOtherList();
   var isPC = IsPC();
-  run();
-  $(document).on("pjax:success", function () {
-    $("#mirror-menu").remove();
-    run();
-  });
 
-  function run() {
-    addMenus(CloneList + addBrowseList() + OtherList);
-    if (location.pathname.split("/")[3] == "releases")
-      addReleasesList();
-    if (isPC)
-      addDownloadZip();
-    addRawList();
+  function callback(_mutationList, _observer) {
+    setTimeout(run, 1500);
   }
+  const observer = new MutationObserver(callback);
+  observer.observe(document.querySelector("head"), { attributes: true, childList: true });
+
+  var pathname;
+  function run() {
+    if (location.pathname != pathname) {
+      pathname = location.pathname;
+      $("#mirror-menu").remove();
+      addMenus(CloneList + addBrowseList() + OtherList);
+      if (location.pathname.split("/")[3] == "releases")
+        addReleasesList();
+      if (isPC)
+        addDownloadZip();
+      addRawList();
+    }
+  }
+  run();
   /**
    * 添加Raw列表
    */
@@ -149,7 +156,7 @@
   function addReleasesList() {
     $(".Box--condensed").find("[href]").each(function () {
       var href = $(this).attr("href");
-      $(this).parent().after(`<div class="Box-body" >` + downloadHref(href) + `</div>`);
+      $(this).parent().after(`<div class="d-flex">` + downloadHref(href) + `</div>`);
       $(this).parent().removeClass("Box-body");
 
       function downloadHref(href) {
@@ -192,7 +199,7 @@
    * 添加菜单列表
    */
   function addMenus(info) {
-    $(".Label--secondary").after(info);
+    $(".pagehead-actions").before(info);
   }
   /**
    * 添加克隆列表
