@@ -11,7 +11,7 @@
 // @include       *://github*
 // @include       *://hub.fastgit.xyz/*
 // @require       https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.slim.min.js
-// @version       1.6.5
+// @version       1.6.6
 // ==/UserScript==
 
 (function () {
@@ -199,7 +199,10 @@
    * 添加菜单列表
    */
   function addMenus(info) {
-    $(".pagehead-actions").before(info);
+    if (isPC)
+      $("#repository-details-container > ul.pagehead-actions").prepend(`<li>${info}</li>`);
+    else
+      $("span.Label.Label--secondary.v-align-middle.mr-1").after(`<span>${info}</span>`);
   }
   /**
    * 添加克隆列表
@@ -208,7 +211,7 @@
     var href = window.location.href.split("/");
     var git = href[3] + "/" + href[4] + ".git";
     var info = `<details class="details-reset details-overlay mr-0 mb-0" id="mirror-menu">
-  <summary class="btn  ml-2 btn-primary" data-hotkey="m" title="打开列表" aria-haspopup="menu" role="button">
+  <summary class="btn btn-sm ml-2 btn-primary" data-hotkey="m" title="打开列表" aria-haspopup="menu" role="button">
     <span class="css-truncate-target" data-menu-button="">克隆与镜像</span>
     <span class="dropdown-caret"></span>
   </summary>
@@ -243,9 +246,6 @@
             <div class="btn-block flash-error"
               style="padding: 4px;color: #990000;" role="alert">
               请不要在镜像网站登录账号,若因此造成任何损失本人概不负责</div> `;
-
-    /* var cloneHtmlStr = $(".input-group:last").clone().addClass("notranslate");
-     cloneHtmlStr.find("clipboard-copy").removeAttr("data-hydro-click data-hydro-click-hmac");*/
     //克隆列表
     CloneSet.forEach((element) => {
       info += cloneHtml(Setting + MirrorUrl[element][0] + "/" + git, MirrorUrl[element][1]);
@@ -253,22 +253,31 @@
     info += cloneHtml(Setting + MirrorUrl[7][0] + git, MirrorUrl[7][1]);
     info += cloneHtml("git remote set-url origin https://github.com/" + git, "还原GitHub仓库地址");
     function cloneHtml(Url, Tip) {
-      /* var str = cloneHtmlStr.clone();
-       str.children("input").attr({ value: Url });
-       str.find("clipboard-copy").attr({ value: Url });
-       return `<div class="input-group notranslate" title="${Tip}">${str.html()}</div>`;*/
       return `<div class="input-group notranslate" title="${Tip}">
-              <input type="text" class="form-control input-monospace input-sm" value="${Url}" readonly=""
-                data-autoselect="">
-              <div class="input-group-button">
-                <clipboard-copy value="${Url}" class="btn btn-sm"><svg class="octicon octicon-clippy"
-                    viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true">
-                    <path fill-rule="evenodd"
-                      d="M5.75 1a.75.75 0 00-.75.75v3c0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75v-3a.75.75 0 00-.75-.75h-4.5zm.75 3V2.5h3V4h-3zm-2.874-.467a.75.75 0 00-.752-1.298A1.75 1.75 0 002 3.75v9.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0014 13.25v-9.5a1.75 1.75 0 00-.874-1.515.75.75 0 10-.752 1.298.25.25 0 01.126.217v9.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-9.5a.25.25 0 01.126-.217z">
-                    </path>
-                  </svg></clipboard-copy>
-              </div>
-            </div>`;
+    <input type="text" class="form-control input-monospace input-sm color-bg-subtle" data-autoselect=""
+        value="${Url}" aria-label="${Url}"
+        readonly="">
+    <div class="input-group-button">
+        <clipboard-copy value="${Url}" aria-label="Copy to clipboard"
+            class="btn btn-sm js-clipboard-copy tooltipped-no-delay ClipboardButton js-clone-url-http"
+            data-copy-feedback="Copied!" data-tooltip-direction="n" role="button"><svg aria-hidden="true" height="16"
+                viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true"
+                class="octicon octicon-copy js-clipboard-copy-icon d-inline-block">
+                <path
+                    d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z">
+                </path>
+                <path
+                    d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z">
+                </path>
+            </svg><svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16"
+                data-view-component="true"
+                class="octicon octicon-check js-clipboard-check-icon color-fg-success d-inline-block d-sm-none">
+                <path
+                    d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z">
+                </path>
+            </svg></clipboard-copy>
+    </div>
+  </div>`;
     }
     return info;
   }
