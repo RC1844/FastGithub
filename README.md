@@ -31,6 +31,13 @@
 |         <https://doc.fastgit.org>          |   ✓   |    ✓     |    ✓     |       ✓       |  fastgit   |     香港     |
 |           <https://gitclone.com>           |   ✓   |    ✓     |    ✗     |       ✗       |   Aliyun   |     杭州     |
 | ~~<https://github-speedup.laiczhang.com>~~ |   ✓   |    ✓     |    ✓     |       ✓       | Quadranet  |     美国     |
+|          <https://eo.gh-proxy.cn>          |   ✓   |    ✓     |    ✓     |       ✓       | 腾讯云EdgeOne |   边缘节点   |
+|          <https://z1.gh-proxy.cn>          |   ✓   |    ✓     |    ✓     |       ✓       |   EdgeOne  |   边缘节点   |
+|          <https://z3.gh-proxy.cn>          |   ✓   |    ✓     |    ✓     |       ✓       |   EdgeOne  |   边缘节点   |
+|          <https://cf.gh-proxy.cn>          |   ✓   |    ✓     |    ✓     |       ✓       | Cloudflare |   优选节点   |
+|         ~~<https://z2.gh-proxy.cn>~~       |   ✓   |    ✓     |    ✓     |       ✓       |   EdgeOne  | 423锁定，暂不可用 |
+
+> gh-proxy.cn 系列入口路径规则为 `https://<入口域名>/github/<完整 GitHub 链接>`，只加速文件（clone、raw、release、archive，支持断点续传），不代理 GitHub 网页；实时延迟与节点状态见 <https://www.gh-proxy.cn/nodes>。
 
 ## 使用 Cloudflare 搭建 Github 镜像(实为代理)
 
@@ -56,6 +63,8 @@ const ASSET_URL = "https://github.com";
 
 [gh-proxy](https://github.com/hunshcn/gh-proxy)
 
+[gh-proxy.cn GitHub 加速](https://www.gh-proxy.cn/github/)（[节点状态](https://www.gh-proxy.cn/nodes)）
+
 [Fast Git](https://fastgit.org/)
 
 [jsproxy](https://github.com/EtherDream/jsproxy)
@@ -63,6 +72,13 @@ const ASSET_URL = "https://github.com";
 [zmirror](https://github.com/aploium/zmirror)
 
 ## 更新日志
+
+v1.6.7
+
+1. 新增 [gh-proxy.cn](https://www.gh-proxy.cn/github/) 的 4 个可用加速入口：eo（官方推荐，腾讯云 EdgeOne）、z1、z3（EdgeOne）、cf（Cloudflare 优选），均支持 clone、raw、zip、releases 加速与断点续传，并置于克隆/下载/Raw 列表首位
+2. z2 节点（<https://z2.gh-proxy.cn>）当前返回 423 锁定，暂未启用，恢复后可手动取消注释并把索引 21 加入对应 Set
+3. gh-proxy.cn 只加速文件不代理网页，故未加入镜像浏览（MirrorSet）
+4. 「其他」菜单新增 gh-proxy.cn 官方站与节点状态页
 
 v1.6.3
 

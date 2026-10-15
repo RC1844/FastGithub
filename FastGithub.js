@@ -11,7 +11,7 @@
 // @include       *://github*
 // @include       *://hub.fastgit.xyz/*
 // @require       https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.slim.min.js
-// @version       1.6.6
+// @version       1.6.7
 // ==/UserScript==
 
 (function () {
@@ -46,11 +46,18 @@
   // MirrorUrl[14] = ["https://iapk.cc/github?url=https://github.com", "IAPK", "IAPK工具箱·Github下载器"]
   // MirrorUrl[15] = ["https://gh.haval.gq", "CF加速 3", "每日10万次调用上限,由@Ecalose提供"]
   MirrorUrl[16] = ["https://cors.zme.ink/https://github.com", "netnr", "由@netnr提供"]
+  //gh-proxy.cn 加速入口:只加速文件不代理网页,支持 clone/raw/releases/archive,节点延迟与状态见 https://www.gh-proxy.cn/nodes
+  MirrorUrl[17] = ["https://eo.gh-proxy.cn/github/https://github.com", "gh-proxy.cn", "gh-proxy.cn 官方推荐入口(腾讯云EdgeOne加速-4),支持clone/raw/releases/archive,可断点续传"];
+  MirrorUrl[18] = ["https://z1.gh-proxy.cn/github/https://github.com", "gh-proxy z1", "gh-proxy.cn EdgeOne加速-1,支持clone/raw/releases/archive,可断点续传"];
+  MirrorUrl[19] = ["https://z3.gh-proxy.cn/github/https://github.com", "gh-proxy z3", "gh-proxy.cn EdgeOne加速-3,支持clone/raw/releases/archive,可断点续传"];
+  MirrorUrl[20] = ["https://cf.gh-proxy.cn/github/https://github.com", "gh-proxy cf", "gh-proxy.cn Cloudflare优选加速,支持clone/raw/releases/archive,可断点续传"];
+  //z2节点(https://z2.gh-proxy.cn)当前返回423锁定暂不启用,恢复后可取消注释并把索引21加入下方对应Set
+  // MirrorUrl[21] = ["https://z2.gh-proxy.cn/github/https://github.com", "gh-proxy z2", "gh-proxy.cn EdgeOne加速-2"]
   //添加对应索引即可使用
-  var CloneSet = [1, 13, 0, 6, 10];
+  var CloneSet = [17, 20, 18, 19, 1, 13, 0, 6, 10];
   var MirrorSet = [1, 0, 3, 2, 5, 16];
-  var DownloadSet = [4, 2, 5, 10];
-  var RawSet = [3, 2, 5];
+  var DownloadSet = [17, 18, 19, 20, 4, 2, 5, 10];
+  var RawSet = [17, 18, 19, 20, 3, 2, 5];
 
   //其他
   var OtherUrl = new Array();
@@ -74,6 +81,8 @@
     ["https://github.b15.me", "gh-proxy部署站点5"],
     ["https://github.xxyyzz.workers.dev", "gh-proxy部署站点6"],
     ["https://gh.argv.cc", "gh-proxy部署站点6"],
+    ["https://www.gh-proxy.cn/github/", "gh-proxy.cn GitHub加速(官方站)"],
+    ["https://www.gh-proxy.cn/nodes", "gh-proxy.cn 加速入口与节点状态"],
   ];
   var CloneList = addCloneList();
   var OtherList = addOtherList();
