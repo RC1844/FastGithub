@@ -167,6 +167,9 @@
   /* ================================ 注入样式（一次性） ================================ */
   var STYLE = [
     "#fg-menu-li{list-style:none;position:relative;display:inline-block;}",
+    // 防御性兜底：若任何重渲染 / 克隆机制产生了多个 #fg-menu-li 兄弟节点，
+    // 只保留每一个容器内的第一个，其余隐藏，避免视觉重复。
+    "li#fg-menu-li ~ li#fg-menu-li{display:none;}",
     ".fg-details{position:relative;}",
     ".fg-details>summary{list-style:none;display:inline-flex;align-items:center;gap:6px;cursor:pointer;",
     "padding:3px 12px;font-size:14px;font-weight:500;line-height:20px;border-radius:6px;",
@@ -245,8 +248,19 @@
   }
 
   function buildMenu(ctx) {
-    var old = $("#fg-menu-li");
-    if (old) old.remove();
+    // 幂等兜底：无论 buildMenu 被调用多少次（React 重渲染 / Turbo / 懒加载），
+    // 先把页面上所有历史 #fg-menu-li 全部移除，再插入唯一一个，杜绝重复累积。
+    $$("li#fg-menu-li").forEach(function (old) {
+      if (old !== menuLi) old.remove();
+    });
+
+    // 复用稳定节点 menuLi（若已存在则清空内容后填充），否则创建新节点
+    var li = menuLi;
+    if (!li) {
+      li = el("li", { id: "fg-menu-li" });
+      menuLi = li;
+    }
+    li.innerHTML = "";
 
     var details = el("details", { id: "fg-details", class: "fg-details" });
     var summary = el("summary", { title: "镜像站点与快速克隆" }, [
@@ -330,20 +344,35 @@
     panel.appendChild(body);
     details.appendChild(summary);
     details.appendChild(panel);
-    var li = el("li", { id: "fg-menu-li" });
     li.appendChild(details);
 
+    // 幂等插入：把稳定节点挂到当前 header 容器
+    //
+    // 关键：GitHub 新版仓库页的 ul#repo-header-actions 位于 React prc-PageLayout 树内，
+    // React 重渲染会“深拷贝”其子节点，导致我们的 li 被复制多份（实测 37 份）。
+    // 因此挂到 ul 的“直接父级 div”（不在 React 子节点管理范围），React 不会克隆它。
     var bar = $("ul[data-testid='repo-header-actions']") || $("ul.pagehead-actions");
+    var mountParent = null;
     if (bar) {
-      bar.insertBefore(li, bar.firstChild);
+      // 直接父级 div（i=1）：prc-PageLayout 树中最外层的不带 data-testid 的普通 div
+      mountParent = bar.parentElement;
+    }
+    if (mountParent) {
+      // 先清除所有历史克隆副本（React 可能复制），再挂我们唯一的 li
+      $$("li#fg-menu-li", mountParent).forEach(function (old) { if (old !== li) old.remove(); });
+      if (!mountParent.contains(li)) mountParent.insertBefore(li, mountParent.firstChild);
       return true;
     }
     // 极端情况的兜底：挂到 Public 标签旁
     var label = $("[data-testid='repo-visibility-label']");
     if (label && label.parentElement && label.parentElement.parentElement) {
-      var wrap = el("div", { style: "display:inline-block;margin:0 8px;" });
-      wrap.appendChild(details);
-      label.parentElement.parentElement.appendChild(wrap);
+      var wrapHost = label.parentElement.parentElement;
+      $$("li#fg-menu-li", wrapHost).forEach(function (old) { if (old !== li) old.remove(); });
+      if (!wrapHost.contains(li)) {
+        var wrap = el("div", { style: "display:inline-block;margin:0 8px;" });
+        wrap.appendChild(li);
+        wrapHost.appendChild(wrap);
+      }
       return true;
     }
     return false;
@@ -360,6 +389,11 @@
       DownloadSet.forEach(function (i) {
         var m = MirrorUrl[i];
         var node = li.cloneNode(true);
+        // 防御性兜底：克隆时剥离任何 #fg-menu-li 子树，
+        // 避免菜单节点被 Code 面板的 li 深拷贝扩散（这是 37 倍重复的真正根源）。
+        $$("li#fg-menu-li", node).forEach(function (x) {
+          if (x.id === "fg-menu-li") x.remove();
+        });
         var aa = node.querySelector("a") || node;
         aa.removeAttribute("id");
         aa.setAttribute("href", m[0] + relPath(a.getAttribute("href")));
@@ -401,55 +435,67 @@
     host.dataset.fgRaw = "1";
     var href = host.getAttribute("href") || "";
     var rel = relPath(href);
-    var anchorNode = host.closest("div"); // 新版 ButtonGroup 的 item 包裹层
+
+    // 新版 Blob 页的 Raw 按钮是  a  > div.prc-ButtonGroup-Item  > div.prc-ButtonGroup
+    // 为视觉一致，克隆其 Item 包裹层作为兄弟按钮
+    var item = host.closest("div[class*='ButtonGroup-Item']") || host.parentElement;
+    var isButtonGroup = item && /ButtonGroup-Item/i.test(item.className || "");
 
     function makeSibling(url, name, tip) {
-      var a;
-      var wrapper = null;
-      if (host.dataset.testid === "raw-button" && anchorNode && anchorNode.className &&
-          /ButtonGroup-Item/i.test(anchorNode.className)) {
-        wrapper = anchorNode.cloneNode(false);
-        a = host.cloneNode(true);
+      var node;
+      if (isButtonGroup) {
+        node = item.cloneNode(false);           // 克隆 Item 包裹
+        var a = host.cloneNode(true);          // 克隆 a 本体
+        node.appendChild(a);
       } else {
-        a = host.cloneNode(true);
+        node = host.cloneNode(true);
       }
-      a.removeAttribute("id");
-      a.setAttribute("href", url);
-      a.setAttribute("title", tip);
-      a.setAttribute("target", "_blank");
-      a.setAttribute("rel", "nofollow");
-      var txt = a.querySelector("[data-component='text']");
-      if (txt) txt.textContent = name; else a.textContent = name;
-      if (wrapper) { wrapper.appendChild(a); return wrapper; }
-      a.className = "fg-zip";
-      return a;
+      node.removeAttribute("id");
+      var aTag = isButtonGroup ? node.lastChild : node;
+      aTag.setAttribute("href", url);
+      aTag.setAttribute("title", tip);
+      aTag.setAttribute("target", "_blank");
+      aTag.setAttribute("rel", "nofollow");
+      var txt = aTag.querySelector("[data-component='text']");
+      if (txt) txt.textContent = name; else aTag.textContent = name;
+      return node;
     }
 
-    var prev = anchorNode || host;
-    var nodes = [];
+    var prev = item;
     RawSet.forEach(function (i) {
       var m = MirrorUrl[i];
-      nodes.push(makeSibling(m[0] + rel, m[1], m[2]));
-    });
-    var jsd = jsDelivrFromUrl(href);
-    if (jsd) nodes.push(makeSibling(jsd, JSD[1], JSD[2]));
-    nodes.forEach(function (n) {
+      var n = makeSibling(m[0] + rel, m[1], m[2]);
       if (prev.parentNode) prev.parentNode.insertBefore(n, prev.nextSibling);
       prev = n;
     });
+    var jsd = jsDelivrFromUrl(href);
+    if (jsd) {
+      var n = makeSibling(jsd, JSD[1], JSD[2]);
+      if (prev.parentNode) prev.parentNode.insertBefore(n, prev.nextSibling);
+      prev = n;
+    }
   }
 
   /* ================================== 调度入口 ================================== */
   var lastKey = "";
+  var menuLi = null;      // 稳定引用：菜单节点只创建一次，后续仅移动不重建
   function scan() {
     injectStyle();
     var ctx = repoContext();
-    var bar = $("ul[data-testid='repo-header-actions']") || $("ul.pagehead-actions");
-    if (ctx && bar) {
-      var key = ctx.owner + "/" + ctx.repo + "|" + location.pathname;
-      if (key !== lastKey || !$("#fg-menu-li")) {
-        zipCache = undefined;
-        if (buildMenu(ctx)) lastKey = key;
+    if (ctx) {
+      var key = ctx.owner + "/" + ctx.repo;
+      // 节点已存在且同一仓库 → 确认稳定节点仍在“当前”挂载点，若被 React 清掉则挂回
+      if (menuLi && key === lastKey) {
+        var liveBar = $("ul[data-testid='repo-header-actions']") || $("ul.pagehead-actions");
+        var liveMount = liveBar ? liveBar.parentElement : null;
+        if (liveMount && !liveMount.contains(menuLi)) {
+          // React 可能克隆副本；先清掉所有 #fg-menu-li（React 复制的），再挂回唯一节点
+          $$("li#fg-menu-li", liveMount).forEach(function (old) { if (old !== menuLi) old.remove(); });
+          liveMount.insertBefore(menuLi, liveMount.firstChild);
+        }
+      } else if (key !== lastKey || !menuLi) {
+        // 换仓库 / 首次：重建菜单（buildMenu 幂等，会复用并移动 menuLi）
+        if (buildMenu(ctx)) { menuLi = $("#fg-menu-li"); lastKey = key; }
       }
     }
     augmentCodePanel();
