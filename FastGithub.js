@@ -12,8 +12,9 @@
 // @include       *://hub.fastgit.xyz/*
 // @grant         GM_setValue
 // @grant         GM_getValue
+// @grant         GM_registerMenuCommand
 // @run-at        document-idle
-// @version       2.2.0
+// @version       3.0.0
 // ==/UserScript==
 
 (function () {
@@ -21,17 +22,15 @@
 
   /* ===================== 可编辑配置（GM_setValue/GM_getValue 持久化） ===================== */
   var CONFIG = {
-    cloneCmd: true,   // 克隆行是否带 "git clone"
-    depth: true       // 克隆行是否带 "--depth=1"
+    cloneCmd: true,
+    depth: true
   };
-  // 从 GM 存储读取用户配置（若不存在则使用默认值）
   try {
     if (typeof GM_getValue === "function") {
       var saved = GM_getValue("fgConfig", null);
       if (saved) CONFIG = Object.assign(CONFIG, saved);
     }
   } catch (e) { }
-  // 保存配置到 GM 存储
   function saveConfig() {
     try {
       if (typeof GM_setValue === "function") GM_setValue("fgConfig", CONFIG);
@@ -39,10 +38,7 @@
   }
 
   /* MirrorUrl[i] = [前缀, 名称, 提示]
-   * 下载/克隆类前缀拼接规则: 前缀 + GitHub 完整链接(以 https://github.com 起始)
-   * 实测 2026-10，仅保留实测可用的节点；z2 等临时不可用节点见下方注释。
-   * 历史镜像(fastgit/cnpmjs/bajins/wuyanzheshui/rc1844 worker/cors.zme.ink/ghproxy.com旧域名等)
-   * 已全部死亡，故移除，git 历史中可查。 */
+   * 下载/克隆类前缀拼接规则: 前缀 + GitHub 完整链接(以 https://github.com 起始) */
   var MirrorUrl = new Array();
   MirrorUrl[0] = ["https://eo.gh-proxy.cn/github/https://github.com", "gh-proxy.cn", "gh-proxy.cn 官方推荐入口(腾讯云EdgeOne)，支持clone/raw/zip/releases，支持断点续传，只加速文件不代理网页"];
   MirrorUrl[1] = ["https://z1.gh-proxy.cn/github/https://github.com", "gh-proxy z1", "gh-proxy.cn EdgeOne加速-1，支持clone/raw/zip/releases，支持断点续传"];
@@ -52,19 +48,13 @@
   MirrorUrl[5] = ["https://ghproxy.net/https://github.com", "ghproxy.net", "公益GitHub文件加速，支持clone/raw/zip/releases"];
   MirrorUrl[6] = ["https://ghfast.top/https://github.com", "ghfast.top", "公益加速，脚本环境实测仅可用于克隆，文件下载请选其它入口"];
   MirrorUrl[7] = ["https://gitclone.com/github.com", "GitClone", "GitHub缓存加速网站，仅克隆有效"];
-  // gh-proxy.cn z2 节点(https://z2.gh-proxy.cn)此前返回423锁定；若已恢复可取消注释并把 8 加入下方对应 Set
-  // MirrorUrl[8] = ["https://z2.gh-proxy.cn/github/https://github.com", "gh-proxy z2", "gh-proxy.cn EdgeOne加速-2"];
 
-  // 专用克隆镜像(SSH形式，前缀 + owner/repo.git)
   var SSH_MIRROR = ["git@git.zhlh6.cn:", "加速你的Github", "利用ucloud提供的GlobalSSH，仅克隆有效"];
-  // 专用文件镜像
   var JSD = ["https://cdn.jsdelivr.net/gh", "jsDelivr", "通过CDN浏览/读取单个文件，单包总体积有限制(约50MB)，无Release/ZIP加速"];
 
-  // 添加对应索引即可（重写后按“能力”拆分，避免把不能下载的站点放进下载列表）
   var CloneSet    = [0, 1, 2, 3, 4, 5, 6, 7];
   var DownloadSet = [0, 1, 2, 3, 4, 5];
   var RawSet      = [0, 1, 2, 3, 4, 5];
-  // 注意: 这些服务“只加速文件不代理网页”，因此没有镜像浏览集合；文件浏览只有 jsDelivr 特殊处理
 
   var OtherUrl = [
     ["https://github.com/RC1844/FastGithub", "脚本Github仓库地址,点个赞谢谢"],
@@ -105,15 +95,6 @@
     return node;
   }
 
-  function absUrl(u) {
-    if (!u) return "";
-    if (/^https?:\/\//i.test(u)) return u;
-    return location.origin + (u.charAt(0) === "/" ? u : "/" + u);
-  }
-
-  // 镜像前缀拼接用：把任意 GitHub 链接/相对路径归一化为
-  //   /owner/repo/... 形式的相对路径（以 / 开头），
-  // 让  前缀(含 .../github.com) + relPath  得到正确的加速 URL。
   function relPath(u) {
     if (!u) return "";
     var m = u.match(/github\.com(\/.*)$/i);
@@ -122,7 +103,6 @@
     return "/" + u;
   }
 
-  // 当前仓库 owner/repo（非仓库页返回 null）
   function repoContext() {
     var p = location.pathname.split("/").filter(Boolean);
     var banned = ["features", "marketplace", "orgs", "settings", "search", "login", "signup",
@@ -131,7 +111,6 @@
     return { owner: p[0], repo: p[1], parts: p };
   }
 
-  // 页面内嵌数据中的默认分支 ZIP 路径（Code 面板未打开时兜底）
   var zipCache;
   function defaultZipPath(ctx) {
     if (zipCache !== undefined) return zipCache;
@@ -141,7 +120,6 @@
       if (m) zipCache = m[1].replace(/\\u0026/g, "&");
     } catch (e) { }
     if (!zipCache) {
-      // 最后兜底：/owner/repo/tree/<分支(可含/)>
       var tm = location.pathname.match(/^\/[^/]+\/[^/]+\/tree\/(.+)$/);
       if (tm) zipCache = "/" + ctx.owner + "/" + ctx.repo + "/archive/refs/heads/" + tm[1] + ".zip";
     }
@@ -157,7 +135,6 @@
     return null;
   }
 
-  // jsDelivr 链接：/owner/repo/(raw|blob)/[refs/heads/|refs/tags/]ref/path -> gh/owner/repo@ref/path
   function jsDelivrFromUrl(u) {
     var m = u.match(/github\.com\/([^/]+)\/[^/]+\/(?:raw|blob)\/(?:refs\/heads\/|refs\/tags\/)?(.+)$/i);
     if (!m) {
@@ -178,90 +155,16 @@
     return JSD[0] + "/" + repoName.replace(/\/$/, "") + "@" + m[2];
   }
 
-  /* ================================ 注入样式（对齐 GitHub Primer 设计） ================================ */
-  var STYLE = [
+  /* ================================== 注入样式（仅保留 GitHub 原生类不覆盖的部分） ================================== */
+  var MINIMAL_CSS = [
+    // 菜单 li 基本定位 + 视觉去重（仅 2 行）
     "#fg-menu-li{list-style:none;position:relative;display:inline-block;}",
-    "li#fg-menu-li ~ li#fg-menu-li{display:none;}",
-
-    /* 触发按钮：完全复刻 GitHub 原生 .btn（如 Code 按钮、Download ZIP 按钮） */
-    ".fg-details{position:relative;}",
-    ".fg-details>summary{list-style:none;display:inline-flex;align-items:center;gap:6px;cursor:pointer;",
-    "padding:5px 12px;font-size:14px;font-weight:500;line-height:20px;border-radius:6px;",
-    "color:var(--color-fg-default);background:var(--color-canvas-subtle);",
-    "border:1px solid var(--color-border-default);user-select:none;white-space:nowrap;",
-    "transition:background-color .15s ease,border-color .15s ease;box-shadow:var(--box-shadow-inset,none);}",
-    ".fg-details>summary::-webkit-details-marker{display:none;}",
-    ".fg-details>summary:hover{background:var(--color-canvas-subtle-hover,#eef0f3);border-color:var(--color-border-muted,#d1d9e0);}",
-    ".fg-details[open]>summary{background:var(--color-canvas-default);border-color:var(--color-border-emphasis,#24292f);",
-    "box-shadow:0 1px 2px rgba(140,149,159,.15);}",
-
-    /* 面板：对齐 GitHub 下拉面板（如 Actions、Settings 下拉） */
-    ".fg-panel{position:absolute;top:calc(100% + 4px);right:0;z-index:1000;width:400px;max-width:90vw;",
-    "background:var(--color-canvas-default,#fff);",
-    "border:1px solid var(--color-border-default,#d0d7de);border-radius:8px;",
-    "box-shadow:0 8px 16px rgba(140,149,159,.25);overflow:hidden;}",
-
-    /* Tab 切换：对齐 GitHub 的 subnav / tab 样式 */
-    ".fg-tabs{display:flex;border-bottom:1px solid var(--color-border-default,#d0d7de);background:var(--color-canvas-subtle,#f6f8fa);",
-    "padding:0 4px;}",
-    ".fg-tab{flex:1;padding:8px 4px;border:0;background:transparent;font-size:13px;font-weight:500;cursor:pointer;",
-    "color:var(--color-fg-muted,#57606a);transition:color .1s;}",
-    ".fg-tab:hover{color:var(--color-fg-default,#1f2328);}",
-    ".fg-tab.fg-on{color:var(--color-fg-default,#1f2328);font-weight:600;",
-    "box-shadow:inset 0 -2px 0 var(--color-accent-emphasis,#0969da);}",
-    ".fg-body{max-height:min(70vh,520px);overflow:auto;padding:8px 12px;}",
-
-    /* 分区标题：对齐 GitHub 的 section heading */
-    ".fg-sec{font-size:12px;font-weight:600;color:var(--color-fg-muted,#57606a);padding:8px 0 4px;",
-    "text-transform:none;letter-spacing:.02em;}",
-
-    /* 提示：对齐 GitHub 的 subtle note（弱化边框，柔和背景） */
-    ".fg-warn{margin:0 0 4px;padding:6px 10px;font-size:12px;border-radius:6px;line-height:1.5;}",
-    ".fg-warn.a{background:var(--color-attention-subtle,#fff8c5);color:var(--color-attention-fg,#4d2e25);}",
-    ".fg-warn.b{background:var(--color-danger-subtle,#ffebe9);color:var(--color-danger-fg,#82071e);}",
-
-    /* 克隆行：对齐 GitHub Code 面板的 input + copy 按钮 */
-    ".fg-row{display:flex;align-items:center;gap:6px;padding:4px 0;}",
-    ".fg-row .fg-name{flex:0 0 88px;font-size:12px;color:var(--color-fg-muted,#57606a);",
-    "overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}",
-    ".fg-in{flex:1;min-width:0;padding:5px 8px;font-size:12px;font-family:var(--mono-font-size-12,var(--font-mono));",
-    "border:1px solid var(--color-border-default,#d0d7de);border-radius:6px;",
-    "background:var(--color-canvas-default,#fff);color:var(--color-fg-default,#1f2328);line-height:1.4;}",
-    ".fg-in:focus{outline:none;border-color:var(--color-accent-emphasis,#0969da);",
-    "box-shadow:0 0 0 1px var(--color-accent-emphasis,#0969da);}",
-    ".fg-copy{flex:0 0 auto;padding:4px 10px;font-size:12px;font-weight:500;border-radius:6px;cursor:pointer;",
-    "border:1px solid var(--color-border-default,#d0d7de);background:var(--color-canvas-subtle,#f6f8fa);",
-    "color:var(--color-fg-default,#1f2328);transition:background-color .1s,border-color .1s;}",
-    ".fg-copy:hover{background:var(--color-canvas-subtle-hover,#eef0f3);border-color:var(--color-border-muted,#d1d9e0);}",
-    ".fg-copy:active{background:var(--color-canvas-overlay,#f3f4f6);}",
-
-    /* 链接项：对齐 GitHub 的 nav / list item */
-    ".fg-item{display:block;padding:6px 10px;border-radius:6px;font-size:13px;",
-    "color:var(--color-accent-fg,#0969da);text-decoration:none;}",
-    ".fg-item:hover{background:var(--color-canvas-subtle,#f6f8fa);text-decoration:underline;}",
-
-    /* 下拉框：完全对齐 GitHub 原生 <select>（.form-select） */
-    ".fg-select{width:100%;padding:5px 28px 5px 8px;font-size:13px;line-height:1.4;",
-    "border:1px solid var(--color-border-default,#d0d7de);border-radius:6px;",
-    "background:var(--color-canvas-default,#fff) url('data:image/svg+xml,%3Csvg width=\"16\" height=\"12\" viewBox=\"0 0 16 12\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cpath d=\"M2 4l6 6 6-6\" stroke=\"%2357606a\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/%3E%3C/svg%3E') no-repeat right 8px center;",
-    "appearance:none;-webkit-appearance:none;color:var(--color-fg-default,#1f2328);cursor:pointer;",
-    "box-shadow:var(--box-shadow-inset,none);}",
-    ".fg-select:hover{border-color:var(--color-border-muted,#d1d9e0);}",
-    ".fg-select:focus{outline:none;border-color:var(--color-accent-emphasis,#0969da);",
-    "box-shadow:0 0 0 1px var(--color-accent-emphasis,#0969da);}",
-
-    /* 设置区：对齐 GitHub 的 checkbox 列表（如 PR 模板设置） */
-    ".fg-settings{padding:4px 0;}",
-    ".fg-set-row{display:flex;align-items:center;gap:8px;padding:6px 8px;font-size:13px;",
-    "border-radius:6px;cursor:pointer;}",
-    ".fg-set-row:hover{background:var(--color-canvas-subtle,#f6f8fa);}",
-    ".fg-set-row input[type=checkbox]{width:14px;height:14px;cursor:pointer;",
-    "accent-color:var(--color-accent-emphasis,#0969da);border-radius:3px;}"
+    "li#fg-menu-li ~ li#fg-menu-li{display:none;}"
   ].join("\n");
 
   function injectStyle() {
     if ($("#fg-style")) return;
-    document.head.appendChild(el("style", { id: "fg-style", textContent: STYLE }));
+    document.head.appendChild(el("style", { id: "fg-style", textContent: MINIMAL_CSS }));
   }
 
   /* ================================== 复制功能 ================================== */
@@ -286,47 +189,54 @@
 
   /* ============================== 主菜单（克隆与镜像） ============================== */
   function buildCloneRow(cmd, name, tip) {
-    var input = el("input", {
-      class: "fg-in", type: "text", value: cmd, readonly: true, title: tip || name,
-      "aria-label": cmd
-    });
-    var copyBtn = el("button", { class: "fg-copy", type: "button", text: "复制", title: "复制命令" });
+    var row = el("div", { class: "Box-row d-flex flex-items-center px-3 py-1", title: tip || "" }, [
+      el("span", { class: "Label Label--inline m-2 text-muted", text: name, title: tip || name }),
+      el("input", {
+        class: "form-control form-control-sm flex-grow-1 w-auto",
+        type: "text", value: cmd, readonly: true, title: tip || name,
+        style: "font-family:var(--font-mono);font-size:12px;min-width:0"
+      }),
+      el("button", { class: "btn btn-sm ml-2", type: "button", text: "复制", title: "复制命令" })
+    ]);
+    var input = row.querySelector("input");
+    var copyBtn = row.querySelector("button");
     copyBtn.addEventListener("click", function () { copyText(cmd, copyBtn); });
     input.addEventListener("focus", function () { input.select(); });
-    return el("div", { class: "fg-row", title: tip || "" }, [
-      el("span", { class: "fg-name", text: name, title: tip || name }), input, copyBtn
-    ]);
+    return row;
   }
 
   function buildMenu(ctx) {
-    // 创建稳定菜单节点 menuLi（每次调用新建一份，旧副本由 CSS 兄弟选择器隐藏）
     var li = el("li", { id: "fg-menu-li" });
     menuLi = li;
 
-    var details = el("details", { id: "fg-details", class: "fg-details" });
-    var summary = el("summary", { title: "镜像站点与快速克隆" });
+    var details = el("details", { id: "fg-details", class: "Box" });
+    details.style.cssText = "position:relative;display:inline-block;width:400px;max-width:90vw;";
+
+    var summary = el("summary", { title: "镜像站点与快速克隆", class: "btn btn-sm m-2" });
+    summary.style.cssText = "list-style:none;display:inline-flex;align-items:center;gap:6px;cursor:pointer;width:auto;";
     summary.innerHTML = "克隆与镜像 " +
       '<svg aria-hidden="true" width="12" height="12" viewBox="0 0 16 16" style="flex-shrink:0;opacity:.6">' +
       '<path fill="currentColor" d="M12.78 5.22a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L3.22 6.28a.75.75 0 0 1 1.06-1.06L8 8.94l3.72-3.72a.75.75 0 0 1 1.06 0Z"/></svg>';
-    var panel = el("div", { class: "fg-panel" });
-    var tabs = el("div", { class: "fg-tabs" });
-    var tabMain = el("button", { class: "fg-tab fg-on", type: "button", text: "主要" });
-    var tabOther = el("button", { class: "fg-tab", type: "button", text: "其他" });
-    var tabSet = el("button", { class: "fg-tab", type: "button", text: "设置" });
+
+    var panel = el("div", { class: "Box-header" });
+    var tabs = el("div", { class: "UnderlineNav px-2" });
+    var tabMain = el("button", { class: "UnderlineNav-octicon-btn m-1 py-2 font-bold", type: "button", text: "主要" });
+    var tabOther = el("button", { class: "UnderlineNav-octicon-btn m-1 py-2", type: "button", text: "其他" });
     tabs.appendChild(tabMain);
     tabs.appendChild(tabOther);
-    tabs.appendChild(tabSet);
 
-    var body = el("div", { class: "fg-body" });
-    var paneMain = el("div");
-    var paneOther = el("div", { hidden: true });
-    var paneSet = el("div", { hidden: true });
+    var body = el("div", { class: "Box-body p-0" });
+    var paneMain = el("div", { class: "Box p-0" });
+    var paneOther = el("div", { class: "Box p-0", hidden: true });
 
     /* ---- 主要 ---- */
-    paneMain.appendChild(el("div", { class: "fg-warn a", text: "提示：可在「设置」页签关闭 git clone / --depth=1 前缀" }));
-    paneMain.appendChild(el("div", { class: "fg-warn b", text: "请不要在镜像网站登录账号，若因此造成任何损失作者概不负责" }));
+    paneMain.appendChild(el("div", { class: "Box p-2 m-2 bg-subtle rounded-2", style: "font-size:12px;" }, [
+      el("div", { class: "text-bold mb-1", text: "⚠ 提示" }),
+      el("div", { text: "可在 Tampermonkey 脚本菜单「配置」中切换 git clone / --depth=1 前缀" }),
+      el("div", { class: "text-danger mt-1", text: "请不要在镜像网站登录账号，若因此造成任何损失作者概不负责" })
+    ]));
 
-    paneMain.appendChild(el("div", { class: "fg-sec", text: "快速克隆" }));
+    paneMain.appendChild(el("div", { class: "h5 px-3 pt-3 text-bold text-muted", text: "快速克隆" }));
     var suffix = ctx.owner + "/" + ctx.repo + ".git";
     function cloneCmd(url) {
       return (CONFIG.cloneCmd ? "git clone " : "") + (CONFIG.depth ? "--depth=1 " : "") + url;
@@ -340,11 +250,11 @@
     paneMain.appendChild(buildCloneRow(
       "git remote set-url origin https://github.com/" + suffix, "还原GitHub", "还原为 GitHub 官方仓库地址"));
 
-    /* ---- ZIP 镜像下载（下拉框） ---- */
+    /* ---- ZIP 镜像下载（form-select） ---- */
     var zipPath = defaultZipPath(ctx);
     if (zipPath) {
-      paneMain.appendChild(el("div", { class: "fg-sec", text: "ZIP 归档加速下载" }));
-      var zipSelect = el("select", { class: "fg-select" });
+      paneMain.appendChild(el("div", { class: "h5 px-3 pt-3 text-bold text-muted", text: "ZIP 归档加速下载" }));
+      var zipSelect = el("select", { class: "form-select w-full p-2" });
       zipSelect.appendChild(el("option", { value: "", text: "选择镜像下载 ZIP" }));
       DownloadSet.forEach(function (i) {
         var m = MirrorUrl[i];
@@ -353,93 +263,51 @@
       zipSelect.addEventListener("change", function () {
         if (zipSelect.value) window.open(zipSelect.value, "_blank", "noopener");
       });
-      paneMain.appendChild(zipSelect);
+      paneMain.appendChild(el("div", { class: "px-3 pb-2" }, [zipSelect]));
     }
 
-    /* ---- 镜像浏览（仅 jsDelivr，可看源码/图片） ---- */
+    /* ---- 镜像浏览 ---- */
     var jsd = jsDelivrFromUrl(location.href);
     if (jsd) {
-      paneMain.appendChild(el("div", { class: "fg-sec", text: "镜像浏览" }));
-      paneMain.appendChild(el("a", { class: "fg-item", href: jsd, target: "_blank", rel: "nofollow", title: JSD[2], text: "镜像浏览(" + JSD[1] + ")" }));
+      paneMain.appendChild(el("div", { class: "h5 px-3 pt-3 text-bold text-muted", text: "镜像浏览" }));
+      paneMain.appendChild(el("a", { class: "Link p-2 d-block text-bold", href: jsd, target: "_blank", rel: "nofollow", title: JSD[2], text: "镜像浏览(" + JSD[1] + ")" }));
     }
     if (location.hostname !== "github.com") {
       paneMain.appendChild(el("a", {
-        class: "fg-item", href: "https://github.com" + location.pathname + location.search,
+        class: "Link p-2 d-block text-bold", href: "https://github.com" + location.pathname + location.search,
         target: "_blank", rel: "nofollow", text: "返回 GitHub 官方站"
       }));
     }
 
     /* ---- 其他 ---- */
     OtherUrl.forEach(function (u) {
-      paneOther.appendChild(el("a", { class: "fg-item", href: u[0], target: "_blank", rel: "nofollow", text: u[1] }));
+      paneOther.appendChild(el("a", { class: "Link p-2 d-block", href: u[0], target: "_blank", rel: "nofollow", text: u[1] }));
     });
-
-    /* ---- 设置 ---- */
-    paneSet.appendChild(el("div", { class: "fg-settings" }, [
-      el("div", { class: "fg-set-row" }, [
-        el("input", { type: "checkbox", id: "fg-cfg-clonecmd", checked: CONFIG.cloneCmd ? "checked" : "" }),
-        el("label", { "for": "fg-cfg-clonecmd", text: "克隆命令带 git clone 前缀" })
-      ]),
-      el("div", { class: "fg-set-row" }, [
-        el("input", { type: "checkbox", id: "fg-cfg-depth", checked: CONFIG.depth ? "checked" : "" }),
-        el("label", { "for": "fg-cfg-depth", text: "克隆命令带 --depth=1 浅克隆" })
-      ])
-    ]));
-    // 勾选后立即保存 + 刷新克隆行
-    var cbCloneCmd = paneSet.querySelector("#fg-cfg-clonecmd");
-    var cbDepth = paneSet.querySelector("#fg-cfg-depth");
-    function onCfgChange() {
-      CONFIG.cloneCmd = cbCloneCmd.checked;
-      CONFIG.depth = cbDepth.checked;
-      saveConfig();
-      // 删除所有旧克隆行
-      Array.prototype.slice.call(paneMain.querySelectorAll(".fg-row")).forEach(function (r) { r.remove(); });
-      // 重新插入
-      var anchor = paneMain.querySelector(".fg-sec"); // "快速克隆" 标题
-      CloneSet.forEach(function (i) {
-        var m = MirrorUrl[i];
-        if (!m) return;
-        paneMain.insertBefore(buildCloneRow(
-          (CONFIG.cloneCmd ? "git clone " : "") + (CONFIG.depth ? "--depth=1 " : "") + m[0] + "/" + suffix,
-          m[1], m[2]), anchor ? anchor.nextSibling : null);
-        anchor = anchor ? anchor.nextSibling : null;
-      });
-    }
-    cbCloneCmd.addEventListener("change", onCfgChange);
-    cbDepth.addEventListener("change", onCfgChange);
 
     tabMain.addEventListener("click", function () {
-      tabMain.classList.add("fg-on"); tabOther.classList.remove("fg-on"); tabSet.classList.remove("fg-on");
-      paneMain.hidden = false; paneOther.hidden = true; paneSet.hidden = true;
+      tabMain.className = "UnderlineNav-octicon-btn m-1 py-2 font-bold";
+      tabOther.className = "UnderlineNav-octicon-btn m-1 py-2";
+      paneMain.hidden = false; paneOther.hidden = true;
     });
     tabOther.addEventListener("click", function () {
-      tabOther.classList.add("fg-on"); tabMain.classList.remove("fg-on"); tabSet.classList.remove("fg-on");
-      paneOther.hidden = false; paneMain.hidden = true; paneSet.hidden = true;
-    });
-    tabSet.addEventListener("click", function () {
-      tabSet.classList.add("fg-on"); tabMain.classList.remove("fg-on"); tabOther.classList.remove("fg-on");
-      paneSet.hidden = false; paneMain.hidden = true; paneOther.hidden = true;
+      tabOther.className = "UnderlineNav-octicon-btn m-1 py-2 font-bold";
+      tabMain.className = "UnderlineNav-octicon-btn m-1 py-2";
+      paneOther.hidden = false; paneMain.hidden = true;
     });
 
     body.appendChild(paneMain);
     body.appendChild(paneOther);
-    body.appendChild(paneSet);
     panel.appendChild(tabs);
     panel.appendChild(body);
     details.appendChild(summary);
     details.appendChild(panel);
     li.appendChild(details);
 
-    // 插入：挂到 header ul 内部。#fg-menu-li 是 <li>，只能挂在 <ul> 里
-    // （挂在 <div> 里会被浏览器 reparent）。新版仓库页 header 是
-    // ul#repo-header-actions，故直接挂回该 ul。重复副本由 CSS 兄弟选择器
-    // (li#fg-menu-li ~ li#fg-menu-li{display:none}) 兜底隐藏，视觉恒定唯一。
     var bar = $("ul[data-testid='repo-header-actions']") || $("ul.pagehead-actions");
     if (bar) {
       bar.insertBefore(li, bar.firstChild);
       return true;
     }
-    // 极端兜底：挂到 Public 标签旁的 div（li 用 div 包裹保持合法）
     var label = $("[data-testid='repo-visibility-label']");
     if (label && label.parentElement && label.parentElement.parentElement) {
       var wrapHost = label.parentElement.parentElement;
@@ -451,18 +319,16 @@
     return false;
   }
 
-  /* ====================== 增强原生 Code 下拉里的 Download ZIP（下拉框） ====================== */
+  /* ====================== 增强原生 Code 下拉里的 Download ZIP（form-select） ====================== */
   function augmentCodePanel() {
     $$("a[href*='/archive/refs/'][href$='.zip']").forEach(function (a) {
       if (a.dataset.fgZip) return;
-      // 仅处理 Code 克隆面板里的 ZIP（避免误伤 releases 的 Source code）
       if (!a.closest("[class*='ActionList'], .get-repo-form, details")) return;
       a.dataset.fgZip = "1";
-      // 在原 ZIP 按钮后面插入一个下拉选择框（脱机副本方式，不深拷贝 li）
       var baseLi = a.closest("li") || a.parentElement;
       var host = baseLi.parentNode;
       var insertRef = baseLi.nextSibling;
-      var sel = el("select", { class: "fg-select", style: "width:auto;min-width:180px;" });
+      var sel = el("select", { class: "form-select m-2", style: "width:auto;min-width:180px;font-size:12px;" });
       sel.appendChild(el("option", { value: "", text: "选择镜像下载 ZIP" }));
       DownloadSet.forEach(function (i) {
         var m = MirrorUrl[i];
@@ -475,15 +341,15 @@
     });
   }
 
-  /* ============================== Releases 资产按钮（下拉框） ============================== */
+  /* ============================== Releases 资产按钮（form-select） ============================== */
   function injectReleaseAssets() {
     if (location.pathname.split("/")[3] !== "releases") return;
     $$("a[href*='/releases/download/']").forEach(function (a) {
       if (a.dataset.fgRel) return;
       var row = a.closest("li.Box-row");
-      if (!row) return; // 资产片段懒加载完成后才会有
+      if (!row) return;
       a.dataset.fgRel = "1";
-      var sel = el("select", { class: "fg-select", style: "width:auto;min-width:180px;" });
+      var sel = el("select", { class: "form-select m-2", style: "width:auto;min-width:180px;font-size:12px;" });
       sel.appendChild(el("option", { value: "", text: "选择镜像下载" }));
       DownloadSet.forEach(function (i) {
         var m = MirrorUrl[i];
@@ -496,18 +362,15 @@
     });
   }
 
-  /* ================================== Raw 按钮（下拉框） ================================== */
+  /* ================================== Raw 按钮（form-select） ================================== */
   function injectRawButtons() {
     var host = $("a[data-testid='raw-button'], a#raw-url");
     if (!host || host.dataset.fgRaw) return;
     host.dataset.fgRaw = "1";
     var href = host.getAttribute("href") || "";
     var rel = relPath(href);
-
-    // 新版 Blob 页的 Raw 按钮是  a > div.prc-ButtonGroup-Item > div.prc-ButtonGroup
-    // 在其兄弟位置插入一个下拉选择框，替代原来的横向按钮组
     var item = host.closest("div[class*='ButtonGroup-Item']") || host.parentElement;
-    var sel = el("select", { class: "fg-select", style: "width:auto;min-width:160px;font-size:13px;" });
+    var sel = el("select", { class: "form-select m-2", style: "width:auto;min-width:160px;font-size:12px;" });
     sel.appendChild(el("option", { value: "", text: "镜像 Raw 下载" }));
     RawSet.forEach(function (i) {
       var m = MirrorUrl[i];
@@ -518,30 +381,47 @@
     sel.addEventListener("change", function () {
       if (sel.value) window.open(sel.value, "_blank", "noopener");
     });
-    // 插入到 Raw 按钮组后面
     if (item.parentNode) item.parentNode.insertBefore(sel, item.nextSibling);
+  }
+
+  /* ================================== GM_registerMenuCommand 配置菜单 ================================== */
+  function registerConfigMenu() {
+    if (typeof GM_registerMenuCommand !== "function") return;
+    // 克隆命令前缀配置
+    GM_registerMenuCommand(
+      "配置：克隆命令带 git clone 前缀（当前：" + (CONFIG.cloneCmd ? "开" : "关") + "）",
+      function () {
+        CONFIG.cloneCmd = !CONFIG.cloneCmd;
+        saveConfig();
+        alert("克隆命令前缀：git clone → " + (CONFIG.cloneCmd ? "开" : "关") + "\n刷新页面生效");
+      }
+    );
+    GM_registerMenuCommand(
+      "配置：克隆命令带 --depth=1（当前：" + (CONFIG.depth ? "开" : "关") + "）",
+      function () {
+        CONFIG.depth = !CONFIG.depth;
+        saveConfig();
+        alert("克隆命令前缀：--depth=1 → " + (CONFIG.depth ? "开" : "关") + "\n刷新页面生效");
+      }
+    );
   }
 
   /* ================================== 调度入口 ================================== */
   var lastKey = "";
-  var menuLi = null;      // 稳定引用：菜单节点只创建一次，后续仅移动不重建
+  var menuLi = null;
   function scan() {
     injectStyle();
     var ctx = repoContext();
     if (ctx) {
       var key = ctx.owner + "/" + ctx.repo;
-      // 节点已存在且同一仓库 → 确认稳定节点仍在“当前” header ul 里，若被 React 清掉则挂回
       if (menuLi && key === lastKey) {
         var liveBar = $("ul[data-testid='repo-header-actions']") || $("ul.pagehead-actions");
         if (liveBar && !liveBar.contains(menuLi)) {
           liveBar.insertBefore(menuLi, liveBar.firstChild);
         }
       } else if (key !== lastKey || !menuLi) {
-        // 换仓库 / 首次：重建菜单（buildMenu 幂等，会复用并移动 menuLi）
         if (buildMenu(ctx)) { menuLi = $("#fg-menu-li"); lastKey = key; }
       }
-      // 物理去重：保留我们稳定引用的 menuLi，移除 GitHub 重渲染/克隆机制
-      // 产生的任何多余 #fg-menu-li 副本（它们只是 menuLi 的深拷贝，无独立状态）
       $$("li#fg-menu-li").forEach(function (n) {
         if (n !== menuLi) n.remove();
       });
@@ -557,7 +437,6 @@
     timer = setTimeout(scan, 200);
   }
 
-  // 点击菜单外部或按 Esc 关闭（全局只注册一次，#fg-details 每次重建后自动生效）
   document.addEventListener("click", function (e) {
     var d = $("#fg-details");
     if (d && d.open && !d.contains(e.target)) d.open = false;
@@ -569,16 +448,12 @@
     }
   });
 
-  // 1) 先跑一次
   scan();
-  // 2) DOM 变动（React 重渲染、include-fragment 懒加载资产、Code 面板弹出）
   new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
-  // 3) Turbo 软导航
   ["turbo:load", "turbo:render"].forEach(function (ev) {
     document.addEventListener(ev, schedule);
   });
   window.addEventListener("popstate", schedule);
-  // 4) 兜底：劫持 pushState/replaceState
   ["pushState", "replaceState"].forEach(function (fn) {
     var raw = history[fn];
     history[fn] = function () {
@@ -587,14 +462,12 @@
       return ret;
     };
   });
-
-  // 5) 周期性物理去重：React/Turbo 重渲染会对 header 子树做深拷贝，把我们的
-  //    #fg-menu-li 复制出多个隐藏副本（CSS 兄弟选择器已隐藏它们，视觉唯一）。
-  //    这里每 1.5s 物理移除除稳定 menuLi 外的多余副本，保持 DOM 整洁。
   setInterval(function () {
     if (!menuLi) return;
     $$("li#fg-menu-li").forEach(function (n) {
       if (n !== menuLi && !menuLi.contains(n)) n.remove();
     });
   }, 1500);
+
+  registerConfigMenu();
 })();
