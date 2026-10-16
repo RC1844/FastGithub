@@ -6,7 +6,7 @@
 // @homepageURL   https://github.com/RC1844/FastGithub
 // @supportURL    https://github.com/RC1844/FastGithub/issues
 // @license       MIT License
-// @description   镜像访问GitHub,极速Clone、Raw、Release资产、ZIP加速；适配 2025+ 新版 GitHub 页面，纯原生JS无外部依赖
+// @description   镜像访问GitHub,极速Clone、Raw、Release资产、ZIP加速；适配 2025+ 新版 GitHub 页面，纯原生JS无外部依赖，自动复用 GitHub Primer React 组件样式
 // @include       *://github.com/*
 // @include       *://github*
 // @include       *://hub.fastgit.xyz/*
@@ -21,10 +21,7 @@
   "use strict";
 
   /* ===================== 可编辑配置（GM_setValue/GM_getValue 持久化） ===================== */
-  var CONFIG = {
-    cloneCmd: true,
-    depth: true
-  };
+  var CONFIG = { cloneCmd: true, depth: true };
   try {
     if (typeof GM_getValue === "function") {
       var saved = GM_getValue("fgConfig", null);
@@ -32,13 +29,10 @@
     }
   } catch (e) { }
   function saveConfig() {
-    try {
-      if (typeof GM_setValue === "function") GM_setValue("fgConfig", CONFIG);
-    } catch (e) { }
+    try { if (typeof GM_setValue === "function") GM_setValue("fgConfig", CONFIG); } catch (e) { }
   }
 
-  /* MirrorUrl[i] = [前缀, 名称, 提示]
-   * 下载/克隆类前缀拼接规则: 前缀 + GitHub 完整链接(以 https://github.com 起始) */
+  /* MirrorUrl[i] = [前缀, 名称, 提示] */
   var MirrorUrl = new Array();
   MirrorUrl[0] = ["https://eo.gh-proxy.cn/github/https://github.com", "gh-proxy.cn", "gh-proxy.cn 官方推荐入口(腾讯云EdgeOne)，支持clone/raw/zip/releases，支持断点续传，只加速文件不代理网页"];
   MirrorUrl[1] = ["https://z1.gh-proxy.cn/github/https://github.com", "gh-proxy z1", "gh-proxy.cn EdgeOne加速-1，支持clone/raw/zip/releases，支持断点续传"];
@@ -75,7 +69,7 @@
   ];
 
   /* ================================== 工具函数 ================================== */
-  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $  = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
   function el(tag, attrs, children) {
@@ -84,6 +78,7 @@
       Object.keys(attrs).forEach(function (k) {
         if (k === "class") node.className = attrs[k];
         else if (k === "text") node.textContent = attrs[k];
+        else if (k === "html") node.innerHTML = attrs[k];
         else if (k.slice(0, 5) === "data-") node.setAttribute(k, attrs[k]);
         else node[k] = attrs[k];
       });
@@ -137,9 +132,7 @@
 
   function jsDelivrFromUrl(u) {
     var m = u.match(/github\.com\/([^/]+)\/[^/]+\/(?:raw|blob)\/(?:refs\/heads\/|refs\/tags\/)?(.+)$/i);
-    if (!m) {
-      m = u.match(/^\/([^/]+)\/[^/]+\/(?:raw|blob)\/(?:refs\/heads\/|refs\/tags\/)?(.+)$/);
-    }
+    if (!m) m = u.match(/^\/([^/]+)\/[^/]+\/(?:raw|blob)\/(?:refs\/heads\/|refs\/tags\/)?(.+)$/);
     var ctx = repoContext();
     if (!m && ctx) {
       var pm = location.pathname.match(/(?:tree|blob)\/(?:refs\/heads\/|refs\/tags\/)?(.+)$/);
@@ -155,11 +148,110 @@
     return JSD[0] + "/" + repoName.replace(/\/$/, "") + "@" + m[2];
   }
 
-  /* ================================== 注入样式（仅保留 GitHub 原生类不覆盖的部分） ================================== */
+  /* ================================== 动态探测 GitHub Primer React 组件样式 ==================================
+   * GitHub 2025+ 前端使用 CSS Modules（哈希类名随构建变化）+ data-component 属性（稳定）。
+   * 启动时从原生 DOM 探测出当前版本的哈希类名和 computedStyle，之后构造注入 UI 时精确复用。 */
+  var GH = {
+    buttonClass: "",            // prc-Button-ButtonBase-*
+    actionMenuButtonClass: "",  // prc-Button-ButtonBase-* + ActionMenu_Button__*
+    labelClass: "",             // prc-Button-Label-*
+    buttonContentClass: "",     // prc-Button-ButtonContent-*
+    leadingVisualClass: "",     // prc-Button-Visual-* prc-Button-LeadingVisual-* prc-Button-VisualWrap-*
+    boxClass: "",               // Box_* 容器
+    inputClass: "",             // prc-components-Input-*
+    // computedStyle 精确值（Primer 主题 Token）
+    cs: {
+      btn: null,   // default small button
+      select: null, // 下拉框主题
+      box: null,    // panel 容器主题
+      link: null    // 链接主题
+    }
+  };
+
+  function detectGitHubStyle() {
+    // 1. 普通按钮（prc-Button-ButtonBase-*）
+    var btn = document.querySelector('[data-component="Button"][data-size="small"][data-variant="default"]');
+    if (!btn) btn = document.querySelector('[data-component="Button"]');
+    if (btn) {
+      GH.buttonClass = btn.className;
+      GH.cs.btn = {
+        bg: getComputedStyle(btn).backgroundColor,
+        border: getComputedStyle(btn).border,
+        radius: getComputedStyle(btn).borderRadius,
+        padding: getComputedStyle(btn).padding,
+        height: getComputedStyle(btn).height,
+        color: getComputedStyle(btn).color,
+        fontSize: getComputedStyle(btn).fontSize,
+        fontFamily: getComputedStyle(btn).fontFamily,
+        cursor: getComputedStyle(btn).cursor,
+        display: getComputedStyle(btn).display,
+        alignItems: getComputedStyle(btn).alignItems
+      };
+      // 内部结构 class
+      var content = btn.querySelector('[data-component="buttonContent"]');
+      if (content) GH.buttonContentClass = content.className;
+      var leading = btn.querySelector('[data-component="leadingVisual"]');
+      if (leading) GH.leadingVisualClass = leading.className;
+      var label = btn.querySelector('[data-component="text"]');
+      if (label) GH.labelClass = label.className;
+    }
+
+    // 2. ActionMenu.Button（带弹出菜单的触发器按钮）
+    var amb = document.querySelector('[class*="ActionMenu_Button"], [data-component="ActionMenu.Button"]');
+    if (amb) GH.actionMenuButtonClass = amb.className;
+
+    // 3. Box 容器（选一个看起来像 panel 的）
+    var boxes = $$('[class*="Box_"]').filter(function (b) {
+      var cls = b.className.toString();
+      // 排除 icon/button 内嵌的小 Box，要选 panel-like 的
+      return cls.indexOf("Box_") >= 0 && b.children.length >= 2 && b.offsetWidth > 120;
+    });
+    if (boxes.length) GH.boxClass = boxes[0].className.toString();
+    if (GH.boxClass) {
+      GH.cs.box = {
+        bg: getComputedStyle(boxes[0]).backgroundColor,
+        border: getComputedStyle(boxes[0]).border,
+        radius: getComputedStyle(boxes[0]).borderRadius,
+        padding: getComputedStyle(boxes[0]).padding
+      };
+    }
+
+    // 4. Input（TextInput 组件）
+    var input = document.querySelector('[data-component="input"], [class*="prc-components-Input"]');
+    if (input) {
+      GH.inputClass = input.className;
+      GH.cs.input = {
+        bg: getComputedStyle(input).backgroundColor,
+        border: getComputedStyle(input).border,
+        radius: getComputedStyle(input).borderRadius,
+        padding: getComputedStyle(input).padding,
+        height: getComputedStyle(input).height,
+        fontSize: getComputedStyle(input).fontSize
+      };
+    }
+
+    // 5. Link
+    var link = document.querySelector('[data-component="Link"], [class*="prc-Link-"]');
+    if (link) {
+      GH.linkClass = link.className;
+      GH.cs.link = {
+        color: getComputedStyle(link).color,
+        fontSize: getComputedStyle(link).fontSize
+      };
+    }
+  }
+
+  /* ================================== 注入样式（仅 GitHub 原生 class 无法覆盖的部分） ================================== */
   var MINIMAL_CSS = [
-    // 菜单 li 基本定位 + 视觉去重（仅 2 行）
     "#fg-menu-li{list-style:none;position:relative;display:inline-block;}",
-    "li#fg-menu-li ~ li#fg-menu-li{display:none;}"
+    "li#fg-menu-li ~ li#fg-menu-li{display:none;}",
+    // select 下拉框：GitHub 无原生 select 组件，用 Primer 主题 Token 精确模拟
+    "details#fg-details select{box-sizing:border-box;appearance:none;-webkit-appearance:none;background-image:url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16' fill='%2359636e'%3E%3Cpath d='M12.78 5.22a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L3.22 6.28a.75.75 0 0 1 1.06-1.06L8 8.94l3.72-3.72a.75.75 0 0 1 1.06 0Z'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 8px center;padding-right:28px;}",
+    // details/summary 的三角箭头隐藏（我们用自定义 chevron SVG）
+    "details#fg-details > summary{list-style:none;display:inline-flex;align-items:center;gap:6px;cursor:pointer;width:auto;}",
+    "details#fg-details > summary::-webkit-details-marker{display:none;}",
+    // details 展开面板容器样式（匹配 GitHub Box）
+    "details#fg-details > div[class*='Box']{position:absolute;top:calc(100% + 4px);left:0;min-width:320px;width:max-content;max-width:420px;z-index:100;}"
   ].join("\n");
 
   function injectStyle() {
@@ -167,18 +259,112 @@
     document.head.appendChild(el("style", { id: "fg-style", textContent: MINIMAL_CSS }));
   }
 
+  /* ================================== 原生风格按钮构建（仿照 data-component="Button"） ================================== */
+  // <button data-component="Button" data-size="small" data-variant="default" class="prc-Button-ButtonBase-*">
+  //   <span data-component="buttonContent" data-align="center" class="prc-Button-ButtonContent-*">
+  //     [<span data-component="leadingVisual" class="prc-Button-Visual-* prc-Button-LeadingVisual-* prc-Button-VisualWrap-*"><svg...></svg></span>]
+  //     <span data-component="text" class="prc-Button-Label-*">文字</span>
+  //   </span>
+  // </button>
+  function buildNativeButton(text, opts) {
+    opts = opts || {};
+    var cls = GH.buttonClass || "";
+    if (opts.extraClass) cls += " " + opts.extraClass;
+
+    var btn = el("button", {
+      type: "button",
+      "data-component": "Button",
+      "data-size": opts.size || "small",
+      "data-variant": opts.variant || "default",
+      class: cls,
+      title: opts.title || text,
+      html: ""
+    });
+
+    var contentClass = GH.buttonContentClass || "";
+    var content = el("span", {
+      "data-component": "buttonContent",
+      "data-align": "center",
+      class: contentClass
+    });
+
+    if (opts.icon) {
+      var leadingCls = GH.leadingVisualClass || "";
+      var leading = el("span", { "data-component": "leadingVisual", class: leadingCls });
+      leading.innerHTML = opts.icon;
+      content.appendChild(leading);
+    }
+
+    var labelCls = GH.labelClass || "";
+    content.appendChild(el("span", { "data-component": "text", class: labelCls, text: text }));
+    btn.appendChild(content);
+
+    // 精确匹配原生 computedStyle 给 inline fallback（万一 class 探测失败）
+    if (!GH.buttonClass && GH.cs.btn) {
+      var cs = GH.cs.btn;
+      btn.style.cssText = "background:" + cs.bg + ";border:" + cs.border + ";border-radius:" + cs.radius +
+        ";padding:" + cs.padding + ";color:" + cs.color + ";font-size:" + cs.fontSize +
+        ";height:" + cs.height + ";cursor:" + cs.cursor + ";display:" + cs.display +
+        ";align-items:" + cs.alignItems + ";font-family:" + cs.fontFamily;
+    }
+    return btn;
+  }
+
+  // <summary> 触发器按钮（仿照 ActionMenu.Button + variant=invisible）
+  function buildActionMenuTrigger(text, opts) {
+    opts = opts || {};
+    var btn = el("summary", {
+      title: opts.title || text,
+      html: ""
+    });
+    var cls = GH.actionMenuButtonClass || GH.buttonClass || "";
+    btn.className = cls;
+    btn.setAttribute("role", "button");
+    btn.setAttribute("aria-haspopup", "true");
+    btn.setAttribute("tabindex", "0");
+    btn.setAttribute("data-component", "ActionMenu.Button");
+    btn.setAttribute("data-size", opts.size || "medium");
+    btn.setAttribute("data-variant", opts.variant || "invisible");
+
+    // 内容：可选 SVG leadingVisual + 文字 + chevron
+    if (opts.icon) {
+      var leading = el("span", {
+        "data-component": "leadingVisual",
+        class: GH.leadingVisualClass || ""
+      });
+      leading.innerHTML = opts.icon;
+      btn.appendChild(leading);
+    }
+    btn.appendChild(el("span", {
+      "data-component": "text",
+      class: GH.labelClass || "",
+      text: text
+    }));
+    btn.innerHTML +=
+      '<svg aria-hidden="true" width="12" height="12" viewBox="0 0 16 16" style="flex-shrink:0;opacity:.6">' +
+      '<path fill="currentColor" d="M12.78 5.22a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L3.22 6.28a.75.75 0 0 1 1.06-1.06L8 8.94l3.72-3.72a.75.75 0 0 1 1.06 0Z"/></svg>';
+
+    // fallback style
+    if (!cls) {
+      btn.style.cssText = "background:transparent;border:1px solid transparent;border-radius:6px;" +
+        "padding:0 8px;color:#59636e;font-size:14px;cursor:pointer;display:flex;" +
+        "align-items:center;gap:6px;list-style:none;";
+    }
+    return btn;
+  }
+
   /* ================================== 复制功能 ================================== */
   function copyText(text, btn) {
     function ok() {
-      var old = btn.textContent;
-      btn.textContent = "已复制";
-      setTimeout(function () { btn.textContent = old; }, 1200);
+      // 把按钮内容替换成 "已复制" 文字（保持原生内部结构）
+      var label = btn.querySelector('[data-component="text"]');
+      if (label) { var old = label.textContent; label.textContent = "已复制"; setTimeout(function () { label.textContent = old; }, 1200); }
+      else { var ot = btn.textContent; btn.textContent = "已复制"; setTimeout(function () { btn.textContent = ot; }, 1200); }
     }
     function fallback() {
       var ta = el("textarea", { value: text });
       ta.style.cssText = "position:fixed;opacity:0";
-      document.body.appendChild(ta);
-      ta.select();
+      document.body.appendChild(ta); ta.select();
       try { document.execCommand("copy"); ok(); } catch (e) { }
       ta.remove();
     }
@@ -188,55 +374,132 @@
   }
 
   /* ============================== 主菜单（克隆与镜像） ============================== */
+
+  // 克隆行 —— 完全仿照原生按钮风格
   function buildCloneRow(cmd, name, tip) {
-    var row = el("div", { class: "Box-row d-flex flex-items-center px-3 py-1", title: tip || "" }, [
-      el("span", { class: "Label Label--inline m-2 text-muted", text: name, title: tip || name }),
-      el("input", {
-        class: "form-control form-control-sm flex-grow-1 w-auto",
-        type: "text", value: cmd, readonly: true, title: tip || name,
-        style: "font-family:var(--font-mono);font-size:12px;min-width:0"
-      }),
-      el("button", { class: "btn btn-sm ml-2", type: "button", text: "复制", title: "复制命令" })
-    ]);
-    var input = row.querySelector("input");
-    var copyBtn = row.querySelector("button");
+    // 容器：flex 一行，padding 用 Primer token
+    var row = el("div", {
+      style: "display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid var(--color-border-default);" +
+             "font-family:" + (GH.cs.btn ? GH.cs.btn.fontFamily : "var(--font-stack)") + ";"
+    });
+
+    // 名称 Label —— 用原生 Label 类或仿造
+    var labelSpan = el("span", {
+      class: GH.labelClass || "",
+      style: "min-width:96px;opacity:.75;font-size:12px;" +
+             (GH.cs.btn ? "color:" + GH.cs.btn.color + ";" : ""),
+      text: name,
+      title: tip || name
+    });
+    row.appendChild(labelSpan);
+
+    // 命令 Input —— 用探测到的 Input 类
+    var inputCls = GH.inputClass || "";
+    var input = el("input", {
+      type: "text", value: cmd, readonly: true, title: tip || name,
+      "data-component": "input",
+      class: inputCls,
+      style: "flex:1 1 auto;min-width:0;font-family:var(--font-mono);font-size:12px;" +
+             "background:transparent;border:1px solid var(--color-border-default);border-radius:6px;" +
+             "padding:3px 8px;"
+    });
+    row.appendChild(input);
+
+    // 复制按钮 —— 原生 Button 结构
+    var copyBtn = buildNativeButton("复制", { title: "复制命令" });
+    row.appendChild(copyBtn);
+
     copyBtn.addEventListener("click", function () { copyText(cmd, copyBtn); });
     input.addEventListener("focus", function () { input.select(); });
     return row;
+  }
+
+  // select 下拉框（GitHub 无原生组件，用 Primer 主题 Token 精确模拟）
+  function buildPrimerSelect(options, prompt, onChange) {
+    var sel = el("select", {
+      style: "width:auto;min-width:240px;font-size:12px;padding:3px 28px 3px 8px;" +
+             "border:1px solid var(--color-border-default);border-radius:6px;" +
+             "background-color:var(--color-canvas-default);color:var(--color-fg-default);" +
+             "appearance:none;-webkit-appearance:none;"
+    });
+    sel.appendChild(el("option", { value: "", text: prompt }));
+    options.forEach(function (o) {
+      sel.appendChild(el("option", { value: o[0], text: o[1] }));
+    });
+    sel.addEventListener("change", onChange);
+    return sel;
   }
 
   function buildMenu(ctx) {
     var li = el("li", { id: "fg-menu-li" });
     menuLi = li;
 
-    var details = el("details", { id: "fg-details", class: "Box" });
-    details.style.cssText = "position:relative;display:inline-block;width:400px;max-width:90vw;";
+    // 面板容器 —— Box 原生风格
+    var boxCls = GH.boxClass || "";
+    var boxStyle = GH.cs.box ?
+      "box-shadow:0 1px 3px rgba(27,31,36,.12);" +
+      "background:" + GH.cs.box.bg + ";border:" + GH.cs.box.border +
+      ";border-radius:" + GH.cs.box.radius + ";" :
+      "box-shadow:0 1px 3px rgba(27,31,36,.12);background:var(--color-canvas-default);" +
+      "border:1px solid var(--color-border-default);border-radius:6px;";
 
-    var summary = el("summary", { title: "镜像站点与快速克隆", class: "btn btn-sm m-2" });
-    summary.style.cssText = "list-style:none;display:inline-flex;align-items:center;gap:6px;cursor:pointer;width:auto;";
-    summary.innerHTML = "克隆与镜像 " +
-      '<svg aria-hidden="true" width="12" height="12" viewBox="0 0 16 16" style="flex-shrink:0;opacity:.6">' +
-      '<path fill="currentColor" d="M12.78 5.22a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L3.22 6.28a.75.75 0 0 1 1.06-1.06L8 8.94l3.72-3.72a.75.75 0 0 1 1.06 0Z"/></svg>';
+    var details = el("details", { id: "fg-details", class: boxCls });
+    details.style.cssText = boxStyle + "position:relative;display:inline-block;";
 
-    var panel = el("div", { class: "Box-header" });
-    var tabs = el("div", { class: "UnderlineNav px-2" });
-    var tabMain = el("button", { class: "UnderlineNav-octicon-btn m-1 py-2 font-bold", type: "button", text: "主要" });
-    var tabOther = el("button", { class: "UnderlineNav-octicon-btn m-1 py-2", type: "button", text: "其他" });
-    tabs.appendChild(tabMain);
-    tabs.appendChild(tabOther);
+    // 触发器 —— ActionMenu.Button 风格（invisible variant 但加个轻边框让它看得清）
+    var summary = buildActionMenuTrigger("克隆与镜像", { title: "镜像站点与快速克隆" });
+    // 给 summary 加回按钮边框和背景（让它看起来像个按钮）
+    if (GH.cs.btn) {
+      summary.style.background = GH.cs.btn.bg;
+      summary.style.border = GH.cs.btn.border;
+    } else {
+      summary.style.background = "rgb(246,248,250)";
+      summary.style.border = "1px solid rgb(209,217,224)";
+    }
 
-    var body = el("div", { class: "Box-body p-0" });
-    var paneMain = el("div", { class: "Box p-0" });
-    var paneOther = el("div", { class: "Box p-0", hidden: true });
+    // 面板主体
+    var panel = el("div", { style: "max-height:calc(100vh - 100px);overflow:auto;" });
+
+    // 两个 Tab（GitHub 原生 UnderlineNav 风格，点击切换）
+    var tabBar = el("div", {
+      style: "display:flex;border-bottom:1px solid var(--color-border-default);padding:4px 8px;"
+    });
+    var tabMain = el("button", {
+      type: "button", "data-component": "Button", "data-size": "small", "data-variant": "invisible",
+      class: GH.buttonClass || "",
+      text: "主要",
+      style: "font-weight:600;border-bottom:2px solid var(--color-accent-emphasis);margin-right:4px;"
+    });
+    var tabOther = el("button", {
+      type: "button", "data-component": "Button", "data-size": "small", "data-variant": "invisible",
+      class: GH.buttonClass || "",
+      text: "其他",
+      style: "font-weight:normal;margin-right:4px;"
+    });
+    tabBar.appendChild(tabMain);
+    tabBar.appendChild(tabOther);
+
+    var body = el("div");
+    var paneMain = el("div", { style: "padding:4px 0;" });
+    var paneOther = el("div", { style: "padding:4px 0;", hidden: true });
 
     /* ---- 主要 ---- */
-    paneMain.appendChild(el("div", { class: "Box p-2 m-2 bg-subtle rounded-2", style: "font-size:12px;" }, [
-      el("div", { class: "text-bold mb-1", text: "⚠ 提示" }),
-      el("div", { text: "可在 Tampermonkey 脚本菜单「配置」中切换 git clone / --depth=1 前缀" }),
-      el("div", { class: "text-danger mt-1", text: "请不要在镜像网站登录账号，若因此造成任何损失作者概不负责" })
-    ]));
+    var tipBox = el("div", {
+      style: "padding:8px 12px;margin:8px;border-radius:6px;background:var(--color-neutral-subtle);" +
+             "font-size:12px;color:var(--color-fg-muted);line-height:1.5;"
+    }, [
+      el("div", { style: "font-weight:600;color:var(--color-fg-default);margin-bottom:2px;", text: "⚠ 提示" }),
+      el("div", { text: "可在 Tampermonkey 脚本菜单「FastGithub」里切换 clone 命令前缀" }),
+      el("div", { style: "color:var(--color-danger-fg, #cf222e);margin-top:2px;",
+        text: "请不要在镜像网站登录账号，若因此造成任何损失作者概不负责" })
+    ]);
+    paneMain.appendChild(tipBox);
 
-    paneMain.appendChild(el("div", { class: "h5 px-3 pt-3 text-bold text-muted", text: "快速克隆" }));
+    paneMain.appendChild(el("div", {
+      style: "font-weight:600;padding:8px 12px 4px;font-size:13px;color:var(--color-fg-default);",
+      text: "快速克隆"
+    }));
+
     var suffix = ctx.owner + "/" + ctx.repo + ".git";
     function cloneCmd(url) {
       return (CONFIG.cloneCmd ? "git clone " : "") + (CONFIG.depth ? "--depth=1 " : "") + url;
@@ -250,54 +513,73 @@
     paneMain.appendChild(buildCloneRow(
       "git remote set-url origin https://github.com/" + suffix, "还原GitHub", "还原为 GitHub 官方仓库地址"));
 
-    /* ---- ZIP 镜像下载（form-select） ---- */
+    /* ---- ZIP ---- */
     var zipPath = defaultZipPath(ctx);
     if (zipPath) {
-      paneMain.appendChild(el("div", { class: "h5 px-3 pt-3 text-bold text-muted", text: "ZIP 归档加速下载" }));
-      var zipSelect = el("select", { class: "form-select w-full p-2" });
-      zipSelect.appendChild(el("option", { value: "", text: "选择镜像下载 ZIP" }));
-      DownloadSet.forEach(function (i) {
+      paneMain.appendChild(el("div", {
+        style: "font-weight:600;padding:8px 12px 4px;font-size:13px;color:var(--color-fg-default);",
+        text: "ZIP 归档加速下载"
+      }));
+      var zipOpts = DownloadSet.map(function (i) {
         var m = MirrorUrl[i];
-        zipSelect.appendChild(el("option", { value: m[0] + relPath(zipPath), text: m[1] + " - " + m[2] }));
+        return [m[0] + relPath(zipPath), m[1] + " - " + m[2]];
       });
-      zipSelect.addEventListener("change", function () {
-        if (zipSelect.value) window.open(zipSelect.value, "_blank", "noopener");
-      });
-      paneMain.appendChild(el("div", { class: "px-3 pb-2" }, [zipSelect]));
+      paneMain.appendChild(el("div", { style: "padding:0 8px 8px;" }, [
+        buildPrimerSelect(zipOpts, "选择镜像下载 ZIP", function () {
+          if (this.value) window.open(this.value, "_blank", "noopener");
+        })
+      ]));
     }
 
     /* ---- 镜像浏览 ---- */
     var jsd = jsDelivrFromUrl(location.href);
     if (jsd) {
-      paneMain.appendChild(el("div", { class: "h5 px-3 pt-3 text-bold text-muted", text: "镜像浏览" }));
-      paneMain.appendChild(el("a", { class: "Link p-2 d-block text-bold", href: jsd, target: "_blank", rel: "nofollow", title: JSD[2], text: "镜像浏览(" + JSD[1] + ")" }));
+      paneMain.appendChild(el("div", {
+        style: "font-weight:600;padding:8px 12px 4px;font-size:13px;color:var(--color-fg-default);",
+        text: "镜像浏览"
+      }));
+      paneMain.appendChild(el("a", {
+        href: jsd, target: "_blank", rel: "nofollow", title: JSD[2],
+        style: "display:block;padding:6px 12px;color:var(--color-accent-fg);text-decoration:none;font-weight:600;",
+        text: "镜像浏览(" + JSD[1] + ")"
+      }));
     }
     if (location.hostname !== "github.com") {
       paneMain.appendChild(el("a", {
-        class: "Link p-2 d-block text-bold", href: "https://github.com" + location.pathname + location.search,
-        target: "_blank", rel: "nofollow", text: "返回 GitHub 官方站"
+        href: "https://github.com" + location.pathname + location.search,
+        target: "_blank", rel: "nofollow",
+        style: "display:block;padding:6px 12px;color:var(--color-accent-fg);text-decoration:none;font-weight:600;",
+        text: "返回 GitHub 官方站"
       }));
     }
 
     /* ---- 其他 ---- */
     OtherUrl.forEach(function (u) {
-      paneOther.appendChild(el("a", { class: "Link p-2 d-block", href: u[0], target: "_blank", rel: "nofollow", text: u[1] }));
+      paneOther.appendChild(el("a", {
+        href: u[0], target: "_blank", rel: "nofollow",
+        style: "display:block;padding:6px 12px;color:var(--color-fg);text-decoration:none;font-size:13px;",
+        text: u[1]
+      }));
     });
 
     tabMain.addEventListener("click", function () {
-      tabMain.className = "UnderlineNav-octicon-btn m-1 py-2 font-bold";
-      tabOther.className = "UnderlineNav-octicon-btn m-1 py-2";
+      tabMain.style.borderBottom = "2px solid var(--color-accent-emphasis)";
+      tabMain.style.fontWeight = "600";
+      tabOther.style.borderBottom = "none";
+      tabOther.style.fontWeight = "normal";
       paneMain.hidden = false; paneOther.hidden = true;
     });
     tabOther.addEventListener("click", function () {
-      tabOther.className = "UnderlineNav-octicon-btn m-1 py-2 font-bold";
-      tabMain.className = "UnderlineNav-octicon-btn m-1 py-2";
+      tabOther.style.borderBottom = "2px solid var(--color-accent-emphasis)";
+      tabOther.style.fontWeight = "600";
+      tabMain.style.borderBottom = "none";
+      tabMain.style.fontWeight = "normal";
       paneOther.hidden = false; paneMain.hidden = true;
     });
 
     body.appendChild(paneMain);
     body.appendChild(paneOther);
-    panel.appendChild(tabs);
+    panel.appendChild(tabBar);
     panel.appendChild(body);
     details.appendChild(summary);
     details.appendChild(panel);
@@ -308,84 +590,72 @@
     var bar = $("ul[data-testid='repo-header-actions']") || $("ul.pagehead-actions");
     if (bar) { bar.insertBefore(li, bar.firstChild); return true; }
     // 2. 仓库首页 visibility-label 旁边
-    var label = $("[data-testid='repo-visibility-label']");
-    if (label && label.parentElement && label.parentElement.parentElement) {
-      var wrapHost = label.parentElement.parentElement;
-      var wrap = el("div", { style: "display:inline-block;margin:0 8px;" });
-      wrap.appendChild(li); wrapHost.appendChild(wrap);
-      return true;
+    var vl = $("[data-testid='repo-visibility-label']");
+    if (vl && vl.parentElement && vl.parentElement.parentElement) {
+      var wh = vl.parentElement.parentElement;
+      var w = el("div", { style: "display:inline-flex;margin:0 8px;" });
+      w.appendChild(li); wh.appendChild(w); return true;
     }
     // 3. Blob 页 header（Edit/Raw 按钮组旁）
-    var blobHeader = $("[class*='react-blob-header']") || $("[class*='blob-header']");
-    if (blobHeader) {
-      var blobWrap = el("div", { style: "display:inline-block;margin:0 8px;" });
-      blobWrap.appendChild(li);
-      blobHeader.insertBefore(blobWrap, blobHeader.firstChild);
-      return true;
+    var bh = $("[class*='react-blob-header']") || $("[class*='blob-header']");
+    if (bh) {
+      var bw = el("div", { style: "display:inline-flex;margin:0 8px;" });
+      bw.appendChild(li); bh.insertBefore(bw, bh.firstChild); return true;
     }
-    // 4. 面包屑导航末尾
-    var crumbs = $("nav[aria-label='Breadcrumb']") || $("[data-testid='breadcrumbs']");
-    if (crumbs) {
-      var crumbWrap = el("div", { style: "display:inline-block;margin:0 8px;" });
-      crumbWrap.appendChild(li);
-      crumbs.insertBefore(crumbWrap, crumbs.firstChild);
-      return true;
+    // 4. 面包屑导航
+    var cr = $("nav[aria-label='Breadcrumb']") || $("[data-testid='breadcrumbs']");
+    if (cr) {
+      var cw = el("div", { style: "display:inline-flex;margin:0 8px;" });
+      cw.appendChild(li); cr.insertBefore(cw, cr.firstChild); return true;
     }
-    // 5. 通用 fallback：#repo-content-pjax-container 开头
+    // 5. 通用 fallback
     var pjax = $("#repo-content-pjax-container");
     if (pjax && pjax.firstElementChild) {
-      var pjaxWrap = el("div", { style: "display:inline-block;margin:8px 0;" });
-      pjaxWrap.appendChild(li);
-      pjax.insertBefore(pjaxWrap, pjax.firstElementChild);
-      return true;
+      var pw = el("div", { style: "display:inline-flex;margin:8px 0;" });
+      pw.appendChild(li); pjax.insertBefore(pw, pjax.firstElementChild); return true;
     }
     return false;
   }
 
-  /* ====================== 增强原生 Code 下拉里的 Download ZIP（form-select） ====================== */
+  /* ====================== 增强原生 Code 下拉里的 Download ZIP ====================== */
   function augmentCodePanel() {
     $$("a[href*='/archive/refs/'][href$='.zip']").forEach(function (a) {
       if (a.dataset.fgZip) return;
-      if (!a.closest("[class*='ActionList'], .get-repo-form, details")) return;
+      if (!a.closest("[class*='ActionList'], [class*='action-list'], details, .Anchor, ul")) return;
       a.dataset.fgZip = "1";
-      var baseLi = a.closest("li") || a.parentElement;
-      var host = baseLi.parentNode;
-      var insertRef = baseLi.nextSibling;
-      var sel = el("select", { class: "form-select m-2", style: "width:auto;min-width:180px;font-size:12px;" });
-      sel.appendChild(el("option", { value: "", text: "选择镜像下载 ZIP" }));
-      DownloadSet.forEach(function (i) {
+      var baseNode = a.closest("li") || a.parentElement;
+      var host = baseNode.parentNode;
+      var insertRef = baseNode.nextSibling;
+      var opts = DownloadSet.map(function (i) {
         var m = MirrorUrl[i];
-        sel.appendChild(el("option", { value: m[0] + relPath(a.getAttribute("href")), text: m[1] + " - " + m[2] }));
+        return [m[0] + relPath(a.getAttribute("href")), m[1] + " - " + m[2]];
       });
-      sel.addEventListener("change", function () {
-        if (sel.value) window.open(sel.value, "_blank", "noopener");
+      var sel = buildPrimerSelect(opts, "选择镜像下载 ZIP", function () {
+        if (this.value) window.open(this.value, "_blank", "noopener");
       });
       if (host) host.insertBefore(sel, insertRef);
     });
   }
 
-  /* ============================== Releases 资产按钮（form-select） ============================== */
+  /* ============================== Releases 资产按钮 ============================== */
   function injectReleaseAssets() {
     if (location.pathname.split("/")[3] !== "releases") return;
     $$("a[href*='/releases/download/']").forEach(function (a) {
       if (a.dataset.fgRel) return;
-      var row = a.closest("li.Box-row");
+      var row = a.closest("[class*='Box-row'], li, [class*='release']");
       if (!row) return;
       a.dataset.fgRel = "1";
-      var sel = el("select", { class: "form-select m-2", style: "width:auto;min-width:180px;font-size:12px;" });
-      sel.appendChild(el("option", { value: "", text: "选择镜像下载" }));
-      DownloadSet.forEach(function (i) {
+      var opts = DownloadSet.map(function (i) {
         var m = MirrorUrl[i];
-        sel.appendChild(el("option", { value: m[0] + relPath(a.getAttribute("href")), text: m[1] + " - " + m[2] }));
+        return [m[0] + relPath(a.getAttribute("href")), m[1] + " - " + m[2]];
       });
-      sel.addEventListener("change", function () {
-        if (sel.value) window.open(sel.value, "_blank", "noopener");
-      });
-      row.appendChild(sel);
+      row.appendChild(buildPrimerSelect(opts, "选择镜像下载", function () {
+        if (this.value) window.open(this.value, "_blank", "noopener");
+      }));
     });
   }
 
-  /* ================================== Raw 按钮（form-select） ================================== */
+  /* ================================== Raw 按钮下拉 ================================================== */
   function injectRawButtons() {
     var host = $("a[data-testid='raw-button'], a#raw-url");
     if (!host || host.dataset.fgRaw) return;
@@ -393,16 +663,16 @@
     var href = host.getAttribute("href") || "";
     var rel = relPath(href);
     var item = host.closest("div[class*='ButtonGroup-Item']") || host.parentElement;
-    var sel = el("select", { class: "form-select m-2", style: "width:auto;min-width:160px;font-size:12px;" });
-    sel.appendChild(el("option", { value: "", text: "镜像 Raw 下载" }));
-    RawSet.forEach(function (i) {
+
+    var opts = RawSet.map(function (i) {
       var m = MirrorUrl[i];
-      sel.appendChild(el("option", { value: m[0] + rel, text: m[1] }));
+      return [m[0] + rel, m[1]];
     });
     var jsd = jsDelivrFromUrl(href);
-    if (jsd) sel.appendChild(el("option", { value: jsd, text: JSD[1] + " " + JSD[2] }));
-    sel.addEventListener("change", function () {
-      if (sel.value) window.open(sel.value, "_blank", "noopener");
+    if (jsd) opts.push([jsd, JSD[1]]);
+
+    var sel = buildPrimerSelect(opts, "镜像 Raw 下载", function () {
+      if (this.value) window.open(this.value, "_blank", "noopener");
     });
     if (item.parentNode) item.parentNode.insertBefore(sel, item.nextSibling);
   }
@@ -410,7 +680,6 @@
   /* ================================== GM_registerMenuCommand 配置菜单 ================================== */
   function registerConfigMenu() {
     if (typeof GM_registerMenuCommand !== "function") return;
-    // 克隆命令前缀配置
     GM_registerMenuCommand(
       "配置：克隆命令带 git clone 前缀（当前：" + (CONFIG.cloneCmd ? "开" : "关") + "）",
       function () {
@@ -432,16 +701,18 @@
   /* ================================== 调度入口 ================================== */
   var lastKey = "";
   var menuLi = null;
+
   function scan() {
+    // 启动时首次探测 GitHub 样式（后续 page 切换会重新探测）
+    if (!GH.buttonClass) detectGitHubStyle();
+
     injectStyle();
     var ctx = repoContext();
     if (ctx) {
       var key = ctx.owner + "/" + ctx.repo;
       if (menuLi && key === lastKey) {
         var liveBar = $("ul[data-testid='repo-header-actions']") || $("ul.pagehead-actions");
-        if (liveBar && !liveBar.contains(menuLi)) {
-          liveBar.insertBefore(menuLi, liveBar.firstChild);
-        }
+        if (liveBar && !liveBar.contains(menuLi)) liveBar.insertBefore(menuLi, liveBar.firstChild);
       } else if (key !== lastKey || !menuLi) {
         if (buildMenu(ctx)) { menuLi = $("#fg-menu-li"); lastKey = key; }
       }
@@ -466,12 +737,14 @@
   }, true);
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") {
-      var d = $("#fg-details");
-      if (d) d.open = false;
+      var d = $("#fg-details"); if (d) d.open = false;
     }
   });
 
+  // 首次启动
+  detectGitHubStyle();
   scan();
+
   // 启动阶段多次重试 —— 应对 GitHub React hydrate 延迟
   var _startupRetries = 0;
   var _startupTimer = setInterval(function () {
@@ -479,19 +752,22 @@
     scan();
     if (_startupRetries >= 8) clearInterval(_startupTimer);
   }, 500);
+
   new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
   ["turbo:load", "turbo:render"].forEach(function (ev) {
-    document.addEventListener(ev, schedule);
+    document.addEventListener(ev, function () { detectGitHubStyle(); schedule(); });
   });
-  window.addEventListener("popstate", schedule);
+  window.addEventListener("popstate", function () { detectGitHubStyle(); schedule(); });
+
   ["pushState", "replaceState"].forEach(function (fn) {
     var raw = history[fn];
     history[fn] = function () {
       var ret = raw.apply(this, arguments);
-      schedule();
+      detectGitHubStyle(); schedule();
       return ret;
     };
   });
+
   setInterval(function () {
     if (!menuLi) return;
     $$("li#fg-menu-li").forEach(function (n) {

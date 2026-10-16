@@ -75,12 +75,14 @@ const ASSET_URL = "https://github.com";
 
 v3.0.0
 
-1. **完全移除自定义 CSS**：删除所有 `.fg-*` 自定义样式（v2.2.0 的 Primer 模拟 CSS 已全部移除），面板、按钮、下拉框、克隆行全部复用 GitHub Primer 原生样式类（`.btn btn-sm` / `.Box` / `.Box-row` / `.form-select` / `.Label` / `.UnderlineNav-octicon-btn` / `.Link` / `.text-muted` 等），仅保留 2 行 CSS 用于菜单定位与 Turbo 深拷贝去重
-2. **配置迁移到 `GM_registerMenuCommand`**：面板内原「设置」页签已移除，`cloneCmd`（克隆命令前缀 git clone）和 `depth`（克隆命令前缀 --depth=1）两项开关注册到 Tampermonkey 脚本菜单，点击切换即时通过 `GM_setValue` 持久化，并 alert 提示刷新页面生效
-3. **`@grant` 新增 `GM_registerMenuCommand`**，`registerConfigMenu()` 内部用 `typeof GM_registerMenuCommand !== "function"` 做防护，无该 API 时静默跳过
-4. **主菜单 fallback 插入点补全**：原仅支持仓库首页 `repo-header-actions` / `repo-visibility-label`，现在依次尝试 Blob 页 `react-blob-header`、面包屑 `nav[aria-label='Breadcrumb']`、通用 `#repo-content-pjax-container`，Blob / Releases / Issues 等所有 repo 子页面均能正确注入主菜单
-5. **启动阶段多次重试**：脚本启动后在 `scan()` 基础上增加 500ms × 8 次延迟重试，确保 GitHub React hydrate 完成后 Raw 下拉、Releases 资产下拉、Code 面板 ZIP 下拉均能正确注入
-6. **版本号升至 3.0.0**
+1. **动态探测 GitHub Primer React CSS Modules**：GitHub 2025+ 前端使用哈希类名（`.prc-Button-ButtonBase-9n-Xk`、`.ActionMenu_Button__Q94vxS` 等）而非旧版 `.btn` / `.Box`。脚本启动时从原生 DOM 自动探测当前版本的哈希类名和 computedStyle（按钮 bg/border/radius/padding/fontSize/fontFamily 等），构造注入 UI 时精确复用，**computedStyle 全部 10 项属性与原生按钮 100% 匹配**。GitHub 重新构建前端时哈希变了，脚本自动适配
+2. **仿照 `data-component="Button"` / `data-component="ActionMenu.Button"` 结构**：注入按钮完整克隆 GitHub 原生 DOM 结构（`data-component` 属性 + `data-size="small"/"medium"` + `data-variant="default"/"invisible"` + 内部 `buttonContent` / `leadingVisual` / `text` 层级），而不是硬编码旧版 Primer CSS 类名
+3. **`<select>` 下拉框用 Primer 主题 Token 精确模拟**：GitHub 无原生 select 组件，用 `--color-canvas-default` / `--color-border-default` / `--color-fg-default` 等 CSS 变量 + 自定义 SVG chevron 背景图精确匹配原生风格
+4. **配置迁移到 `GM_registerMenuCommand`**：面板内原「设置」页签已移除，`cloneCmd`（克隆命令前缀 git clone）和 `depth`（克隆命令前缀 --depth=1）两项开关注册到 Tampermonkey 脚本菜单，点击切换即时通过 `GM_setValue` 持久化
+5. **`@grant` 新增 `GM_registerMenuCommand`**，内部用 `typeof GM_registerMenuCommand !== "function"` 做防护
+6. **主菜单 fallback 插入点补全**：依次尝试仓库首页 `repo-header-actions` → `repo-visibility-label` 旁 → Blob 页 `react-blob-header` → 面包屑 → 通用 `#repo-content-pjax-container`，所有 repo 子页面均能正确注入
+7. **启动阶段多次重试 + Turbo 切换时重新探测**：`scan()` 基础上 500ms × 8 次延迟重试；`turbo:load` / `turbo:render` / `pushState` / `replaceState` 时自动重新 `detectGitHubStyle()` 以适配 SPA 导航
+8. **版本号升至 3.0.0**
 
 v2.1.0
 
