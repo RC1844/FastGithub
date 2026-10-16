@@ -97,6 +97,17 @@
     return location.origin + (u.charAt(0) === "/" ? u : "/" + u);
   }
 
+  // 镜像前缀拼接用：把任意 GitHub 链接/相对路径归一化为
+  //   /owner/repo/... 形式的相对路径（以 / 开头），
+  // 让  前缀(含 .../github.com) + relPath  得到正确的加速 URL。
+  function relPath(u) {
+    if (!u) return "";
+    var m = u.match(/github\.com(\/.*)$/i);
+    if (m) return m[1];
+    if (u.charAt(0) === "/") return u;
+    return "/" + u;
+  }
+
   // 当前仓库 owner/repo（非仓库页返回 null）
   function repoContext() {
     var p = location.pathname.split("/").filter(Boolean);
@@ -279,7 +290,7 @@
       DownloadSet.forEach(function (i) {
         var m = MirrorUrl[i];
         zipBox.appendChild(el("a", {
-          class: "fg-zip", href: m[0] + absUrl(zipPath), target: "_blank",
+          class: "fg-zip", href: m[0] + relPath(zipPath), target: "_blank",
           rel: "nofollow", title: m[2], text: "ZIP(" + m[1] + ")"
         }));
       });
@@ -351,7 +362,7 @@
         var node = li.cloneNode(true);
         var aa = node.querySelector("a") || node;
         aa.removeAttribute("id");
-        aa.setAttribute("href", m[0] + absUrl(a.getAttribute("href")));
+        aa.setAttribute("href", m[0] + relPath(a.getAttribute("href")));
         aa.setAttribute("title", m[2]);
         aa.setAttribute("rel", "nofollow");
         aa.setAttribute("target", "_blank");
@@ -375,7 +386,7 @@
       DownloadSet.forEach(function (i) {
         var m = MirrorUrl[i];
         wrap.appendChild(el("a", {
-          href: m[0] + absUrl(a.getAttribute("href")), target: "_blank",
+          href: m[0] + relPath(a.getAttribute("href")), target: "_blank",
           rel: "nofollow", title: m[2], text: m[1]
         }));
       });
@@ -389,7 +400,7 @@
     if (!host || host.dataset.fgRaw) return;
     host.dataset.fgRaw = "1";
     var href = host.getAttribute("href") || "";
-    var abs = absUrl(href);
+    var rel = relPath(href);
     var anchorNode = host.closest("div"); // 新版 ButtonGroup 的 item 包裹层
 
     function makeSibling(url, name, tip) {
@@ -418,9 +429,9 @@
     var nodes = [];
     RawSet.forEach(function (i) {
       var m = MirrorUrl[i];
-      nodes.push(makeSibling(m[0] + abs, m[1], m[2]));
+      nodes.push(makeSibling(m[0] + rel, m[1], m[2]));
     });
-    var jsd = jsDelivrFromUrl(abs);
+    var jsd = jsDelivrFromUrl(href);
     if (jsd) nodes.push(makeSibling(jsd, JSD[1], JSD[2]));
     nodes.forEach(function (n) {
       if (prev.parentNode) prev.parentNode.insertBefore(n, prev.nextSibling);
