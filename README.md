@@ -71,6 +71,12 @@ const ASSET_URL = "https://github.com";
 
 ## 更新日志
 
+v2.1.0
+
+1. 横向列表（ZIP 归档下载、Code 面板 ZIP、Releases 资产、Raw 按钮）全部改为下拉选择框，选中即在新窗口打开下载，界面更简洁
+2. CONFIG 配置（`cloneCmd` / `depth`）改为通过 `GM_setValue` / `GM_getValue` 持久化，并在菜单新增「设置」页签提供勾选框，改动实时保存、即时生效
+3. `@grant` 由 `none` 改为 `GM_setValue` + `GM_getValue`（仅使用 Greasemonkey 标准 API，无其他依赖）
+
 v2.0.0
 
 1. 全面重写为纯原生 JS，移除 jQuery 依赖，体积更小、无外部依赖
