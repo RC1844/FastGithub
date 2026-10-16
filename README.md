@@ -8,6 +8,8 @@
 
 该脚本在[GitHub 镜像加速下载-码酷博客-改](https://greasyfork.org/zh-CN/scripts/391911)基础上修改(已经面目全非了)。
 
+> **v3.0.0 起完全移除自定义 CSS**，复用 GitHub Primer 原生样式类（`.btn` / `.Box` / `.form-select` / `.Label` / `.UnderlineNav-octicon-btn` / `.Link` 等），零视觉割裂感；`CONFIG` 配置迁移到 `GM_registerMenuCommand`（Tampermonkey 脚本菜单）切换。
+>
 > **v2.0.0 起脚本已完全重写为纯原生 JS（零依赖、无 jQuery）**，适配 2025+ 新版 GitHub 页面（`ul[data-testid="repo-header-actions"]`、`a[data-testid="raw-button"]`、Blob 页 Raw 按钮的 `prc-ButtonGroup` 嵌套等）。同时移除了所有已死亡的镜像站点（fastgit/cnpmjs/bajins/wuyanzheshui/rc1844 worker 等），只保留实测可用的入口。
 
 ## [[预览效果]](REANDME/README.md)
@@ -70,6 +72,15 @@ const ASSET_URL = "https://github.com";
 [zmirror](https://github.com/aploium/zmirror)
 
 ## 更新日志
+
+v3.0.0
+
+1. **完全移除自定义 CSS**：删除所有 `.fg-*` 自定义样式（v2.2.0 的 Primer 模拟 CSS 已全部移除），面板、按钮、下拉框、克隆行全部复用 GitHub Primer 原生样式类（`.btn btn-sm` / `.Box` / `.Box-row` / `.form-select` / `.Label` / `.UnderlineNav-octicon-btn` / `.Link` / `.text-muted` 等），仅保留 2 行 CSS 用于菜单定位与 Turbo 深拷贝去重
+2. **配置迁移到 `GM_registerMenuCommand`**：面板内原「设置」页签已移除，`cloneCmd`（克隆命令前缀 git clone）和 `depth`（克隆命令前缀 --depth=1）两项开关注册到 Tampermonkey 脚本菜单，点击切换即时通过 `GM_setValue` 持久化，并 alert 提示刷新页面生效
+3. **`@grant` 新增 `GM_registerMenuCommand`**，`registerConfigMenu()` 内部用 `typeof GM_registerMenuCommand !== "function"` 做防护，无该 API 时静默跳过
+4. **主菜单 fallback 插入点补全**：原仅支持仓库首页 `repo-header-actions` / `repo-visibility-label`，现在依次尝试 Blob 页 `react-blob-header`、面包屑 `nav[aria-label='Breadcrumb']`、通用 `#repo-content-pjax-container`，Blob / Releases / Issues 等所有 repo 子页面均能正确注入主菜单
+5. **启动阶段多次重试**：脚本启动后在 `scan()` 基础上增加 500ms × 8 次延迟重试，确保 GitHub React hydrate 完成后 Raw 下拉、Releases 资产下拉、Code 面板 ZIP 下拉均能正确注入
+6. **版本号升至 3.0.0**
 
 v2.1.0
 

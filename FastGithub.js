@@ -303,17 +303,40 @@
     details.appendChild(panel);
     li.appendChild(details);
 
+    /* ---- 依次尝试所有 repo 子页面都能用的插入点 ---- */
+    // 1. 仓库首页 header actions
     var bar = $("ul[data-testid='repo-header-actions']") || $("ul.pagehead-actions");
-    if (bar) {
-      bar.insertBefore(li, bar.firstChild);
-      return true;
-    }
+    if (bar) { bar.insertBefore(li, bar.firstChild); return true; }
+    // 2. 仓库首页 visibility-label 旁边
     var label = $("[data-testid='repo-visibility-label']");
     if (label && label.parentElement && label.parentElement.parentElement) {
       var wrapHost = label.parentElement.parentElement;
       var wrap = el("div", { style: "display:inline-block;margin:0 8px;" });
-      wrap.appendChild(li);
-      wrapHost.appendChild(wrap);
+      wrap.appendChild(li); wrapHost.appendChild(wrap);
+      return true;
+    }
+    // 3. Blob 页 header（Edit/Raw 按钮组旁）
+    var blobHeader = $("[class*='react-blob-header']") || $("[class*='blob-header']");
+    if (blobHeader) {
+      var blobWrap = el("div", { style: "display:inline-block;margin:0 8px;" });
+      blobWrap.appendChild(li);
+      blobHeader.insertBefore(blobWrap, blobHeader.firstChild);
+      return true;
+    }
+    // 4. 面包屑导航末尾
+    var crumbs = $("nav[aria-label='Breadcrumb']") || $("[data-testid='breadcrumbs']");
+    if (crumbs) {
+      var crumbWrap = el("div", { style: "display:inline-block;margin:0 8px;" });
+      crumbWrap.appendChild(li);
+      crumbs.insertBefore(crumbWrap, crumbs.firstChild);
+      return true;
+    }
+    // 5. 通用 fallback：#repo-content-pjax-container 开头
+    var pjax = $("#repo-content-pjax-container");
+    if (pjax && pjax.firstElementChild) {
+      var pjaxWrap = el("div", { style: "display:inline-block;margin:8px 0;" });
+      pjaxWrap.appendChild(li);
+      pjax.insertBefore(pjaxWrap, pjax.firstElementChild);
       return true;
     }
     return false;
@@ -449,6 +472,13 @@
   });
 
   scan();
+  // 启动阶段多次重试 —— 应对 GitHub React hydrate 延迟
+  var _startupRetries = 0;
+  var _startupTimer = setInterval(function () {
+    _startupRetries++;
+    scan();
+    if (_startupRetries >= 8) clearInterval(_startupTimer);
+  }, 500);
   new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
   ["turbo:load", "turbo:render"].forEach(function (ev) {
     document.addEventListener(ev, schedule);
