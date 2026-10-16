@@ -73,6 +73,14 @@ const ASSET_URL = "https://github.com";
 
 ## 更新日志
 
+v3.1.0
+
+1. **扩充公益镜像池**：从 [bdnb.cn](https://m.bdnb.cn/search?q=github&sort=stars&page=1) 聚合的 GitHub 加速脚本中整理出一批「前缀 + 完整 GitHub URL」格式兼容的公益加速源，并对每个域名做过连通性实测后收录，`MirrorUrl` 由 8 个扩充至 30 个
+2. 新增镜像：gh.llkk.cc、hub.ddayh.com、gh.con.sh、fastgit.cc、git.yylx.win、ghproxy.monkeyray.net、tvv.tw、ghproxy.it、gh.monlor.com、wget.la、hk.gh-proxy.org、cdn.gh-proxy.org、edgeone.gh-proxy.org、github.moeyy.xyz、gh.ddlc.top、github.boki.moe、ghfile.geekertao.top、ghp.keleyaa.com、gh.chjina.com、ghpxy.hwinzniej.top、cdn.crashmc.com、gh.idayer.com（均支持 clone/raw/zip/releases，克隆/下载/Raw 三组下拉框统一收录）
+3. 实测未通过（连接超时/403/404/格式不兼容）的候选源未收录，包括 github.akams.cn、gh.h233.eu.org、github.geekery.cn、github.ednovas.xyz、gh.zwy.one、ghproxy.053000.xyz、g.blfrp.cn 等
+4. 「其他」菜单新增 gh-proxy.org、fastgit.cc、wget.la、github.moeyy.xyz 入口
+5. 版本号升至 3.1.0
+
 v3.0.0
 
 1. **动态探测 GitHub Primer React CSS Modules**：GitHub 2025+ 前端使用哈希类名（`.prc-Button-ButtonBase-9n-Xk`、`.ActionMenu_Button__Q94vxS` 等）而非旧版 `.btn` / `.Box`。脚本启动时从原生 DOM 自动探测当前版本的哈希类名和 computedStyle（按钮 bg/border/radius/padding/fontSize/fontFamily 等），构造注入 UI 时精确复用，**computedStyle 全部 10 项属性与原生按钮 100% 匹配**。GitHub 重新构建前端时哈希变了，脚本自动适配

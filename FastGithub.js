@@ -14,7 +14,7 @@
 // @grant         GM_getValue
 // @grant         GM_registerMenuCommand
 // @run-at        document-idle
-// @version       3.0.0
+// @version       3.1.0
 // ==/UserScript==
 
 (function () {
@@ -42,13 +42,37 @@
   MirrorUrl[5] = ["https://ghproxy.net/https://github.com", "ghproxy.net", "公益GitHub文件加速，支持clone/raw/zip/releases"];
   MirrorUrl[6] = ["https://ghfast.top/https://github.com", "ghfast.top", "公益加速，脚本环境实测仅可用于克隆，文件下载请选其它入口"];
   MirrorUrl[7] = ["https://gitclone.com/github.com", "GitClone", "GitHub缓存加速网站，仅克隆有效"];
+  MirrorUrl[8] = ["https://gh.llkk.cc/https://github.com", "gh.llkk.cc", "公益加速，支持clone/raw/zip/releases（国内常用，部分海外网络可能不可达）"];
+  MirrorUrl[9] = ["https://hub.ddayh.com/https://github.com", "hub.ddayh.com", "公益加速，支持clone/raw/zip/releases"];
+  MirrorUrl[10] = ["https://gh.con.sh/https://github.com", "gh.con.sh", "公益加速，支持clone/raw/zip/releases"];
+  MirrorUrl[11] = ["https://fastgit.cc/https://github.com", "fastgit.cc", "FastGit 公益加速，支持clone/raw/zip/releases"];
+  MirrorUrl[12] = ["https://git.yylx.win/https://github.com", "git.yylx.win", "公益加速，支持clone/raw/zip/releases"];
+  MirrorUrl[13] = ["https://ghproxy.monkeyray.net/https://github.com", "ghproxy.monkeyray.net", "公益加速，支持clone/raw/zip/releases"];
+  MirrorUrl[14] = ["https://tvv.tw/https://github.com", "tvv.tw", "公益加速，支持clone/raw/zip/releases"];
+  MirrorUrl[15] = ["https://ghproxy.it/https://github.com", "ghproxy.it", "美国Cloudflare CDN公益加速，支持clone/raw/zip/releases"];
+  MirrorUrl[16] = ["https://gh.monlor.com/https://github.com", "gh.monlor.com", "公益加速，支持clone/raw/zip/releases"];
+  MirrorUrl[17] = ["https://wget.la/https://github.com", "wget.la", "公益加速，支持clone/raw/zip/releases"];
+  MirrorUrl[18] = ["https://hk.gh-proxy.org/https://github.com", "hk.gh-proxy.org", "gh-proxy.org 香港节点，支持clone/raw/zip/releases"];
+  MirrorUrl[19] = ["https://cdn.gh-proxy.org/https://github.com", "cdn.gh-proxy.org", "gh-proxy.org 日本节点，支持clone/raw/zip/releases"];
+  MirrorUrl[20] = ["https://edgeone.gh-proxy.org/https://github.com", "edgeone.gh-proxy.org", "gh-proxy.org 多国节点，支持clone/raw/zip/releases"];
+  MirrorUrl[21] = ["https://github.moeyy.xyz/https://github.com", "github.moeyy.xyz", "公益加速，支持clone/raw/zip/releases（部分海外网络可能不可达）"];
+  MirrorUrl[22] = ["https://gh.ddlc.top/https://github.com", "gh.ddlc.top", "美国Cloudflare CDN公益加速，高并发时可能限流"];
+  MirrorUrl[23] = ["https://github.boki.moe/https://github.com", "github.boki.moe", "美国Cloudflare CDN公益加速，支持clone/raw/zip/releases"];
+  MirrorUrl[24] = ["https://ghfile.geekertao.top/https://github.com", "ghfile.geekertao.top", "公益加速，支持clone/raw/zip/releases"];
+  MirrorUrl[25] = ["https://ghp.keleyaa.com/https://github.com", "ghp.keleyaa.com", "公益加速，支持clone/raw/zip/releases"];
+  MirrorUrl[26] = ["https://gh.chjina.com/https://github.com", "gh.chjina.com", "公益加速，支持clone/raw/zip/releases"];
+  MirrorUrl[27] = ["https://ghpxy.hwinzniej.top/https://github.com", "ghpxy.hwinzniej.top", "公益加速，支持clone/raw/zip/releases"];
+  MirrorUrl[28] = ["https://cdn.crashmc.com/https://github.com", "cdn.crashmc.com", "公益加速，支持clone/raw/zip/releases"];
+  MirrorUrl[29] = ["https://gh.idayer.com/https://github.com", "gh.idayer.com", "公益加速，支持clone/raw/zip/releases"];
 
   var SSH_MIRROR = ["git@git.zhlh6.cn:", "加速你的Github", "利用ucloud提供的GlobalSSH，仅克隆有效"];
   var JSD = ["https://cdn.jsdelivr.net/gh", "jsDelivr", "通过CDN浏览/读取单个文件，单包总体积有限制(约50MB)，无Release/ZIP加速"];
 
-  var CloneSet    = [0, 1, 2, 3, 4, 5, 6, 7];
-  var DownloadSet = [0, 1, 2, 3, 4, 5];
-  var RawSet      = [0, 1, 2, 3, 4, 5];
+  var ALL_MIRRORS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29];
+
+  var CloneSet    = ALL_MIRRORS;
+  var DownloadSet = ALL_MIRRORS;
+  var RawSet      = ALL_MIRRORS;
 
   var OtherUrl = [
     ["https://github.com/RC1844/FastGithub", "脚本Github仓库地址,点个赞谢谢"],
@@ -59,6 +83,10 @@
     ["https://gh-proxy.com", "gh-proxy.com 公益代理"],
     ["https://ghproxy.net", "ghproxy.net 公益加速"],
     ["https://ghfast.top", "ghfast.top 公益加速"],
+    ["https://gh-proxy.org", "gh-proxy.org 公益加速(香港/日本/CDN多节点)"],
+    ["https://fastgit.cc", "FastGit 公益加速"],
+    ["https://wget.la", "wget.la 公益加速"],
+    ["https://github.moeyy.xyz", "moeyy GitHub 加速"],
     ["https://minhaskamal.github.io/DownGit", "DownGit"],
     ["https://zhoudaxiaa.gitee.io", "DownGit 周大侠啊"],
     ["https://d.serctl.com", "GitHub中转下载"],
