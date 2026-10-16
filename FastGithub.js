@@ -13,7 +13,7 @@
 // @grant         GM_setValue
 // @grant         GM_getValue
 // @run-at        document-idle
-// @version       2.1.0
+// @version       2.2.0
 // ==/UserScript==
 
 (function () {
@@ -178,49 +178,85 @@
     return JSD[0] + "/" + repoName.replace(/\/$/, "") + "@" + m[2];
   }
 
-  /* ================================ 注入样式（一次性） ================================ */
+  /* ================================ 注入样式（对齐 GitHub Primer 设计） ================================ */
   var STYLE = [
     "#fg-menu-li{list-style:none;position:relative;display:inline-block;}",
-    // 视觉兜底：若菜单因任何机制产生重复，只保留首个，其余隐藏
     "li#fg-menu-li ~ li#fg-menu-li{display:none;}",
+
+    /* 触发按钮：完全复刻 GitHub 原生 .btn（如 Code 按钮、Download ZIP 按钮） */
     ".fg-details{position:relative;}",
     ".fg-details>summary{list-style:none;display:inline-flex;align-items:center;gap:6px;cursor:pointer;",
-    "padding:3px 12px;font-size:14px;font-weight:500;line-height:20px;border-radius:6px;",
-    "color:var(--color-fg-default,#1f2328);background:var(--color-btn-bg,#f6f8fa);",
-    "border:1px solid var(--color-btn-border,#d0d7de);user-select:none;white-space:nowrap;}",
+    "padding:5px 12px;font-size:14px;font-weight:500;line-height:20px;border-radius:6px;",
+    "color:var(--color-fg-default);background:var(--color-canvas-subtle);",
+    "border:1px solid var(--color-border-default);user-select:none;white-space:nowrap;",
+    "transition:background-color .15s ease,border-color .15s ease;box-shadow:var(--box-shadow-inset,none);}",
     ".fg-details>summary::-webkit-details-marker{display:none;}",
-    ".fg-details>summary:hover{background:var(--color-btn-hover-bg,#f3f4f6);border-color:var(--color-btn-hover-border,#afb8c1);}",
-    ".fg-caret{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid currentColor;opacity:.7;}",
-    ".fg-panel{position:absolute;top:calc(100% + 6px);right:0;z-index:1000;width:420px;max-width:90vw;",
-    "background:var(--color-canvas-overlay,var(--color-canvas-default,#fff));",
-    "border:1px solid var(--color-border-default,#d0d7de);border-radius:12px;",
-    "box-shadow:0 8px 24px rgba(140,149,159,.2);overflow:hidden;}",
-    ".fg-tabs{display:flex;border-bottom:1px solid var(--color-border-muted,#d8dee4);background:var(--color-canvas-subtle,#f6f8fa);}",
-    ".fg-tab{flex:1;padding:8px 0;border:0;background:transparent;font-size:14px;cursor:pointer;color:var(--color-fg-muted,#59636e);}",
-    ".fg-tab.fg-on{color:var(--color-fg-default,#1f2328);font-weight:600;box-shadow:inset 0 -2px 0 var(--color-primer-accent-fg,#fd8c73);}",
-    ".fg-body{max-height:min(70vh,560px);overflow:auto;padding:8px;}",
-    ".fg-sec{font-size:12px;font-weight:600;color:var(--color-fg-muted,#59636e);padding:8px 8px 4px;}",
-    ".fg-warn{margin:0 4px 6px;padding:6px 8px;font-size:12px;border-radius:6px;}",
-    ".fg-warn.a{background:#fff8c5;color:#7d4e00;border:1px solid #d4a72c66;}",
-    ".fg-warn.b{background:#ffebe9;color:#cf222e;border:1px solid #ff818266;}",
-    ".fg-row{display:flex;align-items:center;gap:6px;padding:3px 4px;}",
-    ".fg-row .fg-name{flex:0 0 96px;font-size:12px;color:var(--color-fg-muted,#59636e);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}",
-    ".fg-in{flex:1;min-width:0;padding:4px 8px;font-size:12px;border:1px solid var(--color-border-default,#d0d7de);",
-    "border-radius:6px;background:var(--color-canvas-default,#fff);color:var(--color-fg-default,#1f2328);}",
-    ".fg-copy{flex:0 0 auto;padding:3px 9px;font-size:12px;border-radius:6px;cursor:pointer;",
-    "border:1px solid var(--color-btn-border,#d0d7de);background:var(--color-btn-bg,#f6f8fa);color:var(--color-fg-default,#1f2328);}",
-    ".fg-copy:hover{background:var(--color-btn-hover-bg,#f3f4f6);}",
-    ".fg-item{display:block;padding:8px 10px;border-radius:6px;font-size:13px;color:var(--color-fg-default,#1f2328);text-decoration:none;}",
-    ".fg-item:hover{background:var(--color-canvas-subtle,#f6f8fa);}",
-    /* 下拉选择框 */
-    ".fg-select{width:100%;padding:4px 8px;font-size:12px;border:1px solid var(--color-border-default,#d0d7de);",
-    "border-radius:6px;background:var(--color-canvas-default,#fff);color:var(--color-fg-default,#1f2328);",
-    "cursor:pointer;}",
-    ".fg-select:hover{border-color:var(--color-border-input,#d0d7de);}",
-    /* 设置区 */
-    ".fg-settings{padding:4px 8px;}",
-    ".fg-set-row{display:flex;align-items:center;gap:6px;padding:4px 4px;font-size:13px;}",
-    ".fg-set-row input[type=checkbox]{width:16px;height:16px;cursor:pointer;}"
+    ".fg-details>summary:hover{background:var(--color-canvas-subtle-hover,#eef0f3);border-color:var(--color-border-muted,#d1d9e0);}",
+    ".fg-details[open]>summary{background:var(--color-canvas-default);border-color:var(--color-border-emphasis,#24292f);",
+    "box-shadow:0 1px 2px rgba(140,149,159,.15);}",
+
+    /* 面板：对齐 GitHub 下拉面板（如 Actions、Settings 下拉） */
+    ".fg-panel{position:absolute;top:calc(100% + 4px);right:0;z-index:1000;width:400px;max-width:90vw;",
+    "background:var(--color-canvas-default,#fff);",
+    "border:1px solid var(--color-border-default,#d0d7de);border-radius:8px;",
+    "box-shadow:0 8px 16px rgba(140,149,159,.25);overflow:hidden;}",
+
+    /* Tab 切换：对齐 GitHub 的 subnav / tab 样式 */
+    ".fg-tabs{display:flex;border-bottom:1px solid var(--color-border-default,#d0d7de);background:var(--color-canvas-subtle,#f6f8fa);",
+    "padding:0 4px;}",
+    ".fg-tab{flex:1;padding:8px 4px;border:0;background:transparent;font-size:13px;font-weight:500;cursor:pointer;",
+    "color:var(--color-fg-muted,#57606a);transition:color .1s;}",
+    ".fg-tab:hover{color:var(--color-fg-default,#1f2328);}",
+    ".fg-tab.fg-on{color:var(--color-fg-default,#1f2328);font-weight:600;",
+    "box-shadow:inset 0 -2px 0 var(--color-accent-emphasis,#0969da);}",
+    ".fg-body{max-height:min(70vh,520px);overflow:auto;padding:8px 12px;}",
+
+    /* 分区标题：对齐 GitHub 的 section heading */
+    ".fg-sec{font-size:12px;font-weight:600;color:var(--color-fg-muted,#57606a);padding:8px 0 4px;",
+    "text-transform:none;letter-spacing:.02em;}",
+
+    /* 提示：对齐 GitHub 的 subtle note（弱化边框，柔和背景） */
+    ".fg-warn{margin:0 0 4px;padding:6px 10px;font-size:12px;border-radius:6px;line-height:1.5;}",
+    ".fg-warn.a{background:var(--color-attention-subtle,#fff8c5);color:var(--color-attention-fg,#4d2e25);}",
+    ".fg-warn.b{background:var(--color-danger-subtle,#ffebe9);color:var(--color-danger-fg,#82071e);}",
+
+    /* 克隆行：对齐 GitHub Code 面板的 input + copy 按钮 */
+    ".fg-row{display:flex;align-items:center;gap:6px;padding:4px 0;}",
+    ".fg-row .fg-name{flex:0 0 88px;font-size:12px;color:var(--color-fg-muted,#57606a);",
+    "overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}",
+    ".fg-in{flex:1;min-width:0;padding:5px 8px;font-size:12px;font-family:var(--mono-font-size-12,var(--font-mono));",
+    "border:1px solid var(--color-border-default,#d0d7de);border-radius:6px;",
+    "background:var(--color-canvas-default,#fff);color:var(--color-fg-default,#1f2328);line-height:1.4;}",
+    ".fg-in:focus{outline:none;border-color:var(--color-accent-emphasis,#0969da);",
+    "box-shadow:0 0 0 1px var(--color-accent-emphasis,#0969da);}",
+    ".fg-copy{flex:0 0 auto;padding:4px 10px;font-size:12px;font-weight:500;border-radius:6px;cursor:pointer;",
+    "border:1px solid var(--color-border-default,#d0d7de);background:var(--color-canvas-subtle,#f6f8fa);",
+    "color:var(--color-fg-default,#1f2328);transition:background-color .1s,border-color .1s;}",
+    ".fg-copy:hover{background:var(--color-canvas-subtle-hover,#eef0f3);border-color:var(--color-border-muted,#d1d9e0);}",
+    ".fg-copy:active{background:var(--color-canvas-overlay,#f3f4f6);}",
+
+    /* 链接项：对齐 GitHub 的 nav / list item */
+    ".fg-item{display:block;padding:6px 10px;border-radius:6px;font-size:13px;",
+    "color:var(--color-accent-fg,#0969da);text-decoration:none;}",
+    ".fg-item:hover{background:var(--color-canvas-subtle,#f6f8fa);text-decoration:underline;}",
+
+    /* 下拉框：完全对齐 GitHub 原生 <select>（.form-select） */
+    ".fg-select{width:100%;padding:5px 28px 5px 8px;font-size:13px;line-height:1.4;",
+    "border:1px solid var(--color-border-default,#d0d7de);border-radius:6px;",
+    "background:var(--color-canvas-default,#fff) url('data:image/svg+xml,%3Csvg width=\"16\" height=\"12\" viewBox=\"0 0 16 12\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cpath d=\"M2 4l6 6 6-6\" stroke=\"%2357606a\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/%3E%3C/svg%3E') no-repeat right 8px center;",
+    "appearance:none;-webkit-appearance:none;color:var(--color-fg-default,#1f2328);cursor:pointer;",
+    "box-shadow:var(--box-shadow-inset,none);}",
+    ".fg-select:hover{border-color:var(--color-border-muted,#d1d9e0);}",
+    ".fg-select:focus{outline:none;border-color:var(--color-accent-emphasis,#0969da);",
+    "box-shadow:0 0 0 1px var(--color-accent-emphasis,#0969da);}",
+
+    /* 设置区：对齐 GitHub 的 checkbox 列表（如 PR 模板设置） */
+    ".fg-settings{padding:4px 0;}",
+    ".fg-set-row{display:flex;align-items:center;gap:8px;padding:6px 8px;font-size:13px;",
+    "border-radius:6px;cursor:pointer;}",
+    ".fg-set-row:hover{background:var(--color-canvas-subtle,#f6f8fa);}",
+    ".fg-set-row input[type=checkbox]{width:14px;height:14px;cursor:pointer;",
+    "accent-color:var(--color-accent-emphasis,#0969da);border-radius:3px;}"
   ].join("\n");
 
   function injectStyle() {
@@ -268,10 +304,10 @@
     menuLi = li;
 
     var details = el("details", { id: "fg-details", class: "fg-details" });
-    var summary = el("summary", { title: "镜像站点与快速克隆" }, [
-      document.createTextNode("克隆与镜像"),
-      el("span", { class: "fg-caret" })
-    ]);
+    var summary = el("summary", { title: "镜像站点与快速克隆" });
+    summary.innerHTML = "克隆与镜像 " +
+      '<svg aria-hidden="true" width="12" height="12" viewBox="0 0 16 16" style="flex-shrink:0;opacity:.6">' +
+      '<path fill="currentColor" d="M12.78 5.22a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L3.22 6.28a.75.75 0 0 1 1.06-1.06L8 8.94l3.72-3.72a.75.75 0 0 1 1.06 0Z"/></svg>';
     var panel = el("div", { class: "fg-panel" });
     var tabs = el("div", { class: "fg-tabs" });
     var tabMain = el("button", { class: "fg-tab fg-on", type: "button", text: "主要" });
@@ -287,7 +323,7 @@
     var paneSet = el("div", { hidden: true });
 
     /* ---- 主要 ---- */
-    paneMain.appendChild(el("div", { class: "fg-warn a", text: "可编辑脚本顶部 CONFIG 关闭 clone / --depth=1 前缀" }));
+    paneMain.appendChild(el("div", { class: "fg-warn a", text: "提示：可在「设置」页签关闭 git clone / --depth=1 前缀" }));
     paneMain.appendChild(el("div", { class: "fg-warn b", text: "请不要在镜像网站登录账号，若因此造成任何损失作者概不负责" }));
 
     paneMain.appendChild(el("div", { class: "fg-sec", text: "快速克隆" }));
