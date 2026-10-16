@@ -167,8 +167,7 @@
   /* ================================ 注入样式（一次性） ================================ */
   var STYLE = [
     "#fg-menu-li{list-style:none;position:relative;display:inline-block;}",
-    // 防御性兜底：若任何重渲染 / 克隆机制产生了多个 #fg-menu-li 兄弟节点，
-    // 只保留每一个容器内的第一个，其余隐藏，避免视觉重复。
+    // 视觉兜底：若菜单因任何机制产生重复，只保留首个，其余隐藏
     "li#fg-menu-li ~ li#fg-menu-li{display:none;}",
     ".fg-details{position:relative;}",
     ".fg-details>summary{list-style:none;display:inline-flex;align-items:center;gap:6px;cursor:pointer;",
@@ -248,19 +247,9 @@
   }
 
   function buildMenu(ctx) {
-    // 幂等兜底：无论 buildMenu 被调用多少次（React 重渲染 / Turbo / 懒加载），
-    // 先把页面上所有历史 #fg-menu-li 全部移除，再插入唯一一个，杜绝重复累积。
-    $$("li#fg-menu-li").forEach(function (old) {
-      if (old !== menuLi) old.remove();
-    });
-
-    // 复用稳定节点 menuLi（若已存在则清空内容后填充），否则创建新节点
-    var li = menuLi;
-    if (!li) {
-      li = el("li", { id: "fg-menu-li" });
-      menuLi = li;
-    }
-    li.innerHTML = "";
+    // 创建稳定菜单节点 menuLi（每次调用新建一份，旧副本由 CSS 兄弟选择器隐藏）
+    var li = el("li", { id: "fg-menu-li" });
+    menuLi = li;
 
     var details = el("details", { id: "fg-details", class: "fg-details" });
     var summary = el("summary", { title: "镜像站点与快速克隆" }, [
@@ -346,33 +335,22 @@
     details.appendChild(panel);
     li.appendChild(details);
 
-    // 幂等插入：把稳定节点挂到当前 header 容器
-    //
-    // 关键：GitHub 新版仓库页的 ul#repo-header-actions 位于 React prc-PageLayout 树内，
-    // React 重渲染会“深拷贝”其子节点，导致我们的 li 被复制多份（实测 37 份）。
-    // 因此挂到 ul 的“直接父级 div”（不在 React 子节点管理范围），React 不会克隆它。
+    // 插入：挂到 header ul 内部。#fg-menu-li 是 <li>，只能挂在 <ul> 里
+    // （挂在 <div> 里会被浏览器 reparent）。新版仓库页 header 是
+    // ul#repo-header-actions，故直接挂回该 ul。重复副本由 CSS 兄弟选择器
+    // (li#fg-menu-li ~ li#fg-menu-li{display:none}) 兜底隐藏，视觉恒定唯一。
     var bar = $("ul[data-testid='repo-header-actions']") || $("ul.pagehead-actions");
-    var mountParent = null;
     if (bar) {
-      // 直接父级 div（i=1）：prc-PageLayout 树中最外层的不带 data-testid 的普通 div
-      mountParent = bar.parentElement;
-    }
-    if (mountParent) {
-      // 先清除所有历史克隆副本（React 可能复制），再挂我们唯一的 li
-      $$("li#fg-menu-li", mountParent).forEach(function (old) { if (old !== li) old.remove(); });
-      if (!mountParent.contains(li)) mountParent.insertBefore(li, mountParent.firstChild);
+      bar.insertBefore(li, bar.firstChild);
       return true;
     }
-    // 极端情况的兜底：挂到 Public 标签旁
+    // 极端兜底：挂到 Public 标签旁的 div（li 用 div 包裹保持合法）
     var label = $("[data-testid='repo-visibility-label']");
     if (label && label.parentElement && label.parentElement.parentElement) {
       var wrapHost = label.parentElement.parentElement;
-      $$("li#fg-menu-li", wrapHost).forEach(function (old) { if (old !== li) old.remove(); });
-      if (!wrapHost.contains(li)) {
-        var wrap = el("div", { style: "display:inline-block;margin:0 8px;" });
-        wrap.appendChild(li);
-        wrapHost.appendChild(wrap);
-      }
+      var wrap = el("div", { style: "display:inline-block;margin:0 8px;" });
+      wrap.appendChild(li);
+      wrapHost.appendChild(wrap);
       return true;
     }
     return false;
@@ -385,15 +363,17 @@
       // 仅处理 Code 克隆面板里的 ZIP（避免误伤 releases 的 Source code）
       if (!a.closest("[class*='ActionList'], .get-repo-form, details")) return;
       a.dataset.fgZip = "1";
-      var li = a.closest("li") || a.parentElement;
+      // 关键：在原始 li 的“脱机副本”上逐个构建 ZIP 链接，
+      // 绝不在插入 DOM 后继续对已入树的节点做 cloneNode(true)——
+      // 那会把我们的 #fg-menu-li 子树一起深拷贝扩散（这就是此前 37 倍重复的根源）。
+      var baseLi = a.closest("li") || a.parentElement;
+      var host = baseLi.parentNode;
+      var insertRef = baseLi.nextSibling;
       DownloadSet.forEach(function (i) {
         var m = MirrorUrl[i];
-        var node = li.cloneNode(true);
-        // 防御性兜底：克隆时剥离任何 #fg-menu-li 子树，
-        // 避免菜单节点被 Code 面板的 li 深拷贝扩散（这是 37 倍重复的真正根源）。
-        $$("li#fg-menu-li", node).forEach(function (x) {
-          if (x.id === "fg-menu-li") x.remove();
-        });
+        var node = baseLi.cloneNode(true);
+        // 克隆里剥离任何 #fg-menu-li 子树，确保菜单节点不随 Code 面板 li 复制
+        $$("li#fg-menu-li", node).forEach(function (x) { x.remove(); });
         var aa = node.querySelector("a") || node;
         aa.removeAttribute("id");
         aa.setAttribute("href", m[0] + relPath(a.getAttribute("href")));
@@ -401,9 +381,7 @@
         aa.setAttribute("rel", "nofollow");
         aa.setAttribute("target", "_blank");
         aa.textContent = "Download ZIP(" + m[1] + ")";
-        if (li.parentNode) li.parentNode.insertBefore(node, li.nextSibling);
-        else a.parentNode.insertBefore(node, a.nextSibling);
-        li = node;
+        if (host) host.insertBefore(node, insertRef);
       });
     });
   }
@@ -484,19 +462,21 @@
     var ctx = repoContext();
     if (ctx) {
       var key = ctx.owner + "/" + ctx.repo;
-      // 节点已存在且同一仓库 → 确认稳定节点仍在“当前”挂载点，若被 React 清掉则挂回
+      // 节点已存在且同一仓库 → 确认稳定节点仍在“当前” header ul 里，若被 React 清掉则挂回
       if (menuLi && key === lastKey) {
         var liveBar = $("ul[data-testid='repo-header-actions']") || $("ul.pagehead-actions");
-        var liveMount = liveBar ? liveBar.parentElement : null;
-        if (liveMount && !liveMount.contains(menuLi)) {
-          // React 可能克隆副本；先清掉所有 #fg-menu-li（React 复制的），再挂回唯一节点
-          $$("li#fg-menu-li", liveMount).forEach(function (old) { if (old !== menuLi) old.remove(); });
-          liveMount.insertBefore(menuLi, liveMount.firstChild);
+        if (liveBar && !liveBar.contains(menuLi)) {
+          liveBar.insertBefore(menuLi, liveBar.firstChild);
         }
       } else if (key !== lastKey || !menuLi) {
         // 换仓库 / 首次：重建菜单（buildMenu 幂等，会复用并移动 menuLi）
         if (buildMenu(ctx)) { menuLi = $("#fg-menu-li"); lastKey = key; }
       }
+      // 物理去重：保留我们稳定引用的 menuLi，移除 GitHub 重渲染/克隆机制
+      // 产生的任何多余 #fg-menu-li 副本（它们只是 menuLi 的深拷贝，无独立状态）
+      $$("li#fg-menu-li").forEach(function (n) {
+        if (n !== menuLi) n.remove();
+      });
     }
     augmentCodePanel();
     injectReleaseAssets();
@@ -539,4 +519,14 @@
       return ret;
     };
   });
+
+  // 5) 周期性物理去重：React/Turbo 重渲染会对 header 子树做深拷贝，把我们的
+  //    #fg-menu-li 复制出多个隐藏副本（CSS 兄弟选择器已隐藏它们，视觉唯一）。
+  //    这里每 1.5s 物理移除除稳定 menuLi 外的多余副本，保持 DOM 整洁。
+  setInterval(function () {
+    if (!menuLi) return;
+    $$("li#fg-menu-li").forEach(function (n) {
+      if (n !== menuLi && !menuLi.contains(n)) n.remove();
+    });
+  }, 1500);
 })();

@@ -6,17 +6,15 @@
 
 ## 请不要在镜像网站登录账号，若因此造成任何损失本人概不负责
 
-本人并不会 js(现在会一点点了)，所以只能改别人的代码
-
 该脚本在[GitHub 镜像加速下载-码酷博客-改](https://greasyfork.org/zh-CN/scripts/391911)基础上修改(已经面目全非了)。
+
+> **v2.0.0 起脚本已完全重写为纯原生 JS（零依赖、无 jQuery）**，适配 2025+ 新版 GitHub 页面（`ul[data-testid="repo-header-actions"]`、`a[data-testid="raw-button"]`、Blob 页 Raw 按钮的 `prc-ButtonGroup` 嵌套等）。同时移除了所有已死亡的镜像站点（fastgit/cnpmjs/bajins/wuyanzheshui/rc1844 worker 等），只保留实测可用的入口。
 
 ## [[预览效果]](REANDME/README.md)
 
 下载安装地址：
 
 <https://raw.githubusercontent.com/RC1844/FastGithub/master/FastGithub.js>
-
-<https://raw.fastgit.org/RC1844/FastGithub/master/FastGithub.js>(无法下载安装的请使用该链接)
 
 或：从[Greasyfork](https://greasyfork.org/zh-CN/scripts/397419)安装
 
@@ -72,6 +70,16 @@ const ASSET_URL = "https://github.com";
 [zmirror](https://github.com/aploium/zmirror)
 
 ## 更新日志
+
+v2.0.0
+
+1. 全面重写为纯原生 JS，移除 jQuery 依赖，体积更小、无外部依赖
+2. 适配 2025+ 新版 GitHub 页面：仓库页 header 由 `ul.pagehead-actions` 迁移为 `ul[data-testid="repo-header-actions"]`，Blob 页 Raw 按钮改为 `a[data-testid="raw-button"]`（嵌套 `prc-ButtonGroup` 包裹层），克隆面板结构同步更新
+3. 移除全部已死亡镜像站点（fastgit/cnpmjs/bajins/wuyanzheshui/rc1844 worker/cors.zme.ink/ghproxy.com 旧域名等），仅保留实测可用的 gh-proxy.cn（eo/z1/z3/cf）、gh-proxy.com、ghproxy.net、ghfast.top、gitclone.com
+4. 修复镜像 URL 拼接：统一通过 `relPath()` 归一化 `/owner/repo/...` 相对路径，杜绝 `.../github.com/https://github.com/...` 之类错误拼接
+5. 修复菜单重复累积：菜单稳定引用 `menuLi` 只创建一次，`augmentCodePanel` 在脱机副本上构建 ZIP 链接不再深拷贝菜单子树，配合 CSS 兄弟选择器 + 周期性物理去重，视觉与 DOM 均保持唯一
+6. 按「能力」拆分站点集合（CloneSet/DownloadSet/RawSet），避免把不支持下载的站点放进下载列表；gh-proxy.cn 只加速文件不代理网页，故未加入镜像浏览
+7. 「其他」菜单新增 gh-proxy.cn 官方站与节点状态页
 
 v1.6.7
 
