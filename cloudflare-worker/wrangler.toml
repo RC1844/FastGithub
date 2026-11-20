@@ -1,0 +1,13 @@
+# GitHub 镜像加速 Worker 配置
+# 文档：https://developers.cloudflare.com/workers/wrangler/configuration/
+
+name = "github-mirror"
+main = "github-mirror-worker.js"
+compatibility_date = "2024-11-01"
+workers_dev = true
+
+# 可选环境变量：也可在 Cloudflare Dashboard → Worker → 设置 → 变量 中添加
+# [vars]
+# ENABLE_API = "1"        # 允许 api.github.com，并把 Worker 根路径作为 API 镜像
+# ALLOW_AUTH = "0"        # 设为 "1" 时转发 Authorization（默认剥离）
+# ALLOWED_HOSTS = ""      # 额外允许的域名，逗号分隔
