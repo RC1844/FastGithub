@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub 镜像加速助手
 // @namespace    https://github.com/ghma
-// @version      1.5.1
+// @version      1.7.1
 // @description  镜像浏览 / Clone / Raw / Release / Archive 加速，多线路重试、按用途分线路、线路禁用置顶、浅克隆、Actions 制品登录态/Token 下载、Gist 支持、诊断报告、配置导入导出
 // @author       ghma
 // @license      MIT
@@ -38,6 +38,65 @@
     { id: 'ghproxy', label: 'ghproxy.net', type: 'proxy', base: 'https://ghproxy.net/' },
     { id: 'ghfast', label: 'ghfast.top', type: 'proxy', base: 'https://ghfast.top/' },
     { id: 'ghproxycom', label: 'gh-proxy.com', type: 'proxy', base: 'https://gh-proxy.com/' },
+    { id: 'ghproxyorg', label: 'gh-proxy.org', type: 'proxy', base: 'https://gh-proxy.org/' },
+    { id: 'ghproxyorgv4', label: 'v4.gh-proxy.org（推荐）', type: 'proxy', base: 'https://v4.gh-proxy.org/' },
+    { id: 'ghproxyorgv6', label: 'v6.gh-proxy.org', type: 'proxy', base: 'https://v6.gh-proxy.org/' },
+    { id: 'ghproxyorgcdn', label: 'cdn.gh-proxy.org', type: 'proxy', base: 'https://cdn.gh-proxy.org/' },
+    { id: 'ghproxyorgaxis', label: 'axisnow.gh-proxy.org', type: 'proxy', base: 'https://axisnow.gh-proxy.org/' },
+    { id: 'ghproxynet', label: 'gh-proxy.net', type: 'proxy', base: 'https://gh-proxy.net/' },
+    { id: 'ghproxycn', label: 'gh-proxy.cn', type: 'proxy', base: 'https://gh-proxy.cn/github/' },
+    {
+      id: 'eo.ghproxycn',
+      label: 'eo.gh-proxy.cn（仅 Raw）',
+      type: 'template',
+      template: 'https://eo.gh-proxy.cn/github/{rawUrl}',
+      caps: { raw: true, downloads: false },
+    },
+    { id: 'ghproxycn2', label: 'ghproxy.cn', type: 'proxy', base: 'https://ghproxy.cn/' },
+    { id: 'ghproxycfd', label: 'ghproxy.cfd', type: 'proxy', base: 'https://ghproxy.cfd/' },
+    { id: 'gitproxyclick', label: 'gitproxy.click', type: 'proxy', base: 'https://gitproxy.click/' },
+    { id: 'cnxiaobai', label: 'github.cnxiaobai.com', type: 'proxy', base: 'https://github.cnxiaobai.com/' },
+    { id: 'monkeyray', label: 'ghproxy.monkeyray.net', type: 'proxy', base: 'https://ghproxy.monkeyray.net/' },
+    // 2026-11-20 批量实测通过（Raw + Archive），按延迟排序
+    { id: 'sakuramoe', label: 'ghproxy.sakuramoe.dev', type: 'proxy', base: 'https://ghproxy.sakuramoe.dev/' },
+    { id: 'gh996986', label: 'gh.996986.xyz', type: 'proxy', base: 'https://gh.996986.xyz/' },
+    { id: 'zzrbk', label: 'github.zzrbk.xyz', type: 'proxy', base: 'https://github.zzrbk.xyz/' },
+    { id: 'git951959483', label: 'git.951959483.xyz', type: 'proxy', base: 'https://git.951959483.xyz/' },
+    { id: 'git820828', label: 'git.820828.xyz', type: 'proxy', base: 'https://git.820828.xyz/' },
+    { id: 'shiina', label: 'gh.shiina-rimo.cafe', type: 'proxy', base: 'https://gh.shiina-rimo.cafe/' },
+    { id: 'gh39al', label: 'gh.39.al', type: 'proxy', base: 'https://gh.39.al/' },
+    { id: 'ihn', label: 'github.ihnic.com', type: 'proxy', base: 'https://github.ihnic.com/' },
+    { id: 'gp871201', label: 'gp.871201.xyz', type: 'proxy', base: 'https://gp.871201.xyz/' },
+    { id: 'chjina', label: 'gh.chjina.com', type: 'proxy', base: 'https://gh.chjina.com/' },
+    { id: 'tianrld', label: 'github.tianrld.top', type: 'proxy', base: 'https://github.tianrld.top/' },
+    { id: 'baguoyuyan', label: 'proxy.baguoyuyan.com', type: 'proxy', base: 'https://proxy.baguoyuyan.com/' },
+    { id: 'gh880824', label: 'github.880824.xyz', type: 'proxy', base: 'https://github.880824.xyz/' },
+    { id: 'padao', label: 'gh.padao.fun', type: 'proxy', base: 'https://gh.padao.fun/' },
+    { id: 'skybyte', label: 'ghproxy.mirror.skybyte.me', type: 'proxy', base: 'https://ghproxy.mirror.skybyte.me/' },
+    { id: 'imciel', label: 'ghproxy.imciel.com', type: 'proxy', base: 'https://ghproxy.imciel.com/' },
+    { id: 'love8yun', label: 'getgit.love8yun.eu.org', type: 'proxy', base: 'https://getgit.love8yun.eu.org/' },
+    { id: 'catmak', label: 'gh.catmak.name', type: 'proxy', base: 'https://gh.catmak.name/' },
+    { id: 'jiashu', label: 'jiashu.1win.eu.org', type: 'proxy', base: 'https://jiashu.1win.eu.org/' },
+    { id: 'fastgitcc', label: 'fastgit.cc', type: 'proxy', base: 'https://fastgit.cc/' },
+    { id: 'ghdpik', label: 'gh.dpik.top', type: 'proxy', base: 'https://gh.dpik.top/' },
+    { id: 'ddayh', label: 'hub.ddayh.com', type: 'proxy', base: 'https://hub.ddayh.com/' },
+    { id: 'ghm078465', label: 'ghm.078465.xyz', type: 'proxy', base: 'https://ghm.078465.xyz/' },
+    { id: 'gh1ms', label: 'github.1ms.xx.kg', type: 'proxy', base: 'https://github.1ms.xx.kg/' },
+    { id: 'ednovas', label: 'github.ednovas.xyz', type: 'proxy', base: 'https://github.ednovas.xyz/' },
+    { id: 'crdz', label: 'github.crdz.eu.org', type: 'proxy', base: 'https://github.crdz.eu.org/' },
+    { id: 'keleyaa', label: 'ghp.keleyaa.com', type: 'proxy', base: 'https://ghp.keleyaa.com/' },
+    { id: 'lsdfxdk', label: 'github.lsdfxdk.nyc.mn', type: 'proxy', base: 'https://github.lsdfxdk.nyc.mn/' },
+    { id: 'boringhex', label: 'github.boringhex.top', type: 'proxy', base: 'https://github.boringhex.top/' },
+    { id: 'monlor', label: 'gh.monlor.com', type: 'proxy', base: 'https://gh.monlor.com/' },
+    { id: 'gh198962', label: 'gh.198962.xyz', type: 'proxy', base: 'https://gh.198962.xyz/' },
+    { id: 'xzhouqd', label: 'ghproxy.xzhouqd.com', type: 'proxy', base: 'https://ghproxy.xzhouqd.com/' },
+    { id: 'kenyu', label: 'kenyu.ggff.net', type: 'proxy', base: 'https://kenyu.ggff.net/' },
+    { id: 'lixxing', label: 'github-proxy.lixxing.top', type: 'proxy', base: 'https://github-proxy.lixxing.top/' },
+    { id: 'gh788787', label: 'github.788787.xyz', type: 'proxy', base: 'https://github.788787.xyz/' },
+    { id: 'clwap', label: 'ggg.clwap.dpdns.org', type: 'proxy', base: 'https://ggg.clwap.dpdns.org/' },
+    { id: 'chenc', label: 'github.chenc.dev', type: 'proxy', base: 'https://github.chenc.dev/' },
+    { id: 'gitproxy127731', label: 'gitproxy.127731.xyz', type: 'proxy', base: 'https://gitproxy.127731.xyz/' },
+    { id: 'yaoyaoling', label: 'proxy.yaoyaoling.net', type: 'proxy', base: 'https://proxy.yaoyaoling.net/' },
     { id: 'gitmirror', label: 'hub.gitmirror.com', type: 'proxy', base: 'https://hub.gitmirror.com/' },
     { id: 'ghproxycc', label: 'ghproxy.cc', type: 'proxy', base: 'https://ghproxy.cc/' },
     { id: 'llkk', label: 'gh.llkk.cc', type: 'proxy', base: 'https://gh.llkk.cc/' },
@@ -66,7 +125,7 @@
   ];
 
   const STORE_KEY = 'ghma:settings';
-  const SCRIPT_VERSION = '1.5.1';
+  const SCRIPT_VERSION = '1.7.1';
   const DEFAULTS = {
     enabled: true,
     mirror: 'ghproxy',
@@ -271,9 +330,10 @@
   function zipUrl(ctx) {
     if (!ctx) return '';
     if (ctx.isGist) {
-      const link = $$('a[href*="/archive/"][href$=".zip"]').find((a) =>
+      const links = $$('a[href*="/archive/"]').filter((a) =>
         a.href.startsWith('https://gist.github.com/')
       );
+      const link = links.find((a) => /\.zip(\?|$)/i.test(a.href)) || links[0];
       return link ? link.href : '';
     }
     return `https://github.com/${ctx.owner}/${ctx.repo}/archive/HEAD.zip`;
@@ -394,6 +454,41 @@
 
   function isMirrorDisabled(id) {
     return (state.settings.disabledMirrors || []).indexOf(id) >= 0;
+  }
+
+  // 统一排序：禁用置底 → 置顶顺序 → 健康度 → 测速延迟 → 原始顺序
+  function sortedMirrors(list) {
+    const pinned = state.settings.pinnedMirrors || [];
+    const order = new Map(MIRRORS.map((m, i) => [m.id, i]));
+    const pinRank = (m) => {
+      const i = pinned.indexOf(m.id);
+      return i < 0 ? Number.MAX_SAFE_INTEGER : i;
+    };
+    const healthRank = (m) => {
+      const h = healthOf(m);
+      return h === 'ok' ? 0 : h === 'bad' ? 2 : 1;
+    };
+    const speedRank = (m) => {
+      const ms = Number(state.settings.speeds[m.id]);
+      if (Number.isFinite(ms) && ms > 0) return ms;
+      if (Number.isFinite(ms) && ms < 0) return 999999;
+      return 500000;
+    };
+    return list.slice().sort((a, b) => {
+      const da = isMirrorDisabled(a.id) ? 1 : 0;
+      const db = isMirrorDisabled(b.id) ? 1 : 0;
+      if (da !== db) return da - db;
+      const pa = pinRank(a);
+      const pb = pinRank(b);
+      if (pa !== pb) return pa - pb;
+      const ha = healthRank(a);
+      const hb = healthRank(b);
+      if (ha !== hb) return ha - hb;
+      const sa = speedRank(a);
+      const sb = speedRank(b);
+      if (sa !== sb) return sa - sb;
+      return (order.get(a.id) || 0) - (order.get(b.id) || 0);
+    });
   }
 
   // 按用途取线路：'raw' | 'downloads' | 'clone'，未单独设置时跟随主线路
@@ -630,7 +725,7 @@
           responseType: 'blob',
           timeout: timeout || 45000,
           onload: (res) => {
-            if (res.status >= 200 && res.status < 400 && res.response) resolve(res.response);
+            if (res.status >= 200 && res.status < 300 && res.response) resolve(res.response);
             else reject(new Error(`HTTP ${res.status}`));
           },
           onerror: () => reject(new Error('网络错误')),
@@ -662,8 +757,8 @@
     }
   }
 
-  async function downloadViaMirror(url, filename, notify) {
-    const say = notify || state.toast || (() => {});
+  async function downloadViaMirror(url, filename, notify, need) {
+    const say = notify || state.toast || (() => { });
     state.stats.downloads++;
     if (!url) {
       state.stats.fail++;
@@ -671,7 +766,7 @@
       renderPanel();
       return false;
     }
-    const pool = orderedPool('downloads');
+    const pool = orderedPool(need || 'downloads').slice(0, 4);
     if (!pool.length) {
       state.stats.fail++;
       say('没有可用的下载镜像', true);
@@ -690,7 +785,19 @@
       if (!target) continue;
       say(`通过 ${m.label} 下载…（${i + 1}/${pool.length}）`);
       try {
-        const blob = await requestBlob(target, 45000);
+        const blob = await requestBlob(target, 120000);
+        if (
+          blob &&
+          typeof blob.type === 'string' &&
+          /^text\/html/i.test(blob.type) &&
+          !/\.html?$/i.test(filename || '')
+        ) {
+          throw new Error('线路返回网页而非文件');
+        }
+        if (/\.zip$/i.test(filename || '') && blob && typeof blob.slice === 'function') {
+          const head = new Uint8Array(await blob.slice(0, 2).arrayBuffer());
+          if (head[0] !== 0x50 || head[1] !== 0x4b) throw new Error('返回内容不是 ZIP');
+        }
         markHealth(m.id, true);
         if (!saveBlob(blob, filename)) throw new Error('无法保存文件');
         state.stats.ok++;
@@ -704,14 +811,14 @@
       }
     }
     state.stats.fail++;
-    say('所有镜像均失败，已改为新窗口打开原链接', true);
+    say('所有已尝试的镜像均失败，已改为新窗口打开原链接', true);
     openInNewTab(url);
     renderPanel();
     return false;
   }
 
   async function downloadAssets(notify) {
-    const say = notify || state.toast || (() => {});
+    const say = notify || state.toast || (() => { });
     const list = collectAssetLinks();
     if (!list.length) return say('当前页面没有 Release 资产', true);
     say(`开始下载 ${list.length} 个资产…`);
@@ -735,6 +842,12 @@
     const match = location.pathname.match(/^\/([^/]+)\/([^/]+)\/actions\/runs\/(\d+)/);
     if (!match) return null;
     return { owner: match[1], repo: match[2], runId: match[3] };
+  }
+
+  // 读取 GitHub 登录名；匿名页面该 meta 的 content 为空
+  function githubLogin() {
+    const meta = document.querySelector('meta[name="user-login"]');
+    return meta ? String(meta.getAttribute('content') || '').trim() : '';
   }
 
   function actionsApiBase() {
@@ -842,16 +955,19 @@
   }
 
   function artifactWebUrl(info, item) {
-    return (
-      item.url ||
-      `https://github.com/${info.owner}/${info.repo}/actions/runs/${info.runId}/artifacts/${item.id}`
-    );
+    // API 返回的 item.url 是 JSON 接口地址，不能直接当下载地址
+    if (item.url && /^https:\/\/github\.com\//i.test(item.url)) return item.url;
+    return `https://github.com/${info.owner}/${info.repo}/actions/runs/${info.runId}/artifacts/${item.id}`;
   }
 
   async function downloadRunArtifacts(notify) {
-    const say = notify || state.toast || (() => {});
+    const say = notify || state.toast || (() => { });
     const info = actionsRunInfo();
     if (!info) return say('请先打开一个 Actions 运行页面', true);
+    const token = String(state.settings.actionsToken || '').trim();
+    if (!token && !githubLogin()) {
+      return say('Actions 制品不支持匿名下载：请先登录 GitHub，或在「设置」填写 Token', true);
+    }
     say('正在读取 Actions 制品列表…');
     let list = [];
     try {
@@ -867,7 +983,6 @@
     }
     if (!list.length) return say('该运行没有可下载的制品（可能已过期）', true);
     const base = actionsApiBase();
-    const token = String(state.settings.actionsToken || '').trim();
     let ok = 0;
     for (let i = 0; i < list.length; i++) {
       const item = list[i];
@@ -906,11 +1021,14 @@
   }
 
   async function downloadRunLog(notify) {
-    const say = notify || state.toast || (() => {});
+    const say = notify || state.toast || (() => { });
     const info = actionsRunInfo();
     if (!info) return say('请先打开一个 Actions 运行页面', true);
     say('正在下载运行日志…');
     const token = String(state.settings.actionsToken || '').trim();
+    if (!token && !githubLogin()) {
+      return say('Actions 日志不支持匿名下载：请先登录 GitHub，或在「设置」填写 Token', true);
+    }
     const apiLogs = `${actionsApiBase()}repos/${info.owner}/${info.repo}/actions/runs/${info.runId}/logs`;
     const webLogs = `https://github.com/${info.owner}/${info.repo}/actions/runs/${info.runId}/logs`;
     try {
@@ -1365,7 +1483,7 @@
     :host { all: initial; }
     * { box-sizing: border-box; }
     .fab {
-      position: fixed; right: 18px; bottom: 18px; z-index: 2147483001;
+      position: fixed; right: 18px; top: 18px; z-index: 2147483001;
       height: 38px; padding: 0 15px; border-radius: 999px; border: 1px solid #1f6feb;
       background: linear-gradient(180deg, #1f6feb, #1a5fd0); color: #fff;
       font: 600 13px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
@@ -1374,8 +1492,8 @@
     .fab:hover { filter: brightness(1.12); }
     .fab.off { background: #21262d; border-color: #30363d; color: #8b949e; }
     .panel {
-      position: fixed; right: 18px; bottom: 66px; z-index: 2147483002; width: 344px;
-      max-height: calc(100vh - 100px); overflow: auto;
+      position: fixed; right: 18px; top: 66px; z-index: 2147483002; width: 344px;
+      max-height: calc(100vh - 84px); overflow: auto;
       background: #0d1117; color: #e6edf3; border: 1px solid #30363d; border-radius: 12px;
       box-shadow: 0 16px 48px rgba(0, 0, 0, .55);
       font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
@@ -1446,6 +1564,7 @@
     }
     .preview:hover { color: #e6edf3; border-color: #1f6feb; }
     .hint { margin: 0; color: #8b949e; font-size: 11px; }
+    .hint a { color: #58a6ff; }
     .toast {
       position: fixed; right: 18px; bottom: 66px; z-index: 2147483003; max-width: 320px;
       background: #1f6feb; color: #fff; border-radius: 8px; padding: 8px 12px;
@@ -1456,13 +1575,19 @@
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast[hidden] { display: none; }
     details.manage { border: 1px solid #30363d; border-radius: 6px; padding: 6px 8px; }
-    details.manage summary { cursor: pointer; color: #8b949e; font-size: 12px; user-select: none; }
+    details.manage summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; color: #8b949e; font-size: 12px; user-select: none; }
+    details.manage summary .mini {
+      flex: none; padding: 1px 8px; border-radius: 4px; border: 1px solid #30363d;
+      background: #21262d; color: #c9d1d9; font: 11px/1.6 inherit; cursor: pointer;
+    }
+    details.manage summary .mini:hover { border-color: #8b949e; }
     .mline-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
     .mline { display: flex; align-items: center; gap: 6px; font-size: 12px; }
     .mline .mdot { width: 6px; height: 6px; border-radius: 50%; background: #6e7681; flex: none; }
     .mline .mdot.ok { background: #3fb950; }
     .mline .mdot.bad { background: #f85149; }
     .mline .mlabel { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mline .mspeed { flex: none; min-width: 40px; text-align: right; color: #8b949e; font-size: 11px; }
     .mline.off .mlabel { color: #6e7681; text-decoration: line-through; }
     .mline button {
       padding: 2px 6px; border-radius: 4px; border: 1px solid #30363d;
@@ -1477,8 +1602,10 @@
     :host(.ghma-light) .prow em { color: #57606a; }
     :host(.ghma-light) details.manage { border-color: #d0d7de; }
     :host(.ghma-light) details.manage summary { color: #57606a; }
+    :host(.ghma-light) details.manage summary .mini { background: #f6f8fa; color: #1f2328; border-color: #d0d7de; }
     :host(.ghma-light) .mline button { background: #f6f8fa; color: #1f2328; border-color: #d0d7de; }
     :host(.ghma-light) .mline.off .mlabel { color: #8c959f; }
+    :host(.ghma-light) .mline .mspeed { color: #57606a; }
     :host(.ghma-light) .stats { color: #57606a; }
     :host(.ghma-light) .panel {
       background: #ffffff; color: #1f2328; border-color: #d0d7de;
@@ -1501,6 +1628,7 @@
     :host(.ghma-light) .preview:hover { color: #1f2328; }
     :host(.ghma-light) .hint,
     :host(.ghma-light) .field > span { color: #57606a; }
+    :host(.ghma-light) .hint a { color: #0969da; }
     :host(.ghma-light) .ver { color: #57606a; border-color: #d0d7de; }
     :host(.ghma-light) .tabs { border-bottom-color: #d0d7de; }
     :host(.ghma-light) .tab { color: #57606a; }
@@ -1554,6 +1682,7 @@
               <button type="button" data-act="actdl">下载 Artifacts</button>
               <button type="button" data-act="actlog">下载日志</button>
             </div>
+            <p class="hint" data-role="actions-hint"></p>
             <p class="stats" data-role="stats" hidden></p>
           </section>
           <section class="pane" data-pane="routes" hidden>
@@ -1587,7 +1716,10 @@
               <button type="button" data-act="gitcfg">git 配置</button>
             </div>
             <details class="manage">
-              <summary>线路管理（禁用 / 置顶）</summary>
+              <summary>
+                <span>线路管理（禁用 / 置顶）</span>
+                <button type="button" class="mini" data-act="speed" title="测试全部线路并重新排序">测速</button>
+              </summary>
               <div class="mline-list" data-role="manage-list"></div>
             </details>
           </section>
@@ -1766,6 +1898,7 @@
     const saveToken = debounce(() => {
       state.settings.actionsToken = tokenInput.value.trim();
       saveSettings();
+      renderPanel();
     }, 400);
     tokenInput.addEventListener('input', saveToken);
 
@@ -1881,21 +2014,37 @@
     if (shadow.activeElement !== tokenInput) tokenInput.value = s.actionsToken || '';
 
     const runInfo = actionsRunInfo();
+    const token = String(s.actionsToken || '').trim();
+    const login = githubLogin();
+    const canActions = !!(runInfo && (token || login));
     const ghcmdBtn = shadow.querySelector('[data-act="ghcmd"]');
     const actDlBtn = shadow.querySelector('[data-act="actdl"]');
     const actLogBtn = shadow.querySelector('[data-act="actlog"]');
-    [ghcmdBtn, actDlBtn, actLogBtn].forEach((btn) => {
-      btn.disabled = !runInfo;
-    });
+    ghcmdBtn.disabled = !runInfo;
+    actDlBtn.disabled = !canActions;
+    actLogBtn.disabled = !canActions;
     ghcmdBtn.title = runInfo
       ? '复制 gh run download 命令（使用本机 gh 登录态）'
       : '请先打开 Actions 运行页面';
-    actDlBtn.title = runInfo
-      ? '用 Token 通过 API 下载本次运行的制品'
-      : '请先打开 Actions 运行页面';
-    actLogBtn.title = runInfo
-      ? '用 Token 下载本次运行的日志 zip'
-      : '请先打开 Actions 运行页面';
+    const authTitle = token
+      ? '使用 Token 通过 API 下载'
+      : login
+        ? `使用 GitHub 登录态（${login}）下载`
+        : '制品不支持匿名下载：请先登录 GitHub，或在「设置」填写 Token';
+    actDlBtn.title = runInfo ? `${authTitle}本次运行的制品` : '请先打开 Actions 运行页面';
+    actLogBtn.title = runInfo ? `${authTitle}本次运行的日志` : '请先打开 Actions 运行页面';
+
+    const actionsHint = byRole('actions-hint');
+    if (!runInfo) {
+      actionsHint.textContent = '打开 Actions 运行页面后可下载制品与日志';
+    } else if (token) {
+      actionsHint.textContent = '已配置 Token，制品与日志通过 API 下载';
+    } else if (login) {
+      actionsHint.textContent = `已登录 ${login}，制品与日志使用浏览器登录态下载`;
+    } else {
+      actionsHint.innerHTML =
+        '制品 / 日志不支持匿名下载，请先 <a href="https://github.com/login" target="_blank" rel="noopener">登录 GitHub</a>，或在「设置」填写 Token';
+    }
 
     const rawBtn = shadow.querySelector('[data-act="raw"]');
     const cloneBtn = shadow.querySelector('[data-act="clone"]');
@@ -1935,14 +2084,17 @@
     const manageList = byRole('manage-list');
     const pinned = s.pinnedMirrors || [];
     const disabled = s.disabledMirrors || [];
-    manageList.innerHTML = MIRRORS.map((mirror) => {
+    manageList.innerHTML = sortedMirrors(MIRRORS).map((mirror) => {
       const health = healthOf(mirror);
       const isPinned = pinned.indexOf(mirror.id) >= 0;
       const isOff = disabled.indexOf(mirror.id) >= 0;
+      const ms = state.settings.speeds && state.settings.speeds[mirror.id];
+      const speed = typeof ms === 'number' ? (ms > 0 ? `${ms}ms` : '超时') : '';
       return (
         `<div class="mline${isOff ? ' off' : ''}">` +
         `<span class="mdot ${health}"></span>` +
         `<span class="mlabel">${mirror.label}</span>` +
+        `<span class="mspeed">${speed}</span>` +
         `<button type="button" data-manage="pin" data-id="${mirror.id}" class="${isPinned ? 'on' : ''}">${isPinned ? '取消置顶' : '置顶'}</button>` +
         `<button type="button" data-manage="disable" data-id="${mirror.id}" class="${isOff ? 'on' : ''}">${isOff ? '启用' : '禁用'}</button>` +
         `</div>`
@@ -1989,6 +2141,7 @@
       ctx && ctx.isFile ? 1 : 0,
       collectAssetLinks().length,
       state.settings.mirror,
+      githubLogin(),
     ].join('|');
   }
 
@@ -2010,7 +2163,7 @@
       const off = isMirrorDisabled(m.id) ? ' · 已禁用' : '';
       return `<option value="${m.id}">${badge}${m.label}${suffix}${off}</option>`;
     };
-    const group = (type) => MIRRORS.filter((m) => m.type === type).map(opt).join('');
+    const group = (type) => sortedMirrors(MIRRORS.filter((m) => m.type === type)).map(opt).join('');
     return `
       <optgroup label="下载代理（Raw / Release / Archive / Clone）">${group('proxy')}</optgroup>
       <optgroup label="URL 模板（Raw / 文件 CDN）">${group('template')}</optgroup>
@@ -2027,7 +2180,7 @@
       const off = isMirrorDisabled(m.id) ? ' · 已禁用' : '';
       return `<option value="${m.id}">${badge}${m.label}${off}</option>`;
     };
-    const list = MIRRORS.filter((m) => mirrorCaps(m, need)).map(opt).join('');
+    const list = sortedMirrors(MIRRORS.filter((m) => mirrorCaps(m, need))).map(opt).join('');
     return `<option value="auto">跟随主线路</option>${list}<option value="custom">自定义线路…</option>`;
   }
 
@@ -2167,7 +2320,7 @@
       } catch (e) {
         /* 保留原样 */
       }
-      downloadViaMirror(getRawUrl(ctx), name, toast);
+      downloadViaMirror(getRawUrl(ctx), name, toast, 'raw');
       return;
     }
 
@@ -2196,9 +2349,7 @@
     if (act === 'zip') {
       const link = zipUrl(ctx);
       if (!link) return toast('当前页面没有可用的 ZIP 链接', true);
-      const dm = chooseDownloadMirror('downloads');
-      if (!dm) return toast('没有可用的下载镜像', true);
-      openInNewTab(mirrorize(link, dm));
+      downloadViaMirror(link, `${ctx.repo}.zip`, toast);
       return;
     }
 
@@ -2216,7 +2367,7 @@
   }
 
   async function runSpeedTest(toast) {
-    const notify = toast || (state.toast || (() => {}));
+    const notify = toast || (state.toast || (() => { }));
     const list = MIRRORS.filter(
       (m) => !isMirrorDisabled(m.id) && (m.type === 'proxy' || m.type === 'site')
     );
@@ -2282,7 +2433,7 @@
   }
 
   async function runDiagnostics(toast) {
-    const notify = toast || (state.toast || (() => {}));
+    const notify = toast || (state.toast || (() => { }));
     notify('正在诊断线路，请稍候…');
     const list = MIRRORS.filter(
       (m) => !isMirrorDisabled(m.id) && (m.type === 'proxy' || m.type === 'site')
@@ -2405,11 +2556,10 @@
     bar.innerHTML = `
       <button type="button" class="btn btn-sm ghma-btn" data-ghma="clone" title="复制镜像 Clone 命令">镜像 Clone</button>
       ${link('zip', '下载 ZIP', zipHref, '通过镜像下载仓库 ZIP')}
-      ${
-        currentCtx.isFile
-          ? link('raw', '镜像 Raw', rawHref, '通过镜像打开 Raw 文件') +
-            link('filedl', '下载文件', rawHref, '通过镜像下载当前文件')
-          : ''
+      ${currentCtx.isFile
+        ? link('raw', '镜像 Raw', rawHref, '通过镜像打开 Raw 文件') +
+        link('filedl', '下载文件', rawHref, '通过镜像下载当前文件')
+        : ''
       }
       ${link('site', '镜像站', siteHref, '在全站镜像中打开')}
     `;
@@ -2417,7 +2567,7 @@
 
   function handleToolbarAction(action) {
     const ctx = getRepoContext();
-    const notify = state.toast || (() => {});
+    const notify = state.toast || (() => { });
     if (!ctx) return;
 
     if (action === 'clone') {
@@ -2433,9 +2583,7 @@
     if (action === 'zip') {
       const link = zipUrl(ctx);
       if (!link) return notify('当前页面没有可用的 ZIP 链接', true);
-      const dm = chooseDownloadMirror('downloads');
-      if (!dm) return notify('没有可用的下载镜像', true);
-      openInNewTab(mirrorize(link, dm));
+      downloadViaMirror(link, `${ctx.repo}.zip`, notify);
       return;
     }
     if (action === 'raw') {
@@ -2458,7 +2606,7 @@
       } catch (e) {
         /* 保留原样 */
       }
-      downloadViaMirror(getRawUrl(ctx), name, notify);
+      downloadViaMirror(getRawUrl(ctx), name, notify, 'raw');
       return;
     }
     if (action === 'site') {
