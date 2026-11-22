@@ -14,8 +14,8 @@ const S1_END = `  function chooseCloneMirror(silent) {
       ? pickMirror('clone', silent)
       : mirrorFor('clone');
   }`;
-const S2_START = '  function cloneCommand(ctx, mirror) {';
-const S2_END = '    return wrap(httpsUrl);\n  }';
+const S2_START = '  // 分支名含 shell 特殊字符时加单引号';
+const S2_END = "    return parts.join(' && ');\n  }";
 
 const i1 = src.indexOf(S1_START);
 const i2 = src.indexOf(S1_END);
@@ -61,7 +61,8 @@ const MIRRORS = [
 ];
 const byId = (id) => MIRRORS.find((m) => m.id === id);
 
-function setup(over) {
+function setup(over, page) {
+  const pageInfo = page || {};
   const state = {
     settings: Object.assign(
       {
@@ -83,15 +84,36 @@ function setup(over) {
   };
   const activeMirror = () => byId(state.settings.mirror) || MIRRORS[0];
   const customMirror = () => null;
+  const zipUrl = () => pageInfo.zip || '';
+  const refFromArchiveHref = (href) => {
+    const m = String(href || '').match(/\/archive\/(.+?)\.(zip|tar\.gz)(?:\?|$)/i);
+    if (!m) return '';
+    const token = m[1];
+    if (token === 'HEAD') return '';
+    return token.replace(/^refs\/(heads|tags)\//, '');
+  };
+  const embeddedRepoInfo = () => ({ zipballUrl: '', defaultBranch: pageInfo.defaultBranch || '' });
   const factory = new Function(
     'MIRRORS',
     'state',
     'healthOf',
     'activeMirror',
     'customMirror',
+    'zipUrl',
+    'refFromArchiveHref',
+    'embeddedRepoInfo',
     block + '\nreturn { mirrorCaps, mirrorFor, fallbackCloneMirror, cloneCommand, orderedPool };',
   );
-  const api = factory(MIRRORS, state, healthOf, activeMirror, customMirror);
+  const api = factory(
+    MIRRORS,
+    state,
+    healthOf,
+    activeMirror,
+    customMirror,
+    zipUrl,
+    refFromArchiveHref,
+    embeddedRepoInfo,
+  );
   return Object.assign({ state }, api);
 }
 
@@ -161,19 +183,22 @@ console.log('\nClone 候选线路池');
 }
 
 console.log('\nClone 命令生成');
+const OFFICIAL = 'https://github.com/octocat/Hello-World.git';
+const GIST_OFFICIAL = 'https://gist.github.com/abc123.git';
+const restore = (dir, url) => ` && git -C ${dir} remote set-url origin ${url || OFFICIAL}`;
 {
   const { cloneCommand } = setup({ mirror: 'ghproxy' });
   eq(
     cloneCommand(CTX),
-    'git clone https://ghproxy.net/https://github.com/octocat/Hello-World.git',
-    '代理线路：前缀拼接完整地址',
+    'git clone https://ghproxy.net/https://github.com/octocat/Hello-World.git' + restore('Hello-World'),
+    '代理线路：前缀拼接完整地址，并还原 origin',
   );
 }
 {
   const { cloneCommand } = setup({ mirror: 'ghproxy', cloneDepth: 1 });
   eq(
     cloneCommand(CTX),
-    'git clone --depth 1 https://ghproxy.net/https://github.com/octocat/Hello-World.git',
+    'git clone --depth 1 https://ghproxy.net/https://github.com/octocat/Hello-World.git' + restore('Hello-World'),
     '浅克隆：追加 --depth',
   );
 }
@@ -181,7 +206,7 @@ console.log('\nClone 命令生成');
   const { cloneCommand } = setup({ mirror: 'ghproxy' });
   eq(
     cloneCommand(CTX, byId('gitclone')),
-    'git clone https://gitclone.com/github.com/octocat/Hello-World.git',
+    'git clone https://gitclone.com/github.com/octocat/Hello-World.git' + restore('Hello-World'),
     'Clone 专用节点：gitclone 路径形式',
   );
 }
@@ -189,7 +214,7 @@ console.log('\nClone 命令生成');
   const { cloneCommand } = setup({ mirror: 'ghproxy' });
   eq(
     cloneCommand(CTX, byId('kkgithub')),
-    'git clone https://kkgithub.com/octocat/Hello-World.git',
+    'git clone https://kkgithub.com/octocat/Hello-World.git' + restore('Hello-World'),
     '全站镜像：域名直拼 owner/repo',
   );
 }
@@ -197,7 +222,7 @@ console.log('\nClone 命令生成');
   const { cloneCommand } = setup({ mirror: 'ghproxy' });
   eq(
     cloneCommand(CTX, byId('cloneurl')),
-    'git clone https://m.example.com/https://github.com/octocat/Hello-World.git',
+    'git clone https://m.example.com/https://github.com/octocat/Hello-World.git' + restore('Hello-World'),
     'URL 模板：替换 {cloneUrl}',
   );
 }
@@ -205,7 +230,7 @@ console.log('\nClone 命令生成');
   const { cloneCommand } = setup({ mirror: 'ghproxy' });
   eq(
     cloneCommand(CTX, byId('jsdelivr')),
-    'git clone https://ghproxy.net/https://github.com/octocat/Hello-World.git',
+    'git clone https://ghproxy.net/https://github.com/octocat/Hello-World.git' + restore('Hello-World'),
     '传入不支持 Clone 的线路时自动兜底',
   );
 }
@@ -214,7 +239,7 @@ console.log('\nClone 命令生成');
   state.health.ghproxy = { ok: true };
   eq(
     cloneCommand(CTX),
-    'git clone https://ghfast.top/https://github.com/octocat/Hello-World.git',
+    'git clone https://ghfast.top/https://github.com/octocat/Hello-World.git' + restore('Hello-World'),
     '主线路被禁用时改用可用节点',
   );
 }
@@ -224,17 +249,149 @@ console.log('\nClone 命令生成');
   eq(
     cloneCommand(gist, byId('kkgithub')),
     'git clone https://gist.github.com/abc123.git',
-    'Gist + 全站镜像：回退到官方地址',
+    'Gist + 全站镜像：回退到官方地址，无需还原',
   );
   eq(
     cloneCommand(gist, byId('ghproxy')),
-    'git clone https://ghproxy.net/https://gist.github.com/abc123.git',
-    'Gist + 代理线路：仍走镜像前缀',
+    'git clone https://ghproxy.net/https://gist.github.com/abc123.git' + restore('abc123', GIST_OFFICIAL),
+    'Gist + 代理线路：仍走镜像前缀并还原 origin',
   );
 }
 {
   const { cloneCommand } = setup({ mirror: 'ghproxy' });
   eq(cloneCommand(null), '', '无仓库上下文时返回空字符串');
+}
+{
+  const { cloneCommand } = setup({
+    mirror: 'jsdelivr',
+    disabledMirrors: ['ghproxy', 'ghfast', 'ghproxycom', 'ghproxyorgv4', 'cloneurl', 'gitclone', 'kkgithub'],
+  });
+  eq(
+    cloneCommand(CTX),
+    'git clone https://github.com/octocat/Hello-World.git',
+    '无可用 Clone 节点时直连，且不追加还原命令',
+  );
+}
+
+console.log('\n自动写入当前分支');
+{
+  const { cloneCommand } = setup(
+    { mirror: 'ghproxy' },
+    { zip: 'https://github.com/octocat/Hello-World/archive/refs/heads/main.zip' },
+  );
+  eq(
+    cloneCommand(CTX),
+    'git clone --branch main https://ghproxy.net/https://github.com/octocat/Hello-World.git' +
+      restore('Hello-World'),
+    '仓库首页：使用默认分支 main',
+  );
+}
+{
+  const { cloneCommand } = setup(
+    { mirror: 'ghproxy' },
+    { zip: 'https://github.com/octocat/Hello-World/archive/refs/heads/feature/x.zip' },
+  );
+  const ctx = Object.assign({ kind: 'tree', rest: ['tree', 'feature', 'x'] }, CTX);
+  eq(
+    cloneCommand(ctx),
+    'git clone --branch feature/x https://ghproxy.net/https://github.com/octocat/Hello-World.git' +
+      restore('Hello-World'),
+    '带斜杠的分支原样保留',
+  );
+}
+{
+  const { cloneCommand } = setup({ mirror: 'ghproxy', cloneDepth: 1 }, { defaultBranch: 'main' });
+  eq(
+    cloneCommand(CTX),
+    'git clone --branch main --depth 1 https://ghproxy.net/https://github.com/octocat/Hello-World.git' +
+      restore('Hello-World'),
+    '分支参数在 --depth 之前',
+  );
+}
+{
+  const { cloneCommand } = setup(
+    { mirror: 'ghproxy' },
+    { zip: 'https://github.com/octocat/Hello-World/archive/abc1234.zip' },
+  );
+  const ctx = Object.assign({ kind: 'tree', rest: ['tree', 'abc1234'] }, CTX);
+  eq(
+    cloneCommand(ctx),
+    'git clone https://ghproxy.net/https://github.com/octocat/Hello-World.git' +
+      ' && git -C Hello-World checkout abc1234' +
+      restore('Hello-World'),
+    'tree/<SHA>：clone 后 checkout 该提交',
+  );
+}
+{
+  const { cloneCommand } = setup(
+    { mirror: 'ghproxy', cloneDepth: 1 },
+    { zip: 'https://github.com/octocat/Hello-World/archive/abc1234.zip' },
+  );
+  const ctx = Object.assign({ kind: 'commit', rest: ['commit', 'abc1234'] }, CTX);
+  eq(
+    cloneCommand(ctx),
+    'git clone --depth 1 https://ghproxy.net/https://github.com/octocat/Hello-World.git' +
+      ' && git -C Hello-World fetch --depth 1 origin abc1234' +
+      ' && git -C Hello-World checkout abc1234' +
+      restore('Hello-World'),
+    'commit 页面 + 浅克隆：先补取提交再 checkout',
+  );
+}
+{
+  const { cloneCommand } = setup({ mirror: 'ghproxy' }, { defaultBranch: 'main' });
+  const ctx = Object.assign(
+    {
+      kind: 'tree',
+      rest: ['tree', 'trae', 'agent-WkFkuq'],
+      ref: 'trae/agent-WkFkuq',
+      refExact: true,
+    },
+    CTX,
+  );
+  eq(
+    cloneCommand(ctx),
+    'git clone --branch trae/agent-WkFkuq https://ghproxy.net/https://github.com/octocat/Hello-World.git' +
+      restore('Hello-World'),
+    '精确拆分斜杠分支：--branch 使用完整 ref',
+  );
+}
+{
+  const { cloneCommand } = setup({ mirror: 'ghproxy', restoreOrigin: false });
+  eq(
+    cloneCommand(CTX),
+    'git clone https://ghproxy.net/https://github.com/octocat/Hello-World.git',
+    '关闭还原 origin 后不再追加 remote set-url',
+  );
+}
+{
+  const { cloneCommand } = setup({ mirror: 'ghproxy' }, { defaultBranch: 'main' });
+  const ctx = Object.assign({ kind: 'pull', rest: ['pull', '1'] }, CTX);
+  eq(
+    cloneCommand(ctx),
+    'git clone https://ghproxy.net/https://github.com/octocat/Hello-World.git' + restore('Hello-World'),
+    'PR 页面不猜分支',
+  );
+}
+{
+  const { cloneCommand } = setup({ mirror: 'ghproxy' }, { defaultBranch: 'main' });
+  const gist = { repo: 'abc123', isGist: true, kind: '' };
+  eq(
+    cloneCommand(gist),
+    'git clone https://ghproxy.net/https://gist.github.com/abc123.git' + restore('abc123', GIST_OFFICIAL),
+    'Gist 不写 --branch',
+  );
+}
+{
+  const { cloneCommand } = setup(
+    { mirror: 'ghproxy' },
+    { zip: 'https://github.com/octocat/Hello-World/archive/refs/heads/foo$bar.zip' },
+  );
+  eq(
+    cloneCommand(CTX),
+    "git clone --branch 'foo$bar' https://ghproxy.net/https://github.com/octocat/Hello-World.git" +
+      restore('Hello-World'),
+    '含 shell 特殊字符的分支加引号',
+  );
 }
 
 console.log('');

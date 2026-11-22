@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub 镜像加速助手
 // @namespace    https://github.com/ghma
-// @version      1.7.7
+// @version      1.7.8
 // @description  镜像浏览 / Clone / Raw / Release / Archive 加速，多线路重试、按用途分线路、线路禁用置顶、浅克隆、Actions 制品登录态/Token 下载、Gist 支持、诊断报告、配置导入导出、浮动按钮拖动贴边
 // @author       ghma
 // @license      MIT
@@ -125,7 +125,7 @@
   ];
 
   const STORE_KEY = 'ghma:settings';
-  const SCRIPT_VERSION = '1.7.7';
+  const SCRIPT_VERSION = '1.7.8';
   const DEFAULTS = {
     enabled: true,
     mirror: 'ghproxy',
@@ -136,6 +136,7 @@
     disabledMirrors: [],
     pinnedMirrors: [],
     cloneDepth: 0,
+    restoreOrigin: false,
     autoDownload: true,
     autoFallback: true,
     codeToolbar: true,
@@ -269,6 +270,99 @@
     );
   }
 
+  // 从页面上的分支 / Tag 选择器读取 ref 文本，用于还原含斜杠分支的完整名称
+  // 只在文本确实位于 URL 剩余路径开头时才采用，避免把目录名误判为 ref
+  function domRefName(remainder) {
+    if (!remainder) return '';
+    const selectors = [
+      'button[data-hotkey="w"]',
+      '#branch-select-menu summary',
+      '.ref-selector-button-text-container',
+      '[data-testid="anchor-button"]',
+    ];
+    const pick = (value) => {
+      const text = String(value || '').trim();
+      if (!text) return '';
+      return remainder === text || remainder.startsWith(text + '/') ? text : '';
+    };
+    for (const sel of selectors) {
+      for (const el of $$(sel)) {
+        const direct = pick(el.textContent);
+        if (direct) return direct;
+        if (el.querySelectorAll) {
+          for (const child of Array.from(el.querySelectorAll('span, strong, b'))) {
+            const hit = pick(child.textContent);
+            if (hit) return hit;
+          }
+        }
+        const title = pick(el.getAttribute && el.getAttribute('title'));
+        if (title) return title;
+      }
+    }
+    return '';
+  }
+
+  // 专门用于拆分 GitHub 仓库连接
+  //   /<owner>/<repo>/<kind>/<ref>[/<path>]
+  // 含斜杠的分支 / Tag 在 URL 中没有边界，优先用内嵌 refInfo 或 DOM 选择器还原；
+  // 都拿不到时按第一段猜测，并通过 refExact 标记结果是否可信
+  function parseGitHubUrl(pathname, hints) {
+    const decode = (value) => {
+      try {
+        return decodeURIComponent(value);
+      } catch (e) {
+        return value;
+      }
+    };
+    const parts = String(pathname || '')
+      .split('/')
+      .filter(Boolean)
+      .map(decode);
+    if (parts.length < 2) return null;
+    const owner = parts[0];
+    const repo = parts[1];
+    if (RESERVED.has(owner.toLowerCase())) return null;
+    const kind = parts[2] || '';
+    const rest = parts.slice(3);
+    const remainder = rest.join('/');
+    const info = hints || {};
+    const out = { owner, repo, kind, ref: '', refExact: false, filePath: '' };
+
+    if (!kind) {
+      out.ref = info.defaultBranch || '';
+      out.refExact = !!out.ref;
+      return out;
+    }
+    if (kind === 'commit' || kind === 'commits' || kind === 'tag') {
+      out.ref = remainder;
+      out.refExact = !!remainder;
+      return out;
+    }
+    if (kind === 'releases') {
+      if (rest[0] === 'tag') {
+        out.ref = rest.slice(1).join('/');
+        out.refExact = !!out.ref;
+      }
+      return out;
+    }
+    const refKinds = ['tree', 'blob', 'blame', 'raw', 'edit'];
+    if (refKinds.indexOf(kind) < 0) return out;
+
+    const candidates = [info.refName, domRefName(remainder)].filter(Boolean);
+    for (const value of candidates) {
+      if (remainder === value || remainder.startsWith(value + '/')) {
+        out.ref = value;
+        out.refExact = true;
+        if (kind !== 'tree') out.filePath = remainder.slice(value.length).replace(/^\//, '');
+        return out;
+      }
+    }
+    // 无法判定边界：取第一段作为最常见情况的猜测
+    out.ref = rest[0] || '';
+    if (kind !== 'tree' && rest.length > 1) out.filePath = rest.slice(1).join('/');
+    return out;
+  }
+
   function getRepoContext() {
     if (IS_GIST) {
       const parts = location.pathname.split('/').filter(Boolean);
@@ -289,6 +383,9 @@
         repo,
         rest,
         kind: '',
+        ref: '',
+        refExact: false,
+        filePath: '',
         isFile: !!getGistRawLink(),
         isCode: false,
         isGist: true,
@@ -298,15 +395,22 @@
     const parts = location.pathname.split('/').filter(Boolean);
     if (parts.length < 2) return null;
     if (RESERVED.has(parts[0].toLowerCase())) return null;
-    const owner = parts[0];
-    const repo = parts[1];
+    const info = embeddedRepoInfo();
+    const parsed = parseGitHubUrl(location.pathname, {
+      refName: info.refName,
+      defaultBranch: info.defaultBranch,
+    });
+    if (!parsed) return null;
     const rest = parts.slice(2);
     const kind = rest[0] || '';
     return {
-      owner,
-      repo,
+      owner: parsed.owner,
+      repo: parsed.repo,
       rest,
       kind,
+      ref: parsed.ref,
+      refExact: parsed.refExact,
+      filePath: parsed.filePath,
       isFile: kind === 'blob',
       isCode: kind === '' || kind === 'tree',
       isGist: false,
@@ -406,20 +510,28 @@
   function embeddedRepoInfo() {
     const key = location.pathname + location.search;
     if (repoInfoCache.key === key && repoInfoCache.value) return repoInfoCache.value;
-    const info = { zipballUrl: '', defaultBranch: '' };
+    const info = { zipballUrl: '', defaultBranch: '', refName: '' };
     try {
       const text = $$('script[type="application/json"]')
         .map((el) => el.textContent || '')
         .join('');
       const zip = text.match(/"zipballUrl"\s*:\s*"([^"]+)"/);
       const branch = text.match(/"defaultBranch"\s*:\s*"([^"]+)"/);
-      if (zip) info.zipballUrl = zip[1];
+      // refInfo.name 是 GitHub 当前 ref 的权威来源，含斜杠的分支也能完整拿到
+      const refInfo = text.match(/"refInfo"\s*:\s*\{[\s\S]{0,400}?"name"\s*:\s*"([^"]+)"/);
+      const refName = text.match(/"refName"\s*:\s*"([^"]+)"/);
+      if (zip) {
+        info.zipballUrl = zip[1];
+        info.refName = refFromArchiveHref(zip[1]);
+      }
       if (branch) info.defaultBranch = branch[1];
+      if (refName) info.refName = refName[1];
+      if (refInfo) info.refName = refInfo[1];
     } catch (e) {
       /* 页面结构变化时忽略 */
     }
     // 只缓存解析到结果的情况，页面脚本延迟加载时下次仍会重新扫描
-    if (info.zipballUrl || info.defaultBranch) repoInfoCache = { key, value: info };
+    if (info.zipballUrl || info.defaultBranch || info.refName) repoInfoCache = { key, value: info };
     return info;
   }
 
@@ -441,8 +553,8 @@
       return link ? link.href : '';
     }
 
-    // 先从 URL 解析 ref
-    const urlRef = getCurrentRef(ctx);
+    // 先从 URL 解析 ref；parseGitHubUrl 已还原的精确 ref 优先
+    const urlRef = ctx.refExact && ctx.ref ? ctx.ref : getCurrentRef(ctx);
 
     // SHA 判断只看 rest[1]（kind 后面的第一个 URL segment）
     // 原因：blob/@SHA/README.md 页面 getCurrentRef 会返回 'SHA/README.md'（含路径），
@@ -494,12 +606,14 @@
     }
 
     // 3. 兜底：按当前 ref 构造；仓库首页使用默认分支的 refs/heads 地址
-    // tree / blob 的 ref 边界无法从路径判定（分支名可能含 /），这里取第一段作为
-    // 最常见情况的猜测；含斜杠的分支依赖上面的内嵌 JSON / DOM 链接命中
+    // parseGitHubUrl 已确认的精确 ref 优先；否则 tree / blob 取第一段作为猜测，
+    // 含斜杠的分支依赖上面的内嵌 JSON / DOM 链接命中
     const fallbackRef =
-      (ctx.kind === 'tree' || ctx.kind === 'blob') && ctx.rest && ctx.rest[1]
-        ? ctx.rest[1]
-        : urlRef;
+      ctx.refExact && ctx.ref
+        ? ctx.ref
+        : (ctx.kind === 'tree' || ctx.kind === 'blob') && ctx.rest && ctx.rest[1]
+          ? ctx.rest[1]
+          : urlRef;
     return buildArchiveUrl(ctx, fallbackRef, info.defaultBranch);
   }
 
@@ -839,6 +953,13 @@
     return MIRRORS.find((x) => x.type === 'site') || null;
   }
 
+  // 分支名含 shell 特殊字符时加单引号
+  function shellArg(value) {
+    const text = String(value || '');
+    if (/^[\w./@+-]+$/.test(text)) return text;
+    return "'" + text.replace(/'/g, "'\\''") + "'";
+  }
+
   function cloneCommand(ctx, mirror) {
     if (!ctx) return '';
     let m = mirror || mirrorFor('clone');
@@ -848,25 +969,50 @@
       ? `https://gist.github.com/${ctx.repo}.git`
       : `https://github.com/${ctx.owner}/${ctx.repo}.git`;
     const depth = Math.min(10000, Math.max(0, Math.floor(Number(state.settings.cloneDepth) || 0)));
-    const wrap = (target) => `git clone${depth > 0 ? ` --depth ${depth}` : ''} ${target}`;
-    if (!m) return wrap(httpsUrl);
-    if (ctx.isGist && (m.type === 'site' || m.type === 'clone')) {
-      return wrap(httpsUrl);
-    }
-    if (m.type === 'proxy') return wrap(`${m.base}${httpsUrl}`);
-    if (m.type === 'site') {
-      return wrap(`${m.base.replace(/\/+$/, '')}/${ctx.owner}/${ctx.repo}.git`);
-    }
-    if (m.type === 'clone') return wrap(`${m.base}github.com/${ctx.owner}/${ctx.repo}.git`);
-    if (m.type === 'template') {
-      if (m.template.includes('{cloneUrl}')) {
-        return wrap(m.template.replace(/\{cloneUrl\}/g, httpsUrl));
-      }
-      if (m.template.includes('{url}')) {
-        return wrap(m.template.replace(/\{url\}/g, httpsUrl));
+    // 解析当前 ref：分支 / Tag 用 --branch，commit SHA 在 clone 后 checkout
+    const branchKinds = ['', 'tree', 'blob', 'tag', 'releases'];
+    let ref = '';
+    let isSha = false;
+    if (!ctx.isGist) {
+      const zipRef = refFromArchiveHref(zipUrl(ctx));
+      // parseGitHubUrl 已还原的精确 ref（含斜杠分支）优先于 archive 地址反解
+      const exactRef = ctx.refExact && ctx.ref ? ctx.ref : '';
+      if (!ctx.kind || branchKinds.indexOf(ctx.kind) >= 0) {
+        ref = exactRef || zipRef || embeddedRepoInfo().defaultBranch || '';
+        isSha = /^[0-9a-f]{7,40}$/i.test(ref);
+      } else if (ctx.kind === 'commit' || ctx.kind === 'commits') {
+        ref = exactRef || zipRef;
+        isSha = /^[0-9a-f]{7,40}$/i.test(ref);
       }
     }
-    return wrap(httpsUrl);
+    const branch = ref && !isSha ? ` --branch ${shellArg(ref)}` : '';
+
+    // 解析实际使用的 Clone 地址
+    const resolveTarget = (mm) => {
+      if (!mm) return httpsUrl;
+      if (ctx.isGist && (mm.type === 'site' || mm.type === 'clone')) return httpsUrl;
+      if (mm.type === 'proxy') return `${mm.base}${httpsUrl}`;
+      if (mm.type === 'site') return `${mm.base.replace(/\/+$/, '')}/${ctx.owner}/${ctx.repo}.git`;
+      if (mm.type === 'clone') return `${mm.base}github.com/${ctx.owner}/${ctx.repo}.git`;
+      if (mm.type === 'template') {
+        if (mm.template.includes('{cloneUrl}')) return mm.template.replace(/\{cloneUrl\}/g, httpsUrl);
+        if (mm.template.includes('{url}')) return mm.template.replace(/\{url\}/g, httpsUrl);
+      }
+      return httpsUrl;
+    };
+
+    const target = resolveTarget(m);
+    const repoDir = shellArg(ctx.repo);
+    const parts = [`git clone${branch}${depth > 0 ? ` --depth ${depth}` : ''} ${target}`];
+    if (isSha) {
+      if (depth > 0) parts.push(`git -C ${repoDir} fetch --depth ${depth} origin ${shellArg(ref)}`);
+      parts.push(`git -C ${repoDir} checkout ${shellArg(ref)}`);
+    }
+    // 走镜像时 origin 会被写成镜像地址，克隆完成后还原为官方仓库，便于 push / 直连
+    if (state.settings.restoreOrigin !== false && target !== httpsUrl) {
+      parts.push(`git -C ${repoDir} remote set-url origin ${httpsUrl}`);
+    }
+    return parts.join(' && ');
   }
 
   function isDownloadUrl(url) {
@@ -1300,6 +1446,7 @@
       disabledMirrors: [],
       pinnedMirrors: [],
       cloneDepth: DEFAULTS.cloneDepth,
+      restoreOrigin: DEFAULTS.restoreOrigin,
       autoDownload: DEFAULTS.autoDownload,
       autoFallback: DEFAULTS.autoFallback,
       codeToolbar: DEFAULTS.codeToolbar,
@@ -1313,7 +1460,7 @@
     };
     if (!input || typeof input !== 'object' || Array.isArray(input)) return out;
 
-    ['enabled', 'autoDownload', 'autoFallback', 'codeToolbar', 'rawButton', 'staticCdn'].forEach(
+    ['enabled', 'autoDownload', 'autoFallback', 'codeToolbar', 'rawButton', 'staticCdn', 'restoreOrigin'].forEach(
       (key) => {
         if (typeof input[key] === 'boolean') out[key] = input[key];
       }
@@ -1954,6 +2101,7 @@
               <label><input type="checkbox" data-role="autoFallback">线路失败自动切换</label>
               <label><input type="checkbox" data-role="codeToolbar">Code 面板快捷按钮</label>
               <label><input type="checkbox" data-role="rawButton">文件页 Raw 镜像按钮</label>
+              <label><input type="checkbox" data-role="restoreOrigin">Clone 后还原官方仓库连接</label>
               <label><input type="checkbox" data-role="staticCdn">静态资源 CDN（头像 / 图片）</label>
             </div>
             <div class="group-title">配置与诊断</div>
@@ -2277,6 +2425,7 @@
       ['autoFallback', 'autoFallback'],
       ['codeToolbar', 'codeToolbar'],
       ['rawButton', 'rawButton'],
+      ['restoreOrigin', 'restoreOrigin'],
       ['staticCdn', 'staticCdn'],
     ].forEach(([role, key]) => {
       byRole(role).addEventListener('change', (e) => {
@@ -2356,6 +2505,7 @@
     byRole('autoFallback').checked = !!s.autoFallback;
     byRole('codeToolbar').checked = !!s.codeToolbar;
     byRole('rawButton').checked = !!s.rawButton;
+    byRole('restoreOrigin').checked = !!s.restoreOrigin;
     byRole('staticCdn').checked = !!s.staticCdn;
 
     const hotkeyInput = byRole('hotkey');
@@ -2366,13 +2516,14 @@
 
     const ctx = getRepoContext();
     const preview = byRole('preview');
+    const cloneText = ctx ? cloneCommand(ctx) : '';
     const previewText = ctx
-      ? cloneCommand(ctx)
+      ? cloneText
       : IS_GIST
         ? '当前 Gist 页面未解析到文件，试试刷新页面'
         : '打开仓库页面后可一键复制 Clone 命令';
     preview.textContent = previewText;
-    preview.dataset.value = ctx ? cloneCommand(ctx) : '';
+    preview.dataset.value = cloneText;
 
     const m = activeMirror();
     const mirrorName = m ? `${m.label}${describeType(m.type)}` : '未配置自定义线路';

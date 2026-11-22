@@ -2,7 +2,7 @@
 
 一个单文件、零依赖的 Tampermonkey 用户脚本：在 GitHub 页面上提供镜像浏览、Clone、Raw、Release / Archive 下载、ZIP 快照、Actions 制品下载等加速能力，并附带一个可自建的 Cloudflare Worker 镜像。
 
-- 脚本版本：`1.7.7`
+- 脚本版本：`1.7.8`
 - 适用页面：`https://github.com/*`、`https://gist.github.com/*`
 - 运行时：Tampermonkey（推荐）/ Violentmonkey
 - 许可：MIT
@@ -12,7 +12,7 @@
 | 能力 | 说明 |
 | --- | --- |
 | 镜像浏览 | 一键在 kkgithub、bgithub 等全站镜像中打开当前页面（仅建议公开页面） |
-| 镜像 Clone | 生成并复制走镜像的 `git clone` 命令，支持 `--depth` 浅克隆，支持 `insteadOf` 全局配置 |
+| 镜像 Clone | 生成并复制走镜像的 `git clone` 命令，自动带上当前浏览的分支 / Tag / commit，克隆后把 `origin` 还原为官方仓库（可在设置中关闭），支持 `--depth` 浅克隆与 `insteadOf` 全局配置 |
 | 镜像 Raw | 文件页一键打开 / 下载 Raw 文件，自动挑选可用线路 |
 | Release / Archive 下载 | 自动改写下载链接，多线路按健康度与延迟排序重试，失败自动切换 |
 | ZIP 快照 | 支持当前**分支 / 标签 / 提交（commit SHA）**，不再只能下载 HEAD |
@@ -47,7 +47,7 @@
 | 按钮 | 作用 |
 | --- | --- |
 | 镜像浏览 | 用全站镜像打开当前页面 |
-| 复制 Clone | 复制当前仓库的镜像 Clone 命令（可配置浅克隆深度） |
+| 复制 Clone | 复制当前仓库的镜像 Clone 命令（自动带分支 / 提交、还原 origin，可配置浅克隆深度） |
 | 镜像 Raw | 在文件页通过镜像打开 Raw |
 | 下载 ZIP | 下载当前分支 / 标签 / 提交的 ZIP 快照 |
 | 复制直链 | 复制当前页面对应的镜像直链 |
@@ -76,6 +76,7 @@
 | 线路失败自动切换 | 开 | 结合健康检查在失败时换线路 |
 | Code 面板快捷按钮 | 开 | 在仓库文件导航栏注入「镜像 Clone / 下载 ZIP / Raw / 镜像站」按钮 |
 | 文件页 Raw 镜像按钮 | 开 | 在文件页注入 Raw 镜像入口 |
+| Clone 后还原官方仓库连接 | 开 | 关闭后 Clone 命令不再追加 `git remote set-url origin`，保留镜像地址 |
 | 静态资源 CDN | 关 | 头像 / 图片改走 `wsrv.nl` |
 | API 加速 | 关 | 可选 `api.kkgithub.com` 或自定义，只改写 GET / HEAD，且跳过带 `Authorization` 的请求 |
 | Actions Token | 空 | 私有仓库或未登录时必须填写；Token 只发往 `api.github.com`（或自定义 API 镜像） |
@@ -178,8 +179,15 @@ git clone https://<域名>/https://github.com/owner/repo.git
 **下载失败或很慢？**
 打开「线路」页点「镜像测速」，或在脚本菜单执行「镜像测速并选择最快」；也可以禁用不稳定的线路。下载失败时会自动按顺序尝试其他线路，全部失败则回退为打开原链接。
 
+**Clone 命令里的 `--branch`、`checkout` 和 `remote set-url` 是什么？**
+脚本会按当前页面自动补全 Clone 命令，复制后可直接执行：
+
+- **分支 / Tag 页面**：写入 `--branch`，例如 `git clone --branch main ...`；仓库首页使用默认分支。
+- **Commit 页面**：Clone 后追加 `git -C <repo> checkout <sha>` 切到该提交；开启浅克隆时先 `git -C <repo> fetch --depth N origin <sha>` 再 checkout。
+- **origin 还原**：走镜像时 `origin` 会被写成镜像地址，因此最后追加 `git -C <repo> remote set-url origin https://github.com/owner/repo.git`，把仓库连接还原为官方地址，方便 push 或切回直连。直连命令与 Gist 不需要还原时不会追加；可在设置中关闭「Clone 后还原官方仓库连接」。
+
 **ZIP 下载的不是当前分支？**
-脚本优先使用页面内嵌的官方 `zipballUrl`，并结合 URL 中的分支 / 标签 / commit SHA 校正；`blob/@SHA/README.md`、`tree/分支名` 等页面都会生成对应 ref 的归档地址。
+脚本优先使用页面内嵌的官方 `zipballUrl`，并结合 URL 中的分支 / 标签 / commit SHA 校正；`blob/@SHA/README.md`、`tree/分支名` 等页面都会生成对应 ref 的归档地址。含斜杠的分支（如 `trae/agent-WkFkuq`）会通过页面内嵌的 `refInfo` 或分支选择器还原完整名称，不再被截断成第一段。
 
 **Actions 下载返回 401 / 403？**
 填写 Token（`repo` 权限），或确认浏览器已登录 GitHub；私有仓库必须使用 Token。

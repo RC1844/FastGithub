@@ -50,14 +50,18 @@ function makeApi(pathname, opts) {
   });
   const links = (o.links || []).map(toAnchor);
   const gistLinks = (o.gistLinks || []).map(toAnchor);
+  const refEl = o.refName
+    ? [{ textContent: o.refName, getAttribute: () => null, querySelectorAll: () => [] }]
+    : [];
   const $$ = (sel) => {
     if (sel.indexOf('application/json') >= 0) return scripts;
     if (sel.indexOf('/archive/') >= 0) return o.gist ? gistLinks : links;
+    if (/data-hotkey="w"|branch-select-menu|ref-selector-button/.test(sel)) return refEl;
     return [];
   };
   const factory = new Function(
     'IS_GH', 'IS_GIST', 'RESERVED', '$', '$$', 'location',
-    block + '\nreturn { getRepoContext: getRepoContext, zipUrl: zipUrl, buildArchiveUrl: buildArchiveUrl };'
+    block + '\nreturn { getRepoContext: getRepoContext, zipUrl: zipUrl, buildArchiveUrl: buildArchiveUrl, parseGitHubUrl: parseGitHubUrl };'
   );
   const api = factory(true, !!o.gist, RESERVED, () => null, $$, location);
   api.location = location;
@@ -154,6 +158,69 @@ eq(
   `${BASE}/archive/main.zip`,
   'DOM ref 不一致 → 忽略并按 URL 构造'
 );
+
+console.log('\n专用拆分函数 parseGitHubUrl');
+{
+  const api = makeApi(shaPath('tree/trae/agent-WkFkuq'));
+  const ctx = api.parseGitHubUrl(shaPath('tree/trae/agent-WkFkuq'), { refName: 'trae/agent-WkFkuq' });
+  eq(ctx.ref, 'trae/agent-WkFkuq', '内嵌 refInfo：还原完整斜杠分支');
+  eq(ctx.refExact, true, '内嵌 refInfo：结果标记为精确');
+  eq(ctx.filePath, '', 'tree 页面不产生 filePath');
+}
+{
+  const api = makeApi(shaPath('blob/trae/agent-WkFkuq/docs/a.md'));
+  const ctx = api.parseGitHubUrl(shaPath('blob/trae/agent-WkFkuq/docs/a.md'), {
+    refName: 'trae/agent-WkFkuq',
+  });
+  eq(ctx.ref, 'trae/agent-WkFkuq', 'blob：还原完整斜杠分支');
+  eq(ctx.filePath, 'docs/a.md', 'blob：分离出文件路径');
+}
+{
+  const api = makeApi(shaPath('tree/trae/agent-WkFkuq'));
+  const ctx = api.parseGitHubUrl(shaPath('tree/trae/agent-WkFkuq'), {});
+  eq(ctx.ref, 'trae', '无提示：按第一段猜测');
+  eq(ctx.refExact, false, '无提示：标记为不精确');
+}
+{
+  const api = makeApi(`/${OWNER}/${REPO}`);
+  const ctx = api.parseGitHubUrl(`/${OWNER}/${REPO}`, { defaultBranch: 'main' });
+  eq(ctx.ref, 'main', '仓库首页使用默认分支');
+  eq(ctx.refExact, true, '默认分支视为精确');
+}
+{
+  const api = makeApi(shaPath('releases/tag/v1.2.3'));
+  const ctx = api.parseGitHubUrl(shaPath('releases/tag/v1.2.3'), {});
+  eq(ctx.ref, 'v1.2.3', 'releases/tag 拆分');
+  eq(ctx.refExact, true, 'releases/tag 视为精确');
+}
+eq(
+  zipFor(shaPath('tree/trae/agent-WkFkuq'), { refName: 'trae/agent-WkFkuq' }),
+  `${BASE}/archive/trae/agent-WkFkuq.zip`,
+  '无内嵌 JSON 时用 DOM 分支选择器还原斜杠分支'
+);
+eq(
+  zipFor(shaPath('blob/trae/agent-WkFkuq/docs/a.md'), { refName: 'trae/agent-WkFkuq' }),
+  `${BASE}/archive/trae/agent-WkFkuq.zip`,
+  'blob 页面同样可用 DOM 选择器还原'
+);
+
+{
+  const api = makeApi(shaPath('tree/trae/agent-WkFkuq'), {
+    json: JSON.stringify({ refInfo: { name: 'trae/agent-WkFkuq' } }),
+  });
+  const ctx = api.getRepoContext();
+  eq(ctx.ref, 'trae/agent-WkFkuq', '内嵌 refInfo 直接写入上下文');
+  eq(ctx.refExact, true, '内嵌 refInfo 标记为精确');
+  eq(api.zipUrl(ctx), `${BASE}/archive/trae/agent-WkFkuq.zip`, '内嵌 refInfo 生成正确归档地址');
+}
+{
+  const api = makeApi(shaPath('blob/trae/agent-WkFkuq/README.md'), {
+    json: JSON.stringify({ refName: 'trae/agent-WkFkuq' }),
+  });
+  const ctx = api.getRepoContext();
+  eq(ctx.ref, 'trae/agent-WkFkuq', '内嵌 refName 同样可还原斜杠分支');
+  eq(ctx.filePath, 'README.md', '内嵌 refName 同时分离文件路径');
+}
 
 console.log('\n异常与边界');
 eq(
