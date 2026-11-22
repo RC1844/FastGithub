@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub 镜像加速助手
 // @namespace    https://github.com/ghma
-// @version      1.7.5
+// @version      1.7.6
 // @description  镜像浏览 / Clone / Raw / Release / Archive 加速，多线路重试、按用途分线路、线路禁用置顶、浅克隆、Actions 制品登录态/Token 下载、Gist 支持、诊断报告、配置导入导出、浮动按钮拖动贴边
 // @author       ghma
 // @license      MIT
@@ -125,7 +125,7 @@
   ];
 
   const STORE_KEY = 'ghma:settings';
-  const SCRIPT_VERSION = '1.7.5';
+  const SCRIPT_VERSION = '1.7.6';
   const DEFAULTS = {
     enabled: true,
     mirror: 'ghproxy',
@@ -494,7 +494,13 @@
     }
 
     // 3. 兜底：按当前 ref 构造；仓库首页使用默认分支的 refs/heads 地址
-    return buildArchiveUrl(ctx, urlRef, info.defaultBranch);
+    // tree / blob 的 ref 边界无法从路径判定（分支名可能含 /），这里取第一段作为
+    // 最常见情况的猜测；含斜杠的分支依赖上面的内嵌 JSON / DOM 链接命中
+    const fallbackRef =
+      (ctx.kind === 'tree' || ctx.kind === 'blob') && ctx.rest && ctx.rest[1]
+        ? ctx.rest[1]
+        : urlRef;
+    return buildArchiveUrl(ctx, fallbackRef, info.defaultBranch);
   }
 
   // ---------------------------------------------------------------------------
