@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub 镜像加速助手
 // @namespace    https://github.com/ghma
-// @version      1.7.8
+// @version      1.7.9
 // @description  镜像浏览 / Clone / Raw / Release / Archive 加速，多线路重试、按用途分线路、线路禁用置顶、浅克隆、Actions 制品登录态/Token 下载、Gist 支持、诊断报告、配置导入导出、浮动按钮拖动贴边
 // @author       ghma
 // @license      MIT
@@ -125,7 +125,7 @@
   ];
 
   const STORE_KEY = 'ghma:settings';
-  const SCRIPT_VERSION = '1.7.8';
+  const SCRIPT_VERSION = '1.7.9';
   const DEFAULTS = {
     enabled: true,
     mirror: 'ghproxy',
@@ -3055,7 +3055,7 @@
     style.textContent = `
       .ghma-toolbar { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; flex-wrap: wrap; }
       .ghma-toolbar .ghma-btn { white-space: nowrap; }
-      .ghma-raw-btn { margin-left: 6px !important; }
+      .ghma-raw-btn { white-space: nowrap; }
     `;
     document.head.appendChild(style);
   }
@@ -3063,6 +3063,11 @@
   function removeEl(sel) {
     const el = document.querySelector(sel);
     if (el) el.remove();
+  }
+
+  function removeRawButton() {
+    $$('.ghma-raw-wrap').forEach((el) => el.remove());
+    removeEl('.ghma-raw-btn');
   }
 
   function injectToolbar() {
@@ -3184,12 +3189,12 @@
 
   function injectRawButton() {
     if (!state.settings.rawButton) {
-      removeEl('.ghma-raw-btn');
+      removeRawButton();
       return;
     }
     const ctx = getRepoContext();
     if (!ctx || !ctx.isFile) {
-      removeEl('.ghma-raw-btn');
+      removeRawButton();
       return;
     }
     const rawLink = $('a[data-testid="raw-button"]') || $('#raw-url');
@@ -3202,20 +3207,38 @@
       return;
     }
 
+    // 复用原生 Raw 按钮的类名与尺寸，并按 GitHub ButtonGroup 的结构包裹
+    const nativeClass = (rawLink.getAttribute('class') || '').trim();
     const a = document.createElement('a');
-    a.className = 'btn btn-sm ghma-raw-btn';
+    a.className = `${nativeClass || 'btn btn-sm'} ghma-raw-btn`;
+    ['data-size', 'data-variant', 'data-component'].forEach((name) => {
+      const value = rawLink.getAttribute(name);
+      if (value) a.setAttribute(name, value);
+    });
     a.textContent = '镜像 Raw';
     a.href = mirrorizeRaw(getRawUrl(ctx), dm);
     a.target = '_blank';
     a.rel = 'noopener';
     a.title = '通过镜像打开 Raw 文件';
-    rawLink.parentElement.insertBefore(a, rawLink.nextSibling);
+    a.setAttribute('aria-label', '镜像 Raw');
+
+    const groupItem = rawLink.closest && rawLink.closest('[class*="prc-ButtonGroup-Item"]');
+    if (groupItem && groupItem.parentElement) {
+      // 与原生按钮同组，共享圆角与边框，不再单独加间距
+      const wrap = document.createElement('div');
+      wrap.className = `${groupItem.className} ghma-raw-wrap`;
+      wrap.appendChild(a);
+      groupItem.parentElement.insertBefore(wrap, groupItem.nextSibling);
+    } else {
+      a.style.marginLeft = '8px';
+      rawLink.parentElement.insertBefore(a, rawLink.nextSibling);
+    }
   }
 
   function refreshInjected() {
     if (!state.settings.enabled) {
       removeEl('.ghma-toolbar');
-      removeEl('.ghma-raw-btn');
+      removeRawButton();
       restoreStaticCdn();
       restoreDownloadLinks();
       return;
@@ -3453,7 +3476,7 @@
 
     ['turbo:load', 'pjax:end'].forEach((evt) => {
       document.addEventListener(evt, () => {
-        document.querySelectorAll('.ghma-toolbar, .ghma-raw-btn').forEach((el) => el.remove());
+        document.querySelectorAll('.ghma-toolbar, .ghma-raw-btn, .ghma-raw-wrap').forEach((el) => el.remove());
         syncTheme();
         scheduleRefresh();
       });

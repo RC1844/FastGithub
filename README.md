@@ -2,7 +2,7 @@
 
 一个单文件、零依赖的 Tampermonkey 用户脚本：在 GitHub 页面上提供镜像浏览、Clone、Raw、Release / Archive 下载、ZIP 快照、Actions 制品下载等加速能力，并附带一个可自建的 Cloudflare Worker 镜像。
 
-- 脚本版本：`1.7.8`
+- 脚本版本：`1.7.9`
 - 适用页面：`https://github.com/*`、`https://gist.github.com/*`
 - 运行时：Tampermonkey（推荐）/ Violentmonkey
 - 许可：MIT
