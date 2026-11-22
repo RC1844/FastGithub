@@ -272,31 +272,36 @@
 
   // 从页面上的分支 / Tag 选择器读取 ref 文本，用于还原含斜杠分支的完整名称
   // 只在文本确实位于 URL 剩余路径开头时才采用，避免把目录名误判为 ref
+  const REF_SELECTORS = [
+    'button[data-hotkey="w"]',
+    '#branch-select-menu summary',
+    '.ref-selector-button-text-container',
+    '[data-testid="anchor-button"]',
+  ];
+  let domRefCache = { key: '', value: '' };
+
   function domRefName(remainder) {
     if (!remainder) return '';
-    const selectors = [
-      'button[data-hotkey="w"]',
-      '#branch-select-menu summary',
-      '.ref-selector-button-text-container',
-      '[data-testid="anchor-button"]',
-    ];
-    const pick = (value) => {
+    const key = location.pathname + '\n' + remainder;
+    if (domRefCache.key === key) return domRefCache.value;
+    const match = (value) => {
       const text = String(value || '').trim();
-      if (!text) return '';
-      return remainder === text || remainder.startsWith(text + '/') ? text : '';
+      return text && (remainder === text || remainder.startsWith(text + '/')) ? text : '';
     };
-    for (const sel of selectors) {
+    for (const sel of REF_SELECTORS) {
       for (const el of $$(sel)) {
-        const direct = pick(el.textContent);
-        if (direct) return direct;
-        if (el.querySelectorAll) {
-          for (const child of Array.from(el.querySelectorAll('span, strong, b'))) {
-            const hit = pick(child.textContent);
-            if (hit) return hit;
+        let hit = match(el.textContent);
+        if (!hit && el.querySelectorAll) {
+          for (const child of el.querySelectorAll('span, strong, b')) {
+            hit = match(child.textContent);
+            if (hit) break;
           }
         }
-        const title = pick(el.getAttribute && el.getAttribute('title'));
-        if (title) return title;
+        if (!hit && el.getAttribute) hit = match(el.getAttribute('title'));
+        if (hit) {
+          domRefCache = { key, value: hit };
+          return hit;
+        }
       }
     }
     return '';
@@ -348,14 +353,18 @@
     const refKinds = ['tree', 'blob', 'blame', 'raw', 'edit'];
     if (refKinds.indexOf(kind) < 0) return out;
 
-    const candidates = [info.refName, domRefName(remainder)].filter(Boolean);
-    for (const value of candidates) {
-      if (remainder === value || remainder.startsWith(value + '/')) {
-        out.ref = value;
-        out.refExact = true;
-        if (kind !== 'tree') out.filePath = remainder.slice(value.length).replace(/^\//, '');
-        return out;
-      }
+    const fits = (value) => !!value && (remainder === value || remainder.startsWith(value + '/'));
+    // 内嵌 JSON 命中时不再扫描 DOM
+    let refName = fits(info.refName) ? info.refName : '';
+    if (!refName) {
+      const domRef = domRefName(remainder);
+      if (fits(domRef)) refName = domRef;
+    }
+    if (refName) {
+      out.ref = refName;
+      out.refExact = true;
+      if (kind !== 'tree') out.filePath = remainder.slice(refName.length).replace(/^\//, '');
+      return out;
     }
     // 无法判定边界：取第一段作为最常见情况的猜测
     out.ref = rest[0] || '';
@@ -512,21 +521,33 @@
     if (repoInfoCache.key === key && repoInfoCache.value) return repoInfoCache.value;
     const info = { zipballUrl: '', defaultBranch: '', refName: '' };
     try {
-      const text = $$('script[type="application/json"]')
-        .map((el) => el.textContent || '')
-        .join('');
-      const zip = text.match(/"zipballUrl"\s*:\s*"([^"]+)"/);
-      const branch = text.match(/"defaultBranch"\s*:\s*"([^"]+)"/);
-      // refInfo.name 是 GitHub 当前 ref 的权威来源，含斜杠的分支也能完整拿到
-      const refInfo = text.match(/"refInfo"\s*:\s*\{[\s\S]{0,400}?"name"\s*:\s*"([^"]+)"/);
-      const refName = text.match(/"refName"\s*:\s*"([^"]+)"/);
-      if (zip) {
-        info.zipballUrl = zip[1];
-        info.refName = refFromArchiveHref(zip[1]);
+      let refName = '';
+      let refInfo = '';
+      // 逐段扫描，命中即停止，避免把所有脚本拼成一个大字符串
+      for (const el of $$('script[type="application/json"]')) {
+        const text = el.textContent || '';
+        if (!info.zipballUrl) {
+          const zip = text.match(/"zipballUrl"\s*:\s*"([^"]+)"/);
+          if (zip) info.zipballUrl = zip[1];
+        }
+        if (!info.defaultBranch) {
+          const branch = text.match(/"defaultBranch"\s*:\s*"([^"]+)"/);
+          if (branch) info.defaultBranch = branch[1];
+        }
+        // refInfo.name 是 GitHub 当前 ref 的权威来源，含斜杠的分支也能完整拿到
+        if (!refInfo) {
+          const match = text.match(/"refInfo"\s*:\s*\{[\s\S]{0,400}?"name"\s*:\s*"([^"]+)"/);
+          if (match) refInfo = match[1];
+        }
+        if (!refName) {
+          const match = text.match(/"refName"\s*:\s*"([^"]+)"/);
+          if (match) refName = match[1];
+        }
+        if (info.zipballUrl && info.defaultBranch && (refInfo || refName)) break;
       }
-      if (branch) info.defaultBranch = branch[1];
-      if (refName) info.refName = refName[1];
-      if (refInfo) info.refName = refInfo[1];
+      if (info.zipballUrl) info.refName = refFromArchiveHref(info.zipballUrl);
+      if (refName) info.refName = refName;
+      if (refInfo) info.refName = refInfo;
     } catch (e) {
       /* 页面结构变化时忽略 */
     }
@@ -974,9 +995,10 @@
     let ref = '';
     let isSha = false;
     if (!ctx.isGist) {
-      const zipRef = refFromArchiveHref(zipUrl(ctx));
       // parseGitHubUrl 已还原的精确 ref（含斜杠分支）优先于 archive 地址反解
       const exactRef = ctx.refExact && ctx.ref ? ctx.ref : '';
+      // 已有精确 ref 时无需再解析 ZIP 地址（会触发一次页面扫描）
+      const zipRef = exactRef ? '' : refFromArchiveHref(zipUrl(ctx));
       if (!ctx.kind || branchKinds.indexOf(ctx.kind) >= 0) {
         ref = exactRef || zipRef || embeddedRepoInfo().defaultBranch || '';
         isSha = /^[0-9a-f]{7,40}$/i.test(ref);
