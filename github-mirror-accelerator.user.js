@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub 镜像加速助手
 // @namespace    https://github.com/ghma
-// @version      1.7.6
+// @version      1.7.7
 // @description  镜像浏览 / Clone / Raw / Release / Archive 加速，多线路重试、按用途分线路、线路禁用置顶、浅克隆、Actions 制品登录态/Token 下载、Gist 支持、诊断报告、配置导入导出、浮动按钮拖动贴边
 // @author       ghma
 // @license      MIT
@@ -125,7 +125,7 @@
   ];
 
   const STORE_KEY = 'ghma:settings';
-  const SCRIPT_VERSION = '1.7.6';
+  const SCRIPT_VERSION = '1.7.7';
   const DEFAULTS = {
     enabled: true,
     mirror: 'ghproxy',
@@ -602,10 +602,23 @@
     return { id: 'custom', label: '自定义线路', type, base: normalizeBase(raw) };
   }
 
+  // 实测支持 git clone（Git Smart HTTP）的代理前缀线路；其余代理仅用于 Raw / 下载
+  const CLONE_PROXY_IDS = [
+    'ghproxy',
+    'ghfast',
+    'ghproxycom',
+    'ghproxyorg',
+    'ghproxyorgv4',
+    'ghproxyorgv6',
+    'ghproxyorgcdn',
+    'ghproxyorgaxis',
+  ];
+
   function mirrorCaps(m, need) {
     if (!m) return false;
     if (need === 'clone') {
       if (m.type === 'template') return /\{(url|cloneUrl)\}/.test(String(m.template || ''));
+      if (m.type === 'proxy') return m.id === 'custom' || CLONE_PROXY_IDS.indexOf(m.id) >= 0;
       return true;
     }
     if (m.type === 'clone') return false;
@@ -661,8 +674,25 @@
     const key = need === 'raw' ? 'mirrorRaw' : need === 'clone' ? 'mirrorClone' : 'mirrorDownloads';
     const id = s[key] || 'auto';
     if (id === 'custom') return customMirror();
-    if (id === 'auto') return activeMirror();
+    if (id === 'auto') {
+      const active = activeMirror();
+      // 主线路不支持 git clone（如 jsDelivr / 仅 Raw 的模板）时改用可 Clone 的节点
+      if (need === 'clone' && !mirrorCaps(active, 'clone')) {
+        return fallbackCloneMirror() || active;
+      }
+      return active;
+    }
     return MIRRORS.find((m) => m.id === id) || activeMirror();
+  }
+
+  // Clone 兜底：按置顶 / 健康度 / 测速从可 Clone 的线路中挑一个
+  function fallbackCloneMirror() {
+    const pool = sortedMirrors(
+      MIRRORS.filter(
+        (m) => mirrorCaps(m, 'clone') && !isMirrorDisabled(m.id) && healthOf(m) !== 'bad',
+      ),
+    );
+    return pool[0] || null;
   }
 
   // 按「置顶 → 健康度 → 测速」排序候选线路
@@ -811,7 +841,9 @@
 
   function cloneCommand(ctx, mirror) {
     if (!ctx) return '';
-    const m = mirror || mirrorFor('clone');
+    let m = mirror || mirrorFor('clone');
+    // 指定线路被禁用或不支持 git clone 时，换成可用的 Clone 节点，避免生成无效命令
+    if (!m || isMirrorDisabled(m.id) || !mirrorCaps(m, 'clone')) m = fallbackCloneMirror();
     const httpsUrl = ctx.isGist
       ? `https://gist.github.com/${ctx.repo}.git`
       : `https://github.com/${ctx.owner}/${ctx.repo}.git`;
@@ -1232,7 +1264,7 @@
   // 生成 git insteadOf 全局配置，让 git clone / fetch 自动走镜像
   function insteadOfCommand() {
     let m = mirrorFor('clone');
-    if (!m || m.type === 'template') m = activeMirror();
+    if (!m || m.type === 'template') m = fallbackCloneMirror() || activeMirror();
     if (!m) return '';
     let prefix = '';
     if (m.type === 'proxy') prefix = `${m.base}https://github.com/`;
@@ -2510,7 +2542,7 @@
     };
     const group = (type) => sortedMirrors(MIRRORS.filter((m) => m.type === type)).map(opt).join('');
     return `
-      <optgroup label="下载代理（Raw / Release / Archive / Clone）">${group('proxy')}</optgroup>
+      <optgroup label="下载代理（Raw / Release / Archive）">${group('proxy')}</optgroup>
       <optgroup label="URL 模板（Raw / 文件 CDN）">${group('template')}</optgroup>
       <optgroup label="全站镜像（可浏览网页）">${group('site')}</optgroup>
       <optgroup label="镜像 Clone">${group('clone')}</optgroup>
@@ -2525,8 +2557,24 @@
       const off = isMirrorDisabled(m.id) ? ' · 已禁用' : '';
       return `<option value="${m.id}">${badge}${m.label}${off}</option>`;
     };
-    const list = sortedMirrors(MIRRORS.filter((m) => mirrorCaps(m, need))).map(opt).join('');
-    return `<option value="auto">跟随主线路</option>${list}<option value="custom">自定义线路…</option>`;
+    const head = '<option value="auto">跟随主线路</option>';
+    const tail = '<option value="custom">自定义线路…</option>';
+    if (need !== 'clone') {
+      const list = sortedMirrors(MIRRORS.filter((m) => mirrorCaps(m, need))).map(opt).join('');
+      return `${head}${list}${tail}`;
+    }
+    // Clone 按能力分组：专用节点 / 实测支持的代理 / 全站镜像，避免选到不支持 git 的线路
+    const group = (label, list) => {
+      const items = sortedMirrors(list).map(opt).join('');
+      return items ? `<optgroup label="${label}">${items}</optgroup>` : '';
+    };
+    return (
+      head +
+      group('Clone 专用节点', MIRRORS.filter((m) => m.type === 'clone')) +
+      group('支持 Clone 的代理', MIRRORS.filter((m) => m.type === 'proxy' && mirrorCaps(m, 'clone'))) +
+      group('全站镜像', MIRRORS.filter((m) => m.type === 'site')) +
+      tail
+    );
   }
 
   function handleManageAction(action, id) {

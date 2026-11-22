@@ -2,7 +2,7 @@
 
 一个单文件、零依赖的 Tampermonkey 用户脚本：在 GitHub 页面上提供镜像浏览、Clone、Raw、Release / Archive 下载、ZIP 快照、Actions 制品下载等加速能力，并附带一个可自建的 Cloudflare Worker 镜像。
 
-- 脚本版本：`1.7.6`
+- 脚本版本：`1.7.7`
 - 适用页面：`https://github.com/*`、`https://gist.github.com/*`
 - 运行时：Tampermonkey（推荐）/ Violentmonkey
 - 许可：MIT
@@ -64,6 +64,7 @@
   - `全站镜像`：`https://镜像站`
   - `URL 模板`：可用变量 `{url}` `{rawUrl}` `{cloneUrl}` `{owner}` `{repo}` `{ref}` `{path}` `{refPath}` `{host}`（`{cloneUrl}` 仅用于 Clone）
 - **分用途线路**：Raw / Release+Archive / Clone 可分别设为 `auto` 或指定线路。
+- **Clone 节点**：Clone 列表只显示支持 `git clone`（Git Smart HTTP）的线路，分为「Clone 专用节点」「支持 Clone 的代理」「全站镜像」三组；ghproxy.net、ghfast.top、gh-proxy.com、gh-proxy.org 系列等实测可用。选择 `auto` 时，如果主线路不支持 Clone（例如 jsDelivr、仅 Raw 模板），会自动改用可用的 Clone 节点。
 - **线路管理（禁用 / 置顶）**：展开后可查看全部线路、查看健康状态与测速结果，并单独禁用或置顶。
 
 ### 面板：设置
@@ -98,10 +99,11 @@
 
 | 类型 | 示例 | 用途 |
 | --- | --- | --- |
-| 下载代理 | `ghproxy.net`、`ghfast.top`、`gh-proxy.com`、`v4.gh-proxy.org`、`gh.llkk.cc`、`hub.gitmirror.com` | Raw / Release / Archive / Clone |
+| 下载代理 | `ghproxy.net`、`ghfast.top`、`gh-proxy.com`、`v4.gh-proxy.org`、`gh.llkk.cc`、`hub.gitmirror.com` | Raw / Release / Archive（部分支持 Clone） |
 | URL 模板 | `jsDelivr`、`statically.io`、`eo.gh-proxy.cn` | 仅 Raw / 文件 CDN |
 | 全站镜像 | `kkgithub.com`、`bgithub.xyz` | 直接浏览网页 |
 | Clone 专用 | `gitclone.com` | `git clone` 加速 |
+| Clone 代理 | `ghproxy.net`、`ghfast.top`、`gh-proxy.com`、`gh-proxy.org` 系列 | 前缀拼接完整地址后 `git clone` |
 
 线路健康状态有 5 分钟缓存：测速或实际下载失败会被标记，自动降级时优先跳过。
 
@@ -198,6 +200,7 @@ git clone https://<域名>/https://github.com/owner/repo.git
 ├── github-mirror-accelerator.user.js   # 用户脚本（单文件、零依赖）
 ├── test/                               # 回归测试（Node 直接运行）
 │   ├── zipurl.test.js                  # ZIP ref 解析
+│   ├── clone.test.js                   # Clone 线路能力与命令生成
 │   ├── fab-geometry.test.js            # 浮动按钮与面板几何
 │   └── fab-interaction.test.js         # 拖动 / 贴边 / 面板跟随
 ├── LICENSE
@@ -221,11 +224,12 @@ git clone https://<域名>/https://github.com/owner/repo.git
 
   ```bash
   node test/zipurl.test.js
+  node test/clone.test.js
   node test/fab-geometry.test.js
   node test/fab-interaction.test.js
   ```
 
-  测试会从用户脚本中抽取真实代码，用假 DOM 验证 ZIP ref 解析与浮动按钮 / 面板的几何和交互行为。
+  测试会从用户脚本中抽取真实代码，验证 ZIP ref 解析、Clone 线路选择与命令生成，以及浮动按钮 / 面板的几何和交互行为。
 
 ## 许可
 
