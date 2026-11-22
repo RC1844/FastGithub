@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         GitHub 镜像加速助手
 // @namespace    https://github.com/ghma
-// @version      1.7.1
-// @description  镜像浏览 / Clone / Raw / Release / Archive 加速，多线路重试、按用途分线路、线路禁用置顶、浅克隆、Actions 制品登录态/Token 下载、Gist 支持、诊断报告、配置导入导出
+// @version      1.7.5
+// @description  镜像浏览 / Clone / Raw / Release / Archive 加速，多线路重试、按用途分线路、线路禁用置顶、浅克隆、Actions 制品登录态/Token 下载、Gist 支持、诊断报告、配置导入导出、浮动按钮拖动贴边
 // @author       ghma
 // @license      MIT
 // @match        https://github.com/*
@@ -125,7 +125,7 @@
   ];
 
   const STORE_KEY = 'ghma:settings';
-  const SCRIPT_VERSION = '1.7.1';
+  const SCRIPT_VERSION = '1.7.5';
   const DEFAULTS = {
     enabled: true,
     mirror: 'ghproxy',
@@ -146,6 +146,7 @@
     staticCdn: false,
     hotkey: 'Alt+M',
     speeds: {},
+    fabPos: { side: 'right', top: 18 },
   };
 
   // ---------------------------------------------------------------------------
@@ -220,6 +221,7 @@
     }
     const merged = Object.assign({}, DEFAULTS, saved || {});
     merged.custom = Object.assign({}, DEFAULTS.custom, (saved && saved.custom) || {});
+    merged.fabPos = Object.assign({}, DEFAULTS.fabPos, (saved && saved.fabPos) || {});
     merged.speeds = Object.assign({}, (saved && saved.speeds) || {});
     merged.disabledMirrors = Array.isArray(saved && saved.disabledMirrors)
       ? saved.disabledMirrors.slice()
@@ -327,6 +329,108 @@
     return `${location.origin}${location.pathname.split('?')[0]}?raw=true`;
   }
 
+  // 从 URL pathname 解析当前 ref（分支 / Tag / commit SHA）
+  // getRepoContext() 返回的 rest 数组里 rest[0] === kind 字面量（tree/blob/commit/tag/...）
+  // 所以真实 ref 一律从 rest[1] 开始，但 blob 场景要特殊处理：
+  //   /blob/<ref>/<filepath> — 最后一个 segment 一定是文件名，不是 ref 的一部分
+  // tree 场景：ref 可能含 /（GitFlow），但 URL 中 / 的边界不可判定，
+  //   依赖 zipUrl() 的内嵌 JSON zipballUrl 来精确匹配（GitHub 官方来源）
+  // SHA ref 的优先级由 zipUrl() 中的 firstSegment 检测负责（只看第一个 URL segment）
+  function getCurrentRef(ctx) {
+    if (!ctx || ctx.isGist) return '';
+    const { kind, rest } = ctx;
+    if (!kind) return '';
+
+    if (kind === 'blob') {
+      // /blob/<ref>/<filepath> — 最后一个 segment 是文件名，必须去掉
+      // rest 至少 3 个元素 ['blob', <ref>, <file>]
+      if (rest.length < 3) return rest.slice(1).join('/') || '';
+      return rest.slice(1, -1).join('/') || '';
+    }
+    if (kind === 'tree') {
+      // /tree/<ref>[/path] — ref 边界不确定，完整返回 rest[1..]，
+      // 由 zipUrl() 的内嵌 JSON zipballUrl 来精确匹配 ref 边界
+      return rest.slice(1).join('/') || '';
+    }
+    if (kind === 'commit' || kind === 'commits') {
+      return rest.slice(1).join('/') || '';
+    }
+    if (kind === 'tag') {
+      return rest.slice(1).join('/') || '';
+    }
+    if (kind === 'releases') {
+      if (rest[1] === 'tag') return rest.slice(2).join('/') || '';
+      return '';
+    }
+    if (kind === 'pull') {
+      try {
+        const refParam = new URLSearchParams(location.search).get('ref');
+        if (refParam) return refParam;
+      } catch (e) { /* ignore */ }
+      return '';
+    }
+    return '';
+  }
+
+  // 根据 ref 构造 archive URL（遵循 GitHub 文档中的官方格式）
+  function buildArchiveUrl(ctx, ref, defaultBranch) {
+    const base = `https://github.com/${ctx.owner}/${ctx.repo}`;
+    if (!ref) {
+      // 仓库首页：优先使用默认分支的 refs/heads 形式
+      if (defaultBranch) return `${base}/archive/refs/heads/${refPath(defaultBranch)}.zip`;
+      return `${base}/archive/HEAD.zip`;
+    }
+    // 7-40 位 SHA → /archive/<sha>.zip
+    if (/^[0-9a-f]{7,40}$/i.test(ref)) return `${base}/archive/${ref}.zip`;
+    // 分支 / Tag → /archive/<ref>.zip，由 GitHub 自身解析
+    return `${base}/archive/${refPath(ref)}.zip`;
+  }
+
+  // 从 GitHub archive href 里反解出 ref（用于 DOM 结果和 URL ref 比对）
+  // 支持: /archive/HEAD.zip, /archive/{ref}.zip, /archive/refs/heads/{ref}.zip, /archive/refs/tags/{ref}.zip
+  function refFromArchiveHref(href) {
+    const m = (href || '').match(/\/archive\/(.+?)\.(zip|tar\.gz)(?:\?|$)/i);
+    if (!m) return '';
+    const token = m[1];
+    if (token === 'HEAD') return '';
+    // refs/heads/xxx 或 refs/tags/xxx
+    if (token.startsWith('refs/heads/')) return token.slice('refs/heads/'.length);
+    if (token.startsWith('refs/tags/')) return token.slice('refs/tags/'.length);
+    return token;
+  }
+
+  // GitHub 在页面内嵌 JSON 中提供了官方 zipball 地址和默认分支，优先使用
+  // 参考文档：/archive/refs/heads/<branch>.zip、/archive/refs/tags/<tag>.zip、/archive/<sha>.zip
+  // 内嵌 JSON 体积较大，按页面 URL 缓存一次，避免刷新注入时反复拼接扫描
+  let repoInfoCache = { key: '', value: null };
+  function embeddedRepoInfo() {
+    const key = location.pathname + location.search;
+    if (repoInfoCache.key === key && repoInfoCache.value) return repoInfoCache.value;
+    const info = { zipballUrl: '', defaultBranch: '' };
+    try {
+      const text = $$('script[type="application/json"]')
+        .map((el) => el.textContent || '')
+        .join('');
+      const zip = text.match(/"zipballUrl"\s*:\s*"([^"]+)"/);
+      const branch = text.match(/"defaultBranch"\s*:\s*"([^"]+)"/);
+      if (zip) info.zipballUrl = zip[1];
+      if (branch) info.defaultBranch = branch[1];
+    } catch (e) {
+      /* 页面结构变化时忽略 */
+    }
+    // 只缓存解析到结果的情况，页面脚本延迟加载时下次仍会重新扫描
+    if (info.zipballUrl || info.defaultBranch) repoInfoCache = { key, value: info };
+    return info;
+  }
+
+  // ref 可能包含斜杠（如 tag: codeql-cli/v2.12.0），逐段编码，保留分隔符
+  function refPath(ref) {
+    return String(ref || '')
+      .split('/')
+      .map((part) => encodeURIComponent(part))
+      .join('/');
+  }
+
   function zipUrl(ctx) {
     if (!ctx) return '';
     if (ctx.isGist) {
@@ -336,7 +440,61 @@
       const link = links.find((a) => /\.zip(\?|$)/i.test(a.href)) || links[0];
       return link ? link.href : '';
     }
-    return `https://github.com/${ctx.owner}/${ctx.repo}/archive/HEAD.zip`;
+
+    // 先从 URL 解析 ref
+    const urlRef = getCurrentRef(ctx);
+
+    // SHA 判断只看 rest[1]（kind 后面的第一个 URL segment）
+    // 原因：blob/@SHA/README.md 页面 getCurrentRef 会返回 'SHA/README.md'（含路径），
+    // 整体不再匹配纯 SHA 正则；但 rest[1] 永远是 URL 里的纯 ref 起点
+    const firstSegment = (ctx.rest && ctx.rest[1]) || '';
+    const isShaRef = /^[0-9a-f]{7,40}$/i.test(firstSegment);
+
+    // 当 URL 第一个 segment 是 commit SHA 时，内嵌 JSON 指向 HEAD 或默认分支，
+    // 必须跳过内嵌，直接用这个 SHA 构造 archive URL
+    if (isShaRef) return buildArchiveUrl(ctx, firstSegment);
+
+    const info = embeddedRepoInfo();
+    const prefix = `/${ctx.owner}/${ctx.repo}/${ctx.kind || ''}/`;
+    // 判断 ref 是否确实出现在当前路径中（解决带斜杠分支/Tag 被截断的问题）
+    const refInPath = (ref) => {
+      if (!ref || !ctx.kind) return false;
+      const path = location.pathname;
+      return path === prefix + ref || path.startsWith(prefix + ref + '/');
+    };
+
+    // 1. 页面内嵌 zipballUrl 是 GitHub 官方地址，优先使用
+    if (info.zipballUrl) {
+      try {
+        const abs = new URL(info.zipballUrl, 'https://github.com').href;
+        // 防止误用页面内其他仓库的内嵌数据
+        if (!abs.includes(`/${ctx.owner}/${ctx.repo}/archive/`)) throw new Error('repo mismatch');
+        const zipRef = refFromArchiveHref(info.zipballUrl);
+        if (!urlRef || urlRef === zipRef || refInPath(zipRef)) return abs;
+      } catch (e) {
+        /* 忽略非法地址 */
+      }
+    }
+
+    // 2. 从 DOM 抓原生按钮（Code 菜单里的 Download ZIP）
+    const domLink = $$('a[href*="/archive/"]').find((a) => {
+      try {
+        const href = a.getAttribute('href') || '';
+        if (!/^\/[^/]+\/[^/]+\/archive\//.test(href)) return false;
+        if (!/\.(zip|tar\.gz)$/i.test(href)) return false;
+        const m = href.match(/^\/([^/]+)\/([^/]+)\/archive\//);
+        return m && m[1] === ctx.owner && m[2] === ctx.repo;
+      } catch (e) { return false; }
+    });
+
+    if (domLink && domLink.href) {
+      // DOM 按钮的 ref 必须和当前页面一致才信任
+      const domRef = refFromArchiveHref(domLink.getAttribute('href') || '');
+      if (!urlRef || urlRef === domRef || refInPath(domRef)) return domLink.href;
+    }
+
+    // 3. 兜底：按当前 ref 构造；仓库首页使用默认分支的 refs/heads 地址
+    return buildArchiveUrl(ctx, urlRef, info.defaultBranch);
   }
 
   // ---------------------------------------------------------------------------
@@ -1195,6 +1353,8 @@
       const merged = sanitizeSettings(data);
       // 导入的配置通常不含 Token，保留本地已保存的值
       if (!merged.actionsToken) merged.actionsToken = state.settings.actionsToken || '';
+      // 浮动按钮位置属于本机 UI 偏好，不随配置导入而被重置
+      merged.fabPos = Object.assign({}, DEFAULTS.fabPos, state.settings.fabPos || {});
       state.settings = merged;
       state.health = {};
       saveSettings();
@@ -1487,13 +1647,19 @@
       height: 38px; padding: 0 15px; border-radius: 999px; border: 1px solid #1f6feb;
       background: linear-gradient(180deg, #1f6feb, #1a5fd0); color: #fff;
       font: 600 13px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      letter-spacing: .5px; cursor: pointer; box-shadow: 0 6px 20px rgba(0, 0, 0, .35);
+      letter-spacing: .5px; cursor: grab; box-shadow: 0 6px 20px rgba(0, 0, 0, .35);
+      touch-action: none; user-select: none; -webkit-user-select: none;
+      transition: left .18s ease, right .18s ease, top .18s ease;
     }
     .fab:hover { filter: brightness(1.12); }
+    .fab.dragging {
+      cursor: grabbing; transition: none; filter: brightness(1.12);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, .5);
+    }
     .fab.off { background: #21262d; border-color: #30363d; color: #8b949e; }
     .panel {
       position: fixed; right: 18px; top: 66px; z-index: 2147483002; width: 344px;
-      max-height: calc(100vh - 84px); overflow: auto;
+      max-height: calc(100vh - 36px); overflow: auto;
       background: #0d1117; color: #e6edf3; border: 1px solid #30363d; border-radius: 12px;
       box-shadow: 0 16px 48px rgba(0, 0, 0, .55);
       font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
@@ -1667,7 +1833,7 @@
               <a class="primary span2" data-act="browse" target="_blank" rel="noopener">镜像浏览</a>
               <button type="button" data-act="clone">复制 Clone</button>
               <a data-act="raw" target="_blank" rel="noopener">镜像 Raw</a>
-              <a data-act="zip" target="_blank" rel="noopener">下载 ZIP</a>
+              <a data-act="zip" target="_blank" rel="noopener" title="下载当前分支/标签/提交的 ZIP 快照（不含 Git 历史）">下载 ZIP</a>
               <button type="button" data-act="copy">复制直链</button>
             </div>
             <div class="group-title">文件与资产</div>
@@ -1795,14 +1961,178 @@
     };
     state.toast = toast;
 
+    // ---- 浮动按钮：自由拖动 / 自动贴边 / 面板跟随 ----
+    const FAB_MARGIN = 8;
+    const FAB_GAP = 6;
+    const PANEL_GUTTER = 8;
+
+    function clampFabTop(top) {
+      const h = fab.offsetHeight || 38;
+      const max = Math.max(FAB_MARGIN, window.innerHeight - h - FAB_MARGIN);
+      return Math.max(FAB_MARGIN, Math.min(max, top));
+    }
+
+    function applyFabPosition(pos) {
+      const p = pos || state.settings.fabPos || {};
+      const side = p.side === 'left' ? 'left' : 'right';
+      const top = clampFabTop(typeof p.top === 'number' ? p.top : FAB_MARGIN);
+      fab.style.top = Math.round(top) + 'px';
+      if (side === 'left') {
+        fab.style.left = FAB_MARGIN + 'px';
+        fab.style.right = 'auto';
+      } else {
+        fab.style.left = 'auto';
+        fab.style.right = FAB_MARGIN + 'px';
+      }
+    }
+
+    // 面板贴在按钮内侧，垂直与按钮对齐并夹在视口内（始终在最上层）
+    function positionPanel() {
+      if (panel.hidden) return;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      // 宽度随视口收缩，避免窄窗口水平溢出
+      panel.style.width = Math.round(Math.max(220, Math.min(344, vw - PANEL_GUTTER * 2))) + 'px';
+
+      // 先按视口上限量一次高度，据此把面板整体夹进视口
+      panel.style.maxHeight = Math.max(160, vh - PANEL_GUTTER * 2) + 'px';
+      const fr = fab.getBoundingClientRect();
+      let onLeft = fr.left + fr.width / 2 < vw / 2;
+      let space = onLeft ? vw - fr.right - FAB_GAP - PANEL_GUTTER : fr.left - FAB_GAP - PANEL_GUTTER;
+      if (space < 260) onLeft = !onLeft; // 内侧空间不足则换到另一侧，避免压住按钮
+
+      panel.style.left = 'auto';
+      panel.style.right = 'auto';
+      if (onLeft) panel.style.left = Math.round(fr.right + FAB_GAP) + 'px';
+      else panel.style.right = Math.round(Math.max(vw - fr.left + FAB_GAP, PANEL_GUTTER)) + 'px';
+
+      const ph = panel.offsetHeight;
+      const top = Math.max(PANEL_GUTTER, Math.min(fr.top, vh - ph - PANEL_GUTTER));
+      panel.style.top = Math.round(top) + 'px';
+
+      // 依据最终 top 重新约束高度，保证面板底部不越出视口（展开线路管理后尤其重要）
+      panel.style.maxHeight = Math.round(Math.max(120, vh - top - PANEL_GUTTER)) + 'px';
+
+      // 水平越界修正
+      const pr = panel.getBoundingClientRect();
+      if (pr.right > vw - PANEL_GUTTER) {
+        panel.style.left = Math.round(vw - pr.width - PANEL_GUTTER) + 'px';
+        panel.style.right = 'auto';
+      } else if (pr.left < PANEL_GUTTER) {
+        panel.style.left = PANEL_GUTTER + 'px';
+        panel.style.right = 'auto';
+      }
+    }
+
+    // 面板内容高度变化（切页 / 展开 details / 重新渲染）后重新定位
+    let panelPosRaf = 0;
+    function schedulePanelPosition() {
+      if (!state.panelOpen || panelPosRaf) return;
+      panelPosRaf = requestAnimationFrame(() => {
+        panelPosRaf = 0;
+        positionPanel();
+      });
+    }
+
     const togglePanel = (force) => {
       state.panelOpen = typeof force === 'boolean' ? force : !state.panelOpen;
       panel.hidden = !state.panelOpen;
-      if (state.panelOpen) renderPanel();
+      if (state.panelOpen) {
+        renderPanel();
+        positionPanel();
+      }
     };
     state.togglePanel = togglePanel;
 
-    fab.addEventListener('click', () => togglePanel());
+    let dragState = null;
+    let suppressClick = false;
+
+    fab.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      suppressClick = false;
+      const rect = fab.getBoundingClientRect();
+      dragState = {
+        id: e.pointerId,
+        startX: e.clientX,
+        startY: e.clientY,
+        offX: e.clientX - rect.left,
+        offY: e.clientY - rect.top,
+        moved: false,
+      };
+      try { fab.setPointerCapture(e.pointerId); } catch (err) { /* 忽略 */ }
+    });
+
+    fab.addEventListener('pointermove', (e) => {
+      if (!dragState || e.pointerId !== dragState.id) return;
+      const dx = e.clientX - dragState.startX;
+      const dy = e.clientY - dragState.startY;
+      if (!dragState.moved && Math.hypot(dx, dy) < 4) return; // 小幅抖动视为点击
+      dragState.moved = true;
+      fab.classList.add('dragging');
+      const w = fab.offsetWidth;
+      const h = fab.offsetHeight;
+      const left = Math.max(4, Math.min(window.innerWidth - w - 4, e.clientX - dragState.offX));
+      const top = Math.max(4, Math.min(window.innerHeight - h - 4, e.clientY - dragState.offY));
+      fab.style.left = Math.round(left) + 'px';
+      fab.style.right = 'auto';
+      fab.style.top = Math.round(top) + 'px';
+      if (state.panelOpen) positionPanel();
+      e.preventDefault();
+    });
+
+    const endDrag = (e) => {
+      if (!dragState || (e && e.pointerId !== dragState.id)) return;
+      const moved = dragState.moved;
+      dragState = null;
+      fab.classList.remove('dragging'); // 恢复过渡动画，让贴边平滑吸附
+      if (!moved) return; // 未拖动，交给 click 切换面板
+      suppressClick = true;
+      const rect = fab.getBoundingClientRect();
+      const side = rect.left + rect.width / 2 < window.innerWidth / 2 ? 'left' : 'right';
+      const pos = { side, top: Math.round(clampFabTop(rect.top)) };
+      state.settings.fabPos = pos;
+      saveSettings();
+      applyFabPosition(pos);
+      if (state.panelOpen) positionPanel();
+    };
+
+    fab.addEventListener('pointerup', endDrag);
+    fab.addEventListener('pointercancel', endDrag);
+
+    fab.addEventListener('click', () => {
+      if (suppressClick) {
+        suppressClick = false;
+        return;
+      }
+      togglePanel();
+    });
+
+    window.addEventListener('resize', () => {
+      applyFabPosition();
+      if (state.panelOpen) positionPanel();
+    });
+
+    // 贴边过渡结束后再对齐一次，避免按动画中间位置定位导致间隙过大
+    fab.addEventListener('transitionend', (e) => {
+      if (e.target !== fab) return;
+      if (e.propertyName === 'top' || e.propertyName === 'left' || e.propertyName === 'right') {
+        if (state.panelOpen) positionPanel();
+      }
+    });
+
+    // details 展开 / 收起、内容重新渲染都可能导致面板高度变化
+    shadow.addEventListener('toggle', (e) => {
+      if (e.target && e.target.tagName === 'DETAILS') schedulePanelPosition();
+    }, true);
+    if (typeof ResizeObserver === 'function') {
+      const ro = new ResizeObserver(schedulePanelPosition);
+      ro.observe(panel);
+    }
+
+    applyFabPosition();
+    state.applyFabPosition = applyFabPosition;
+
     shadow.querySelector('.x').addEventListener('click', () => togglePanel(false));
 
     // 分页：操作 / 线路 / 设置
@@ -1817,6 +2147,7 @@
       panes.forEach((pane) => {
         pane.hidden = pane.getAttribute('data-pane') !== name;
       });
+      schedulePanelPosition();
     };
     tabBtns.forEach((btn) =>
       btn.addEventListener('click', () => activateTab(btn.getAttribute('data-tab')))
@@ -1937,6 +2268,13 @@
     renderPanel();
   }
 
+  // 仅在 HTML 真正变化时写入，避免重复重建上百个 option / 线路行
+  function setHTML(el, html) {
+    if (!el || el.__ghmaHtml === html) return;
+    el.__ghmaHtml = html;
+    el.innerHTML = html;
+  }
+
   function renderPanel() {
     const shadow = state.shadow;
     if (!shadow) return;
@@ -1944,7 +2282,7 @@
     const byRole = (role) => shadow.querySelector(`[data-role="${role}"]`);
 
     const mirrorSel = byRole('mirror');
-    mirrorSel.innerHTML = buildMirrorOptionsHTML();
+    setHTML(mirrorSel, buildMirrorOptionsHTML());
     mirrorSel.value = s.mirror;
 
     [
@@ -1953,7 +2291,7 @@
       ['mirror-clone', 'mirrorClone', 'clone'],
     ].forEach(([role, key, need]) => {
       const sel = byRole(role);
-      sel.innerHTML = buildPurposeOptionsHTML(need);
+      setHTML(sel, buildPurposeOptionsHTML(need));
       sel.value = s[key] || 'auto';
     });
 
@@ -2084,7 +2422,7 @@
     const manageList = byRole('manage-list');
     const pinned = s.pinnedMirrors || [];
     const disabled = s.disabledMirrors || [];
-    manageList.innerHTML = sortedMirrors(MIRRORS).map((mirror) => {
+    const manageHtml = sortedMirrors(MIRRORS).map((mirror) => {
       const health = healthOf(mirror);
       const isPinned = pinned.indexOf(mirror.id) >= 0;
       const isOff = disabled.indexOf(mirror.id) >= 0;
@@ -2100,6 +2438,7 @@
         `</div>`
       );
     }).join('');
+    setHTML(manageList, manageHtml);
 
     const statsEl = byRole('stats');
     const st = state.stats;
@@ -2523,26 +2862,26 @@
       mount.appendChild(bar);
     }
 
-    const currentCtx = getRepoContext();
     const m = activeMirror();
     const dmDl = chooseDownloadMirror('downloads', true);
     const dmRaw = chooseDownloadMirror('raw', true);
     const site = siteMirror();
-    const zipLink = zipUrl(currentCtx);
+    const zipLink = zipUrl(ctx);
     const zipHref = zipLink && dmDl ? mirrorize(zipLink, dmDl) : '';
-    const rawHref =
-      currentCtx.isFile && dmRaw ? mirrorizeRaw(getRawUrl(currentCtx), dmRaw) : '';
+    const rawHref = ctx.isFile && dmRaw ? mirrorizeRaw(getRawUrl(ctx), dmRaw) : '';
     const siteHref = site
       ? `${site.base.replace(/\/+$/, '')}${location.pathname}${location.search}`
       : '';
     const sig = [
-      currentCtx.owner,
-      currentCtx.repo,
-      currentCtx.isFile ? 1 : 0,
+      ctx.owner,
+      ctx.repo,
+      ctx.isFile ? 1 : 0,
       m ? m.id : '-',
       dmDl ? dmDl.id : '-',
       dmRaw ? dmRaw.id : '-',
       siteHref,
+      zipHref,
+      rawHref,
       state.settings.enabled ? 1 : 0,
     ].join('|');
     if (bar.dataset.sig === sig) return;
@@ -2556,7 +2895,7 @@
     bar.innerHTML = `
       <button type="button" class="btn btn-sm ghma-btn" data-ghma="clone" title="复制镜像 Clone 命令">镜像 Clone</button>
       ${link('zip', '下载 ZIP', zipHref, '通过镜像下载仓库 ZIP')}
-      ${currentCtx.isFile
+      ${ctx.isFile
         ? link('raw', '镜像 Raw', rawHref, '通过镜像打开 Raw 文件') +
         link('filedl', '下载文件', rawHref, '通过镜像下载当前文件')
         : ''
@@ -2681,6 +3020,25 @@
       return;
     }
     if (!isDownloadUrl(abs)) return;
+
+    // 只对 /archive/ 源码压缩包链接做 ref 修正（SHA 优先 / 分支 ref 一致性）
+    // /releases/download/ 下的发布资产完全不动，避免把 APK / wheel 等误改成源码
+    if (/\/archive\//.test(abs)) {
+      const ctx = getRepoContext();
+      if (ctx && !ctx.isGist) {
+        const urlRef = getCurrentRef(ctx);
+        if (urlRef) {
+          const domRef = refFromArchiveHref(a.getAttribute('href') || '');
+          const isSha = /^[0-9a-f]{7,40}$/i.test(urlRef);
+          // SHA ref 直接覆盖；DOM ref 和 URL ref 不一致也覆盖
+          if (isSha || urlRef !== domRef) {
+            const corrected = zipUrl(ctx);
+            if (corrected) abs = corrected;
+          }
+        }
+      }
+    }
+
     const dm = chooseDownloadMirror('downloads', true);
     if (!dm) return;
     const mirrored = mirrorize(abs, dm);
@@ -2781,6 +3139,7 @@
     GM_registerMenuCommand('重置所有设置', () => {
       state.settings = Object.assign({}, DEFAULTS, {
         custom: Object.assign({}, DEFAULTS.custom),
+        fabPos: Object.assign({}, DEFAULTS.fabPos),
         disabledMirrors: [],
         pinnedMirrors: [],
         speeds: {},
@@ -2788,6 +3147,7 @@
       state.health = {};
       restoreStaticCdn();
       saveSettings();
+      if (state.applyFabPosition) state.applyFabPosition();
       renderPanel();
       refreshInjected();
       if (state.toast) state.toast('已重置设置');
@@ -2796,8 +3156,9 @@
 
   document.addEventListener('keydown', (e) => {
     if (!matchHotkey(e)) return;
-    const t = e.target;
-    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    const editable = (el) => el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+    // 事件从 Shadow DOM 里冒出时 target 会被重定向为宿主元素，需额外检查影子树内的焦点
+    if (editable(e.target) || (state.shadow && editable(state.shadow.activeElement))) return;
     e.preventDefault();
     if (state.togglePanel) state.togglePanel();
   });
@@ -2812,7 +3173,7 @@
     if (document.hidden || !state.settings.enabled || !state.settings.autoFallback) return;
     const before = activeMirror();
     const ok = await ensureHealthy();
-    renderPanel();
+    if (state.panelOpen) renderPanel(); // 面板未展开时无需刷新 UI
     if (state.toast && before && ok && ok.id !== before.id && healthOf(before) === 'bad') {
       state.toast(`线路 ${before.label} 异常，已切换至 ${ok.label}`);
     }
