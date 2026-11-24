@@ -2,7 +2,7 @@
 
 一个单文件、零依赖的 Tampermonkey 用户脚本：在 GitHub 页面上提供镜像浏览、Clone、Raw、Release / Archive 下载、ZIP 快照、Actions 制品下载等加速能力，并附带一个可自建的 Cloudflare Worker 镜像。
 
-- 脚本版本：`1.9.0`
+- 脚本版本：`1.10.0`
 - 适用页面：`https://github.com/*`、`https://gist.github.com/*`
 - 运行时：Tampermonkey（推荐）/ Violentmonkey
 - 许可：MIT
@@ -218,6 +218,24 @@ git clone https://<域名>/https://github.com/owner/repo.git
 **按钮位置会丢吗？**
 拖动后的位置会持久化；窗口缩放或换分辨率时会被自动夹回可视区域。
 
+## 代码结构（分层）
+
+脚本仍是单文件、零依赖，但内部按职责自上而下分层，后层只依赖前层，便于定位与维护：
+
+| 层 | 职责 | 主要成员 |
+| --- | --- | --- |
+| 1. 常量与默认值 | 内置线路、API 线路、默认设置 | `MIRRORS`、`API_MIRRORS`、`DEFAULTS` |
+| 2. 通用工具 | DOM 查询、防抖、地址归一化、剪贴板 | `$`、`$$`、`debounce`、`normalizeBase`、`copyText`、`clamp`、`stripTrailingSlash`、`isCustomId` |
+| 3. 设置存储 | 读取、清洗、迁移与持久化 | `loadSettings`、`saveSettings`、`sanitizeSettings`、`migrateSettings` |
+| 4. 页面上下文 | 解析 GitHub / Gist 的仓库、分支、文件与归档地址 | `parseGitHubUrl`、`getRepoContext`、`zipUrl`、`buildArchiveUrl` |
+| 5. 线路模型 | 健康度、能力判断、排序、分用途选择与 URL 改写 | `healthOf`、`mirrorCaps`、`sortedMirrors`、`orderedPool`、`mirrorize`、`cloneCommand` |
+| 6. 文件与 Actions | 下载、制品 / 日志、配置导入导出 | `downloadViaMirror`、`downloadAssets`、`ghApiRequest`、`importConfig`、`exportConfig` |
+| 7. 面板 UI | 设计令牌、CSS、渲染、事件、浮动按钮与定位 | `PANEL_CSS`、`buildUI`、`renderPanel`、`positionPanel` |
+| 8. 页面注入 | Code 工具栏、文件页 Raw 按钮、静态资源 CDN | `injectCodeToolbar`、`injectRawButton`、`applyStaticCdn` |
+| 9. 下载改写与启动 | 链接改写、菜单、快捷键、定时巡检 | `rewriteDownloads`、`installMenus`、`startHealthLoop` |
+
+公共小工具只保留一处实现：`stripTrailingSlash` 统一各处的“去掉末尾斜杠”，`isCustomId` 统一自定义线路 ID 判断，`currentFileName` 统一文件下载命名，`customApiBase` 统一自定义 API 地址解析。回归测试通过字符串标记从源码抽取代码，因此被测试覆盖的函数名与签名保持不变。
+
 ## 项目结构
 
 ```text
@@ -235,9 +253,26 @@ git clone https://<域名>/https://github.com/owner/repo.git
     └── deploy.ps1
 ```
 
+## 布局与响应式
+
+面板样式集中为一份带设计令牌的样式表，视觉规则不再散落在各选择器里：
+
+- **设计令牌**：颜色、间距、圆角、字体、阴影统一声明为 `--ghma-*` CSS 变量；浅色主题只覆盖令牌（`:host(.ghma-light)`），不再为每个选择器重复写一套颜色。
+- **间距体系**：以 4 / 6 / 8 / 10 / 12 / 16px 的六级间距（`--ghma-space-1…6`）组织内边距与元素间隔，面板主体统一 12px 内边距、10px 纵向节奏。
+- **视觉层级**：头部使用吸顶 + 分隔线，标题超出省略；版本号、状态点、关闭按钮固定不换行；分组标题小号大写；主操作按钮使用主色，其余使用次级底色。
+- **对齐一致性**：所有按钮与下拉框统一 `min-height`、圆角与居中方式，图标 / 文本基线一致；线路管理、分用途线路行、自定义线路卡片使用统一的行高与右对齐数值。
+- **响应式**：
+  - 面板宽度随视口收缩（`220–344px`），高度始终夹在视口内；
+  - 视口宽度 `< 380px` 时，快捷操作网格由三列降为两列；
+  - 视口宽度 `< 300px` 时，网格降为单列，自定义线路底部信息与分用途线路行改为纵向排列；
+  - 视口宽度 `< 360px` 时，面板切换为贴边抽屉（左右 8px、顶部 8px），避免与浮动按钮互相遮挡；
+  - 遵循 `prefers-reduced-motion`，在系统要求减少动效时关闭浮动按钮与提示的过渡。
+- **可访问性**：交互元素补充 `:focus-visible` 焦点环；滚动条使用细样式；文本与背景对比度沿用 GitHub 暗色 / 浅色调色板。
+
 ## 开发
 
 - 无构建、无依赖，浏览器直接执行单文件脚本。
+- 编码约定：2 空格缩进、单引号、语句以分号结尾、函数使用 `function` 声明；新增逻辑按上述九层归位，公共表达式先抽小工具，避免在多个分支重复。
 - 修改后先做语法检查：
 
   ```bash
