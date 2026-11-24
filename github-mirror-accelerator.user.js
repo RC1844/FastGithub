@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         GitHub 镜像加速助手
 // @namespace    https://github.com/ghma
-// @version      1.7.11
-// @description  镜像浏览 / Clone / Raw / Release / Archive 加速，多线路重试、按用途分线路、线路禁用置顶、浅克隆、Actions 制品登录态/Token 下载、Gist 支持、诊断报告、配置导入导出、浮动按钮拖动贴边
+// @version      1.9.0
+// @description  镜像浏览 / Clone / Raw / Release / Archive 加速，多线路重试、多条自定义线路（含 API 加速）、按用途分线路、线路禁用置顶、浅克隆、Actions 制品登录态/Token 下载、Gist 支持、诊断报告、配置导入导出、浮动按钮拖动贴边
 // @author       ghma
 // @license      MIT
 // @match        https://github.com/*
@@ -115,6 +115,34 @@
     { id: 'ghproxycc', label: 'ghproxy.cc', type: 'proxy', base: 'https://ghproxy.cc/' },
     { id: 'llkk', label: 'gh.llkk.cc', type: 'proxy', base: 'https://gh.llkk.cc/' },
     { id: 'moeyy', label: 'github.moeyy.xyz', type: 'proxy', base: 'https://github.moeyy.xyz/' },
+    // 2026-11-24 扫描 github.akams.cn 节点列表后实测通过（Raw + Archive），按实测延迟排序
+    { id: 'ak-777-z321-cc-cd', label: '777.z321.cc.cd', type: 'proxy', base: 'https://777.z321.cc.cd/' },
+    { id: 'ak-gh-meali-top', label: 'gh.meali.top', type: 'proxy', base: 'https://gh.meali.top/', caps: { clone: true } },
+    { id: 'ak-g-blfrp-cn', label: 'g.blfrp.cn', type: 'proxy', base: 'https://g.blfrp.cn/', caps: { clone: true } },
+    { id: 'ak-github-tbap-top', label: 'github.tbap.top', type: 'proxy', base: 'https://github.tbap.top/' },
+    { id: 'ak-gh-sixyin-com', label: 'gh.sixyin.com', type: 'proxy', base: 'https://gh.sixyin.com/', caps: { clone: true } },
+    { id: 'ak-ghgo-de5-net', label: 'ghgo.de5.net', type: 'proxy', base: 'https://ghgo.de5.net/', caps: { clone: true } },
+    { id: 'ak-githubproxy-gohj99-site', label: 'githubproxy.gohj99.site', type: 'proxy', base: 'https://githubproxy.gohj99.site/' },
+    { id: 'ak-github-xxlab-tech', label: 'github.xxlab.tech', type: 'proxy', base: 'https://github.xxlab.tech/', caps: { clone: true } },
+    { id: 'ak-mousegithubproxy-cc-cd', label: 'mousegithubproxy.cc.cd', type: 'proxy', base: 'https://mousegithubproxy.cc.cd/', caps: { clone: true } },
+    { id: 'ak-gh-qfmc0721-cc-cd', label: 'gh.qfmc0721.cc.cd', type: 'proxy', base: 'https://gh.qfmc0721.cc.cd/', caps: { clone: true } },
+    { id: 'ak-gh-noki-icu', label: 'gh.noki.icu', type: 'proxy', base: 'https://gh.noki.icu/' },
+    { id: 'ak-gh-07150721-xyz', label: 'gh.07150721.xyz', type: 'proxy', base: 'https://gh.07150721.xyz/', caps: { clone: true } },
+    { id: 'ak-github-ikgy-top', label: 'github.ikgy.top', type: 'proxy', base: 'https://github.ikgy.top/', caps: { clone: true } },
+    { id: 'ak-eogh-719831-xyz', label: 'eogh.719831.xyz', type: 'proxy', base: 'https://eogh.719831.xyz/' },
+    { id: 'ak-git-669966-xyz', label: 'git.669966.xyz', type: 'proxy', base: 'https://git.669966.xyz/', caps: { clone: true } },
+    { id: 'ak-down-mxw-xx-kg', label: 'down.mxw.xx.kg', type: 'proxy', base: 'https://down.mxw.xx.kg/', caps: { clone: true } },
+    { id: 'ak-gh-jjj-gv-uy', label: 'gh.jjj.gv.uy', type: 'proxy', base: 'https://gh.jjj.gv.uy/', caps: { clone: true } },
+    { id: 'ak-gh-acmsz-top', label: 'gh.acmsz.top', type: 'proxy', base: 'https://gh.acmsz.top/', caps: { clone: true } },
+    { id: 'ak-cdn-akaere-online', label: 'cdn.akaere.online', type: 'proxy', base: 'https://cdn.akaere.online/', caps: { clone: true } },
+    { id: 'ak-g-z321-cc-cd', label: 'g.z321.cc.cd', type: 'proxy', base: 'https://g.z321.cc.cd/', caps: { clone: true } },
+    { id: 'ak-cfgh-ikgy-top', label: 'cfgh.ikgy.top', type: 'proxy', base: 'https://cfgh.ikgy.top/', caps: { clone: true } },
+    { id: 'ak-gg-z321-cc-cd', label: 'gg.z321.cc.cd', type: 'proxy', base: 'https://gg.z321.cc.cd/', caps: { clone: true } },
+    { id: 'ak-gh-inkchills-cn', label: 'gh.inkchills.cn', type: 'proxy', base: 'https://gh.inkchills.cn/', caps: { clone: true } },
+    { id: 'ak-ghproxy-felicity-land', label: 'ghproxy.felicity.land', type: 'proxy', base: 'https://ghproxy.felicity.land/', caps: { clone: true } },
+    { id: 'ak-tvv-tw', label: 'tvv.tw', type: 'proxy', base: 'https://tvv.tw/', caps: { clone: true } },
+    { id: 'ak-ghproxy-icu', label: 'ghproxy.icu', type: 'proxy', base: 'https://ghproxy.icu/', caps: { clone: true } },
+    { id: 'ak-xsadwsd-kdns-fr', label: 'xsadwsd.kdns.fr', type: 'proxy', base: 'https://xsadwsd.kdns.fr/', caps: { clone: true } },
     {
       id: 'jsdelivr',
       label: 'jsDelivr（模板）',
@@ -139,15 +167,21 @@
   ];
 
   const STORE_KEY = 'ghma:settings';
-  const SCRIPT_VERSION = '1.7.11';
-  const defaultCustom = () => ({ label: '', type: 'proxy', base: '', caps: { clone: true } });
+  const SCRIPT_VERSION = '1.9.0';
+  const defaultCustom = (id) => ({
+    id: id || 'custom',
+    label: '',
+    type: 'proxy',
+    base: '',
+    caps: { raw: true, downloads: true, clone: true, api: false },
+  });
   const DEFAULTS = {
     enabled: true,
     mirror: 'ghproxy',
     mirrorRaw: 'auto',
     mirrorDownloads: 'auto',
     mirrorClone: 'auto',
-    custom: defaultCustom(),
+    customRoutes: [],
     disabledMirrors: [],
     pinnedMirrors: [],
     cloneDepth: 0,
@@ -240,8 +274,9 @@
       saved = null;
     }
     const merged = Object.assign({}, DEFAULTS, saved || {});
-    const savedCustom = (saved && saved.custom) || {};
-    merged.custom = sanitizeCustom(savedCustom);
+    merged.customRoutes = sanitizeCustomRoutes(saved && saved.customRoutes, saved && saved.custom);
+    delete merged.custom;
+    migrateLegacyApi(merged);
     merged.fabPos = Object.assign({}, DEFAULTS.fabPos, (saved && saved.fabPos) || {});
     merged.speeds = Object.assign({}, (saved && saved.speeds) || {});
     merged.disabledMirrors = Array.isArray(saved && saved.disabledMirrors)
@@ -736,25 +771,68 @@
 
   function activeMirror() {
     const s = state.settings;
-    if (s.mirror === 'custom') return customMirror();
+    if (/^custom/.test(String(s.mirror || ''))) return customMirror(s.mirror);
     return MIRRORS.find((m) => m.id === s.mirror) || MIRRORS[0];
   }
 
-  function customMirror() {
-    const c = state.settings.custom || {};
+  function findCustomRoute(id) {
+    return (state.settings.customRoutes || []).find((r) => r.id === id) || null;
+  }
+
+  function isApiRoute(route) {
+    return !!route && (route.type === 'api' || !!(route.caps && route.caps.api));
+  }
+
+  function defaultCustomCaps(type, base) {
+    if (type === 'api') return { raw: false, downloads: false, clone: false, api: true };
+    if (type === 'template') {
+      const caps = templateCaps(String(base || ''));
+      return {
+        raw: !!caps.raw,
+        downloads: !!caps.downloads,
+        clone: /\{(url|cloneUrl)\}/.test(String(base || '')),
+        api: false,
+      };
+    }
+    return { raw: true, downloads: true, clone: true, api: false };
+  }
+
+  // 模板与 API 线路的能力由类型决定，代理 / 全站镜像可单独开关
+  function customRouteCaps(route) {
+    const type = route.type || 'proxy';
+    const defaults = defaultCustomCaps(type, route.base);
+    if (type === 'template' || type === 'api') return defaults;
+    const caps = route.caps || {};
+    const pick = (key) => (typeof caps[key] === 'boolean' ? caps[key] : defaults[key]);
+    return {
+      raw: pick('raw'),
+      downloads: pick('downloads'),
+      clone: pick('clone'),
+      api: pick('api'),
+    };
+  }
+
+  function customMirror(id) {
+    const routes = state.settings.customRoutes || [];
+    const index = id ? routes.findIndex((r) => r.id === id) : routes.findIndex((r) => r.id === 'custom');
+    if (index < 0) return null;
+    const c = routes[index];
     const type = c.type || 'proxy';
+    if (type === 'api') return null;
     const raw = String(c.base || '').trim();
     if (!raw) return null;
-    const label = c.label || (type === 'template' ? '自定义模板' : '自定义线路');
+    const label = c.label || (type === 'template' ? `自定义模板 ${index + 1}` : `自定义线路 ${index + 1}`);
     if (type === 'template') {
-      return { id: 'custom', label, type: 'template', template: raw, caps: templateCaps(raw) };
+      if (!/^https?:\/\//i.test(raw)) return null;
+      return { id: c.id, label, type: 'template', template: raw, caps: customRouteCaps(c), custom: true };
     }
     return {
-      id: 'custom',
+      id: c.id,
       label,
       type,
       base: normalizeBase(raw),
-      caps: { clone: !c.caps || c.caps.clone !== false },
+      caps: customRouteCaps(c),
+      custom: true,
     };
   }
 
@@ -762,11 +840,13 @@
     if (!m) return false;
     if (need === 'clone') {
       if (m.type === 'template') return /\{(url|cloneUrl)\}/.test(String(m.template || ''));
-      // 代理线路统一用 caps.clone 标记，与 MIRRORS 中的写法一致
-      if (m.type === 'proxy') return !!(m.caps && m.caps.clone);
+      if (m.caps && typeof m.caps.clone === 'boolean') return m.caps.clone;
+      // 内置代理线路统一用 caps.clone 标记，未标记时视为不支持
+      if (m.type === 'proxy') return false;
       return true;
     }
     if (m.type === 'clone') return false;
+    if (m.caps && typeof m.caps[need] === 'boolean') return m.caps[need];
     if (m.type === 'template') {
       const caps = m.caps || templateCaps(m.template);
       return !!caps[need];
@@ -782,6 +862,9 @@
   function sortedMirrors(list) {
     const pinned = state.settings.pinnedMirrors || [];
     const order = new Map(MIRRORS.map((m, i) => [m.id, i]));
+    (state.settings.customRoutes || []).forEach((route, i) => {
+      order.set(route.id, MIRRORS.length + i);
+    });
     const pinRank = (m) => {
       const i = pinned.indexOf(m.id);
       return i < 0 ? Number.MAX_SAFE_INTEGER : i;
@@ -813,12 +896,57 @@
     });
   }
 
+  // 可用的自定义浏览线路（排除 API 线路与未配置地址的条目）
+  function customMirrorList() {
+    return (state.settings.customRoutes || []).map((route) => customMirror(route.id)).filter(Boolean);
+  }
+
+  function mirrorById(id) {
+    return MIRRORS.find((m) => m.id === id) || customMirror(id);
+  }
+
+  function browsingMirrors() {
+    return MIRRORS.concat(customMirrorList());
+  }
+
+  // 线路管理需要展示全部自定义线路，包括未填写地址与 API 线路
+  function manageMirrorList() {
+    return MIRRORS.concat(
+      (state.settings.customRoutes || []).map((route, index) => ({
+        id: route.id,
+        label: route.label || `自定义线路 ${index + 1}`,
+        type: route.type || 'proxy',
+        base: route.base,
+        caps: customRouteCaps(route),
+        custom: true,
+      })),
+    );
+  }
+
+  // API 加速可用的自定义线路
+  function apiMirrorList() {
+    return (state.settings.customRoutes || [])
+      .map((route, index) => {
+        const base = normalizeBase(route.base);
+        if (!isApiRoute(route) || !base) return null;
+        return {
+          id: route.id,
+          label: route.label || `API 线路 ${index + 1}`,
+          type: 'api',
+          base,
+          caps: customRouteCaps(route),
+          custom: true,
+        };
+      })
+      .filter(Boolean);
+  }
+
   // 按用途取线路：'raw' | 'downloads' | 'clone'，未单独设置时跟随主线路
   function mirrorFor(need) {
     const s = state.settings;
     const key = need === 'raw' ? 'mirrorRaw' : need === 'clone' ? 'mirrorClone' : 'mirrorDownloads';
     const id = s[key] || 'auto';
-    if (id === 'custom') return customMirror();
+    if (/^custom/.test(String(id))) return customMirror(id);
     if (id === 'auto') {
       const active = activeMirror();
       // 主线路不支持 git clone（如 jsDelivr / 仅 Raw 的模板）时改用可 Clone 的节点
@@ -1230,6 +1358,12 @@
     if (s.apiMirror === 'custom') {
       const base = normalizeBase(s.apiCustom);
       if (base) return base;
+    } else {
+      const route = findCustomRoute(s.apiMirror);
+      if (route && isApiRoute(route) && !isMirrorDisabled(route.id)) {
+        const base = normalizeBase(route.base);
+        if (base) return base;
+      }
     }
     return 'https://api.github.com/';
   }
@@ -1466,23 +1600,75 @@
     return MIRRORS.some((m) => m.id === id);
   }
 
-  // 自定义线路按 MIRRORS 的字段结构归一化
-  function sanitizeCustom(input) {
+  // 自定义线路按 MIRRORS 的字段结构归一化，支持多条
+  function sanitizeCustomRoute(input, fallbackId) {
     const c = input && typeof input === 'object' ? input : {};
-    const type = ['proxy', 'site', 'template'].indexOf(c.type) >= 0 ? c.type : 'proxy';
+    const type = ['proxy', 'site', 'template', 'api'].indexOf(c.type) >= 0 ? c.type : 'proxy';
     let base = String(c.base || '').trim();
-    if (type === 'template') {
-      base = /^https?:\/\//i.test(base) ? base : '';
-    } else {
-      base = normalizeBase(base);
-    }
+    if (type !== 'template') base = normalizeBase(base);
+    const defaults = defaultCustomCaps(type, base);
     const caps = c.caps && typeof c.caps === 'object' ? c.caps : {};
+    const pick = (key) => (typeof caps[key] === 'boolean' ? caps[key] : defaults[key]);
     return {
+      id: /^custom[\w:-]*$/i.test(String(c.id || '')) ? String(c.id) : fallbackId,
       label: String(c.label || '').trim(),
       type,
       base,
-      caps: { clone: caps.clone !== false },
+      caps:
+        type === 'template' || type === 'api'
+          ? defaults
+          : {
+              raw: pick('raw'),
+              downloads: pick('downloads'),
+              clone: pick('clone'),
+              api: pick('api'),
+            },
     };
+  }
+
+  function sanitizeCustomRoutes(list, legacy) {
+    const out = [];
+    const used = new Set();
+    const source = Array.isArray(list) ? list : [];
+    source.forEach((item) => {
+      const route = sanitizeCustomRoute(item, 'custom');
+      let id = route.id;
+      let n = 2;
+      while (used.has(id)) id = 'custom-' + n++;
+      used.add(id);
+      route.id = id;
+      if (route.base || route.label) out.push(route);
+    });
+    // 兼容旧版单条 custom 配置
+    if (!out.length && legacy && typeof legacy === 'object' && String(legacy.base || '').trim()) {
+      out.push(sanitizeCustomRoute(Object.assign({ id: 'custom' }, legacy), 'custom'));
+    }
+    return out;
+  }
+
+  // 旧版“自定义 API 地址”迁移为一条 API 类型的自定义线路
+  function migrateLegacyApi(settings) {
+    if (!settings || settings.apiMirror !== 'custom') return;
+    const base = normalizeBase(settings.apiCustom);
+    if (!base) {
+      settings.apiMirror = 'off';
+      settings.apiCustom = '';
+      return;
+    }
+    const routes = settings.customRoutes || (settings.customRoutes = []);
+    let route = routes.find((r) => isApiRoute(r) && normalizeBase(r.base) === base);
+    if (!route) {
+      route = {
+        id: nextCustomRouteId(routes),
+        label: 'API 加速',
+        type: 'api',
+        base,
+        caps: defaultCustomCaps('api'),
+      };
+      routes.push(route);
+    }
+    settings.apiMirror = route.id;
+    settings.apiCustom = '';
   }
 
   // 导入配置时只接受已知字段，并逐项校验取值
@@ -1493,7 +1679,7 @@
       mirrorRaw: DEFAULTS.mirrorRaw,
       mirrorDownloads: DEFAULTS.mirrorDownloads,
       mirrorClone: DEFAULTS.mirrorClone,
-      custom: defaultCustom(),
+      customRoutes: [],
       disabledMirrors: [],
       pinnedMirrors: [],
       cloneDepth: DEFAULTS.cloneDepth,
@@ -1517,34 +1703,40 @@
       }
     );
 
-    const validMirror = (id) => id === 'custom' || isKnownMirrorId(id);
+    out.customRoutes = sanitizeCustomRoutes(input.customRoutes, input.custom);
+
+    const validMirror = (id) =>
+      isKnownMirrorId(id) || out.customRoutes.some((route) => route.id === id);
     if (validMirror(input.mirror)) out.mirror = input.mirror;
     ['mirrorRaw', 'mirrorDownloads', 'mirrorClone'].forEach((key) => {
       const value = input[key];
       if (value === 'auto' || validMirror(value)) out[key] = value;
     });
 
-    out.custom = sanitizeCustom(input.custom);
-
+    const validId = (id) =>
+      isKnownMirrorId(id) || out.customRoutes.some((route) => route.id === id);
     const disabled = Array.isArray(input.disabledMirrors) ? input.disabledMirrors : [];
     out.disabledMirrors = disabled
-      .filter(isKnownMirrorId)
+      .filter(validId)
       .filter((id, index, list) => list.indexOf(id) === index);
     const pinned = Array.isArray(input.pinnedMirrors) ? input.pinnedMirrors : [];
     out.pinnedMirrors = pinned
-      .filter(isKnownMirrorId)
+      .filter(validId)
       .filter((id, index, list) => list.indexOf(id) === index);
 
     const apiIds = API_MIRRORS.map((m) => m.id);
-    if (
+    const apiCustom = normalizeBase(input.apiCustom);
+    if (apiCustom) out.apiCustom = apiCustom;
+    if (input.apiMirror === 'custom') {
+      out.apiMirror = 'custom';
+      migrateLegacyApi(out);
+    } else if (
       input.apiMirror === 'off' ||
-      input.apiMirror === 'custom' ||
-      apiIds.indexOf(input.apiMirror) >= 0
+      apiIds.indexOf(input.apiMirror) >= 0 ||
+      out.customRoutes.some((route) => route.id === input.apiMirror && isApiRoute(route))
     ) {
       out.apiMirror = input.apiMirror;
     }
-    const apiCustom = String(input.apiCustom || '').trim();
-    if (/^https?:\/\//i.test(apiCustom)) out.apiCustom = apiCustom;
 
     const actionsToken = String(input.actionsToken || '').trim();
     if (actionsToken) out.actionsToken = actionsToken.slice(0, 255);
@@ -1559,7 +1751,7 @@
 
     if (input.speeds && typeof input.speeds === 'object') {
       Object.keys(input.speeds).forEach((id) => {
-        if (!isKnownMirrorId(id)) return;
+        if (!validId(id)) return;
         const ms = Number(input.speeds[id]);
         if (Number.isFinite(ms)) out.speeds[id] = Math.max(-1, Math.min(600000, Math.round(ms)));
       });
@@ -1770,7 +1962,10 @@
     if (!s.enabled || !s.apiMirror || s.apiMirror === 'off') return '';
     if (s.apiMirror === 'custom') return normalizeBase(s.apiCustom);
     const found = API_MIRRORS.find((x) => x.id === s.apiMirror);
-    return found ? found.base : '';
+    if (found) return found.base;
+    const route = findCustomRoute(s.apiMirror);
+    if (route && isApiRoute(route) && !isMirrorDisabled(route.id)) return normalizeBase(route.base);
+    return '';
   }
 
   function rewriteApiUrl(url) {
@@ -1932,14 +2127,55 @@
       border-radius: 6px; padding: 6px 8px; font: inherit; outline: none;
     }
     select:focus, input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:focus { border-color: #1f6feb; }
-    .custom-group { display: flex; flex-direction: column; gap: 6px; }
-    .custom-group[hidden] { display: none; }
     .custom { display: flex; gap: 6px; align-items: center; }
     .custom[hidden] { display: none; }
     .custom input { flex: 1; min-width: 0; }
     .custom input[type="checkbox"] { flex: none; width: auto; }
     .custom select { width: 108px; flex: none; }
     .custom .cap { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; white-space: nowrap; }
+    .custom-list { display: flex; flex-direction: column; gap: 8px; }
+    .custom-list .crow {
+      display: flex; flex-direction: column; gap: 6px;
+      border: 1px solid #30363d; border-radius: 8px; padding: 8px;
+      background: rgba(22, 27, 34, .45);
+    }
+    .crow-head { display: flex; align-items: center; gap: 6px; }
+    .crow-head input { flex: 1; min-width: 0; }
+    .crow-head select { width: 96px; flex: none; padding: 6px 4px; }
+    .crow-idx {
+      flex: none; display: inline-flex; align-items: center; justify-content: center;
+      min-width: 18px; height: 18px; padding: 0 4px; border-radius: 999px;
+      background: #21262d; color: #8b949e; font-size: 10px; line-height: 1;
+    }
+    .crow-body input { width: 100%; }
+    .crow-caps { display: flex; flex-wrap: wrap; gap: 3px 12px; }
+    .crow-caps label { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; white-space: nowrap; }
+    .crow-caps label.locked { opacity: .66; }
+    .crow-caps input { accent-color: #1f6feb; margin: 0; }
+    .crow-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .crow-foot .crow-help { flex: 1; min-width: 0; }
+    .crow-meta { color: #8b949e; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 46%; }
+    .crow-meta.warn { color: #d29922; }
+    .crow-help { color: #8b949e; font-size: 10px; line-height: 1.45; word-break: break-all; }
+    .custom-empty {
+      border: 1px dashed #30363d; border-radius: 8px; padding: 10px;
+      color: #8b949e; font-size: 11px; line-height: 1.6; text-align: center;
+    }
+    .custom-list .del {
+      flex: none; width: 26px; height: 26px; padding: 0; border-radius: 4px;
+      border: 1px solid #30363d; background: #21262d; color: #c9d1d9;
+      font: 14px/1 inherit; cursor: pointer;
+    }
+    .custom-list .del:hover { border-color: #f85149; color: #f85149; }
+    .custom-list .add {
+      width: 100%; padding: 6px 8px; border-radius: 6px; border: 1px dashed #30363d;
+      background: transparent; color: #c9d1d9; font: inherit; cursor: pointer;
+    }
+    .custom-list .add:hover { border-color: #1f6feb; color: #58a6ff; }
+    .gcount {
+      display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 999px;
+      background: #21262d; color: #8b949e; font-size: 10px; line-height: 1.6;
+    }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .grid.tools { grid-template-columns: 1fr 1fr 1fr; }
     .grid.tools button, .grid.tools a { padding: 6px 4px; font-size: 12px; }
@@ -1985,6 +2221,10 @@
     .mline .mdot.ok { background: #3fb950; }
     .mline .mdot.bad { background: #f85149; }
     .mline .mlabel { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mline .mtag {
+      margin-left: 4px; padding: 0 4px; border-radius: 3px;
+      background: #21262d; color: #8b949e; font-size: 9px;
+    }
     .mline .mspeed { flex: none; min-width: 40px; text-align: right; color: #8b949e; font-size: 11px; }
     .mline.off .mlabel { color: #6e7681; text-decoration: line-through; }
     .mline button {
@@ -2004,6 +2244,7 @@
     :host(.ghma-light) .mline button { background: #f6f8fa; color: #1f2328; border-color: #d0d7de; }
     :host(.ghma-light) .mline.off .mlabel { color: #8c959f; }
     :host(.ghma-light) .mline .mspeed { color: #57606a; }
+    :host(.ghma-light) .mline .mtag { background: #eaeef2; color: #57606a; }
     :host(.ghma-light) .stats { color: #57606a; }
     :host(.ghma-light) .panel {
       background: #ffffff; color: #1f2328; border-color: #d0d7de;
@@ -2027,6 +2268,11 @@
     :host(.ghma-light) .hint,
     :host(.ghma-light) .field > span { color: #57606a; }
     :host(.ghma-light) .hint a { color: #0969da; }
+    :host(.ghma-light) .custom-list .crow { border-color: #d0d7de; background: #f6f8fa; }
+    :host(.ghma-light) .custom-empty { border-color: #d0d7de; }
+    :host(.ghma-light) .crow-idx, :host(.ghma-light) .gcount { background: #eaeef2; color: #57606a; }
+    :host(.ghma-light) .custom-list .del { background: #f6f8fa; color: #1f2328; border-color: #d0d7de; }
+    :host(.ghma-light) .custom-list .add { color: #1f2328; border-color: #d0d7de; }
     :host(.ghma-light) .ver { color: #57606a; border-color: #d0d7de; }
     :host(.ghma-light) .tabs { border-bottom-color: #d0d7de; }
     :host(.ghma-light) .tab { color: #57606a; }
@@ -2034,6 +2280,177 @@
     :host(.ghma-light) .tab.on { color: #1f2328; background: #f6f8fa; border-color: #d0d7de; }
     :host(.ghma-light) .group-title { color: #57606a; }
   `;
+
+  function customRoutePlaceholder(type) {
+    if (type === 'template') return 'https://cdn.example.com/gh/{owner}/{repo}/{ref}/{path}';
+    if (type === 'site') return 'https://mirror.example.com';
+    if (type === 'api') return 'https://api.example.com/';
+    return 'https://your-proxy.example.com/';
+  }
+
+  function customRoutesSignature(routes) {
+    return JSON.stringify(
+      (routes || []).map((r) => {
+        const caps = customRouteCaps(r);
+        return [
+          r.id,
+          r.label || '',
+          r.type || 'proxy',
+          r.base || '',
+          caps.raw ? 1 : 0,
+          caps.downloads ? 1 : 0,
+          caps.clone ? 1 : 0,
+          caps.api ? 1 : 0,
+        ];
+      }),
+    );
+  }
+
+  function customTypeName(type) {
+    if (type === 'site') return '全站镜像';
+    if (type === 'template') return 'URL 模板';
+    if (type === 'api') return 'API 加速';
+    return '代理前缀';
+  }
+
+  function customRouteHelp(type) {
+    if (type === 'template') {
+      return '变量：{url} {rawUrl} {cloneUrl} {owner} {repo} {ref} {path} {refPath} {host}';
+    }
+    if (type === 'site') return '直接替换 github.com 域名，可浏览网页';
+    if (type === 'api') return '用于 api.github.com 请求，Token 会发送到该地址';
+    return '代理前缀 + 原始 GitHub 地址';
+  }
+
+  function customRouteMeta(route, type) {
+    const base = String(route.base || '').trim();
+    if (!base) {
+      return { text: type === 'api' ? '未填写 API 地址' : '未填写地址', warn: true };
+    }
+    if ((type === 'template' || type === 'api') && !/^https?:\/\//i.test(base)) {
+      return {
+        text: type === 'api' ? 'API 地址需以 http(s):// 开头' : '模板需以 http(s):// 开头',
+        warn: true,
+      };
+    }
+    if (type === 'proxy' && base === '/') return { text: '地址无效', warn: true };
+    return { text: customTypeName(type), warn: false };
+  }
+
+  function customRouteRowHTML(route, index) {
+    const type = route.type || 'proxy';
+    const caps = customRouteCaps(route);
+    const locked = type === 'template' || type === 'api';
+    const meta = customRouteMeta(route, type);
+    const typeOptions = ['proxy', 'site', 'template', 'api']
+      .map(
+        (value) =>
+          `<option value="${value}"${type === value ? ' selected' : ''}>${customTypeName(value)}</option>`,
+      )
+      .join('');
+    const capsHtml = [
+      ['raw', 'Raw'],
+      ['downloads', '下载'],
+      ['clone', 'Clone'],
+      ['api', 'API'],
+    ]
+      .map(
+        ([key, text]) =>
+          `<label${locked ? ' class="locked"' : ''}><input type="checkbox" data-field="cap" data-cap="${key}"${caps[key] ? ' checked' : ''}${locked ? ' disabled' : ''}> ${text}</label>`,
+      )
+      .join('');
+    return `
+      <div class="crow" data-route-id="${escHtml(route.id)}">
+        <div class="crow-head">
+          <span class="crow-idx" title="线路顺序">${index + 1}</span>
+          <input type="text" data-field="label" placeholder="线路名称（可选）" value="${escHtml(route.label || '')}">
+          <select data-field="type" title="线路类型">${typeOptions}</select>
+          <button type="button" class="del" data-route-del="${escHtml(route.id)}" title="删除该线路" aria-label="删除该线路">×</button>
+        </div>
+        <div class="crow-body">
+          <input type="text" data-field="base" placeholder="${escHtml(customRoutePlaceholder(type))}" value="${escHtml(route.base || '')}">
+        </div>
+        <div class="crow-caps">${capsHtml}</div>
+        <div class="crow-foot">
+          <span class="crow-help">${escHtml(customRouteHelp(type))}</span>
+          <span class="crow-meta${meta.warn ? ' warn' : ''}" title="${escHtml(meta.text)}">${escHtml(meta.text)}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderCustomRoutes() {
+    const shadow = state.shadow;
+    if (!shadow) return;
+    const box = shadow.querySelector('[data-role="custom-routes"]');
+    if (!box) return;
+    const routes = state.settings.customRoutes || [];
+    const count = shadow.querySelector('[data-role="custom-count"]');
+    if (count) count.textContent = String(routes.length);
+    const sig = customRoutesSignature(routes);
+    if (box.__ghmaSig === sig) return;
+    box.__ghmaSig = sig;
+    box.innerHTML =
+      (routes.length
+        ? routes.map((route, index) => customRouteRowHTML(route, index)).join('')
+        : '<div class="custom-empty">还没有自定义线路<br>可添加浏览线路或 API 加速线路</div>') +
+      '<button type="button" class="add" data-route-add>+ 添加自定义线路</button>';
+  }
+
+  function applyRouteTypeDefaults(route) {
+    const type = route.type || 'proxy';
+    if (type === 'template') route.caps = defaultCustomCaps('template', route.base);
+    else if (type === 'api') route.caps = defaultCustomCaps('api');
+    else route.caps = { raw: true, downloads: true, clone: true, api: false };
+  }
+
+  function nextCustomRouteId(routes) {
+    const list = routes || [];
+    const used = new Set(list.map((route) => route.id));
+    let n = list.length + 1;
+    let id = 'custom-' + n;
+    while (used.has(id)) id = 'custom-' + ++n;
+    return id;
+  }
+
+  function newCustomRouteId() {
+    return nextCustomRouteId(state.settings.customRoutes || []);
+  }
+
+  function addCustomRoute() {
+    const routes = (state.settings.customRoutes = state.settings.customRoutes || []);
+    const route = defaultCustom(newCustomRouteId());
+    routes.push(route);
+    saveSettings();
+    renderPanel();
+    refreshInjected();
+    const shadow = state.shadow;
+    if (shadow) {
+      requestAnimationFrame(() => {
+        const input = shadow.querySelector(`.crow[data-route-id="${route.id}"] [data-field="label"]`);
+        if (input) input.focus();
+      });
+    }
+  }
+
+  function removeCustomRoute(id) {
+    const s = state.settings;
+    s.customRoutes = (s.customRoutes || []).filter((route) => route.id !== id);
+    if (s.mirror === id) {
+      const next = MIRRORS.find((m) => !isMirrorDisabled(m.id) && m.type !== 'clone');
+      s.mirror = next ? next.id : DEFAULTS.mirror;
+    }
+    ['mirrorRaw', 'mirrorDownloads', 'mirrorClone'].forEach((key) => {
+      if (s[key] === id) s[key] = 'auto';
+    });
+    if (s.apiMirror === id) s.apiMirror = 'off';
+    s.pinnedMirrors = (s.pinnedMirrors || []).filter((x) => x !== id);
+    s.disabledMirrors = (s.disabledMirrors || []).filter((x) => x !== id);
+    if (s.speeds) delete s.speeds[id];
+    saveSettings();
+    renderPanel();
+    refreshInjected();
+  }
 
   function buildUI() {
     if ($('#ghma-root')) return;
@@ -2088,23 +2505,6 @@
               <span>镜像线路</span>
               <select data-role="mirror"></select>
             </label>
-            <div class="custom-group" data-role="custom-row" hidden>
-              <div class="custom">
-                <input type="text" data-role="custom-label" placeholder="线路名称（可选）">
-                <label class="cap"><input type="checkbox" data-role="custom-clone"> 支持 Clone</label>
-              </div>
-              <div class="custom">
-                <input type="text" data-role="custom-base" placeholder="https://你的代理前缀/">
-                <select data-role="custom-type">
-                  <option value="proxy">代理前缀</option>
-                  <option value="site">全站镜像</option>
-                  <option value="template">URL 模板</option>
-                </select>
-              </div>
-            </div>
-            <p class="hint" data-role="custom-hint" hidden>
-              模板变量：{url} {rawUrl} {owner} {repo} {ref} {path} {cloneUrl}
-            </p>
             <div class="field">
               <span>分用途线路</span>
               <label class="prow"><em>Raw</em><select data-role="mirror-raw"></select></label>
@@ -2128,25 +2528,6 @@
             </details>
           </section>
           <section class="pane" data-pane="settings" hidden>
-            <label class="field">
-              <span>Actions Token（可选，未登录时必须填写）</span>
-              <input type="password" data-role="actions-token" placeholder="ghp_... / github_pat_..." autocomplete="off" spellcheck="false" title="Token 只发往 api.github.com；若在“API 加速”中选择自定义，则发往该地址（需 Worker 开启 ENABLE_API=1 与 ALLOW_AUTH=1）">
-            </label>
-            <label class="field">
-              <span>API 加速（api.github.com）</span>
-              <select data-role="api-mirror">
-                <option value="off">关闭</option>
-                <option value="kkgithub">api.kkgithub.com</option>
-                <option value="custom">自定义…</option>
-              </select>
-            </label>
-            <div class="custom" data-role="api-custom-row" hidden>
-              <input type="text" data-role="api-custom" placeholder="https://api.example.com/">
-            </div>
-            <label class="field">
-              <span>快捷键</span>
-              <input type="text" data-role="hotkey" placeholder="Alt+M">
-            </label>
             <div class="group-title">开关</div>
             <div class="toggles">
               <label><input type="checkbox" data-role="enabled">启用脚本</label>
@@ -2157,6 +2538,23 @@
               <label><input type="checkbox" data-role="restoreOrigin">Clone 后还原官方仓库连接</label>
               <label><input type="checkbox" data-role="staticCdn">静态资源 CDN（头像 / 图片）</label>
             </div>
+            <div class="group-title">自定义线路 <span class="gcount" data-role="custom-count">0</span></div>
+            <div class="custom-list" data-role="custom-routes"></div>
+            <p class="hint">可添加多条，保存后出现在「线路」页的下拉框中；支持 Clone 的线路会参与 Clone 线路选择。</p>
+            <div class="group-title">账号与 API</div>
+            <label class="field">
+              <span>Actions Token（可选，未登录时必须填写）</span>
+              <input type="password" data-role="actions-token" placeholder="ghp_... / github_pat_..." autocomplete="off" spellcheck="false" title="Token 只发往 api.github.com；若在“API 加速”中选择自定义线路，则发往该地址（需 Worker 开启 ENABLE_API=1 与 ALLOW_AUTH=1）">
+            </label>
+            <label class="field">
+              <span>API 加速（api.github.com）</span>
+              <select data-role="api-mirror"></select>
+            </label>
+            <p class="hint">可在「自定义线路」中添加类型为「API 加速」的线路，选中后用于 API 请求。</p>
+            <label class="field">
+              <span>快捷键</span>
+              <input type="text" data-role="hotkey" placeholder="Alt+M">
+            </label>
             <div class="group-title">配置与诊断</div>
             <div class="grid">
               <button type="button" data-act="newtoken">获取 Token</button>
@@ -2177,12 +2575,8 @@
     const fab = shadow.querySelector('.fab');
     const toastEl = shadow.querySelector('.toast');
     const mirrorSel = byRole('mirror');
-    const customLabel = byRole('custom-label');
-    const customBase = byRole('custom-base');
-    const customType = byRole('custom-type');
-    const customClone = byRole('custom-clone');
+    const routeList = byRole('custom-routes');
     const apiSel = byRole('api-mirror');
-    const apiCustom = byRole('api-custom');
 
     let toastTimer = null;
     let toastHideTimer = null;
@@ -2421,34 +2815,94 @@
       handleManageAction(btn.getAttribute('data-manage'), btn.getAttribute('data-id'));
     });
 
-    const saveCustom = debounce(() => {
-      const type = customType.value;
-      state.settings.custom = {
-        label: customLabel.value.trim(),
-        type,
-        base: type === 'template' ? customBase.value.trim() : normalizeBase(customBase.value),
-        caps: { clone: customClone.checked },
-      };
+    const saveCustomRoutes = debounce(() => {
       saveSettings();
       refreshInjected();
       renderPanel();
     }, 400);
-    customLabel.addEventListener('input', saveCustom);
-    customBase.addEventListener('input', saveCustom);
-    customType.addEventListener('change', saveCustom);
-    customClone.addEventListener('change', saveCustom);
+    const routeRowFromEvent = (target) =>
+      target && target.closest ? target.closest('.crow') : null;
+    const routeFromEvent = (target) => {
+      const row = routeRowFromEvent(target);
+      return row ? findCustomRoute(row.getAttribute('data-route-id')) : null;
+    };
+    routeList.addEventListener('input', (e) => {
+      const field = e.target.getAttribute && e.target.getAttribute('data-field');
+      if (field !== 'label' && field !== 'base') return;
+      const row = routeRowFromEvent(e.target);
+      const route = row ? findCustomRoute(row.getAttribute('data-route-id')) : null;
+      if (!row || !route) return;
+      route[field] = e.target.value;
+      if (field === 'base') {
+        // 仅更新状态提示，避免输入过程中重建整行导致焦点丢失
+        const meta = customRouteMeta(route, route.type || 'proxy');
+        const metaEl = row.querySelector('.crow-meta');
+        if (metaEl) {
+          metaEl.textContent = meta.text;
+          metaEl.classList.toggle('warn', meta.warn);
+        }
+        // 模板能力由变量决定，输入时实时刷新只读勾选
+        if (route.type === 'template') {
+          const caps = customRouteCaps(route);
+          row.querySelectorAll('[data-field="cap"]').forEach((box) => {
+            box.checked = !!caps[box.getAttribute('data-cap')];
+          });
+        }
+      }
+      routeList.__ghmaSig = customRoutesSignature(state.settings.customRoutes);
+      saveCustomRoutes();
+    });
+    routeList.addEventListener('change', (e) => {
+      const field = e.target.getAttribute && e.target.getAttribute('data-field');
+      if (field !== 'type' && field !== 'cap') return;
+      const route = routeFromEvent(e.target);
+      if (!route) return;
+      const s = state.settings;
+      if (field === 'type') {
+        route.type = e.target.value;
+        applyRouteTypeDefaults(route);
+        if (route.type === 'api') {
+          if (s.mirror === route.id) {
+            const next = MIRRORS.find((m) => !isMirrorDisabled(m.id) && m.type !== 'clone');
+            s.mirror = next ? next.id : DEFAULTS.mirror;
+          }
+          ['mirrorRaw', 'mirrorDownloads', 'mirrorClone'].forEach((key) => {
+            if (s[key] === route.id) s[key] = 'auto';
+          });
+        }
+        if (s.apiMirror === route.id && !isApiRoute(route)) s.apiMirror = 'off';
+      } else {
+        const cap = e.target.getAttribute('data-cap');
+        route.caps = Object.assign({}, customRouteCaps(route));
+        route.caps[cap] = e.target.checked;
+        if (cap === 'api' && !e.target.checked && s.apiMirror === route.id) {
+          s.apiMirror = 'off';
+        }
+        const purposeKey = { raw: 'mirrorRaw', downloads: 'mirrorDownloads', clone: 'mirrorClone' }[cap];
+        if (purposeKey && !e.target.checked && s[purposeKey] === route.id) {
+          s[purposeKey] = 'auto';
+        }
+      }
+      saveCustomRoutes();
+    });
+    routeList.addEventListener('click', (e) => {
+      const add = e.target.closest && e.target.closest('[data-route-add]');
+      if (add) {
+        addCustomRoute();
+        return;
+      }
+      const del = e.target.closest && e.target.closest('[data-route-del]');
+      if (del) removeCustomRoute(del.getAttribute('data-route-del'));
+    });
 
     apiSel.addEventListener('change', () => {
       state.settings.apiMirror = apiSel.value;
+      if (apiSel.value === 'off' || API_MIRRORS.some((m) => m.id === apiSel.value)) {
+        state.settings.apiCustom = '';
+      }
       saveSettings();
       renderPanel();
     });
-
-    const saveApiCustom = debounce(() => {
-      state.settings.apiCustom = apiCustom.value.trim();
-      saveSettings();
-    }, 400);
-    apiCustom.addEventListener('input', saveApiCustom);
 
     const hotkeyInput = byRole('hotkey');
     const saveHotkey = debounce(() => {
@@ -2541,28 +2995,11 @@
       sel.value = s[key] || 'auto';
     });
 
-    byRole('custom-row').hidden = s.mirror !== 'custom';
-    const labelInput = byRole('custom-label');
-    if (shadow.activeElement !== labelInput) labelInput.value = s.custom.label || '';
-    const baseInput = byRole('custom-base');
-    if (shadow.activeElement !== baseInput) baseInput.value = s.custom.base || '';
-    const customType = byRole('custom-type');
-    customType.value = s.custom.type || 'proxy';
-    const cloneBox = byRole('custom-clone');
-    cloneBox.checked = !s.custom.caps || s.custom.caps.clone !== false;
-    cloneBox.disabled = s.custom.type === 'template';
-    baseInput.placeholder =
-      s.custom.type === 'template'
-        ? 'https://cdn.example.com/gh/{owner}/{repo}/{ref}/{path}'
-        : s.custom.type === 'site'
-          ? 'https://mirror.example.com'
-          : 'https://your-proxy.example.com/';
-    byRole('custom-hint').hidden = !(s.mirror === 'custom' && s.custom.type === 'template');
+    renderCustomRoutes();
 
-    byRole('api-mirror').value = s.apiMirror || 'off';
-    byRole('api-custom-row').hidden = s.apiMirror !== 'custom';
-    const apiInput = byRole('api-custom');
-    if (shadow.activeElement !== apiInput) apiInput.value = s.apiCustom || '';
+    const apiMirrorSel = byRole('api-mirror');
+    setHTML(apiMirrorSel, buildApiOptionsHTML());
+    apiMirrorSel.value = s.apiMirror || 'off';
 
     byRole('enabled').checked = !!s.enabled;
     byRole('autoDownload').checked = !!s.autoDownload;
@@ -2590,7 +3027,7 @@
     preview.dataset.value = cloneText;
 
     const m = activeMirror();
-    const mirrorName = m ? `${m.label}${describeType(m.type)}` : '未配置自定义线路';
+    const mirrorName = m ? `${m.label}${describeType(m.type)}` : '未配置线路';
     const hasRaw = !!(ctx && ctx.isFile);
     const unhealthy = m && s.autoFallback && healthOf(m) === 'bad';
     byRole('hint').textContent =
@@ -2675,22 +3112,28 @@
     const manageList = byRole('manage-list');
     const pinned = s.pinnedMirrors || [];
     const disabled = s.disabledMirrors || [];
-    const manageHtml = sortedMirrors(MIRRORS).map((mirror) => {
-      const health = healthOf(mirror);
-      const isPinned = pinned.indexOf(mirror.id) >= 0;
-      const isOff = disabled.indexOf(mirror.id) >= 0;
-      const ms = state.settings.speeds && state.settings.speeds[mirror.id];
-      const speed = typeof ms === 'number' ? (ms > 0 ? `${ms}ms` : '超时') : '';
-      return (
-        `<div class="mline${isOff ? ' off' : ''}">` +
-        `<span class="mdot ${health}"></span>` +
-        `<span class="mlabel">${mirror.label}</span>` +
-        `<span class="mspeed">${speed}</span>` +
-        `<button type="button" data-manage="pin" data-id="${mirror.id}" class="${isPinned ? 'on' : ''}">${isPinned ? '取消置顶' : '置顶'}</button>` +
-        `<button type="button" data-manage="disable" data-id="${mirror.id}" class="${isOff ? 'on' : ''}">${isOff ? '启用' : '禁用'}</button>` +
-        `</div>`
-      );
-    }).join('');
+    const manageHtml = sortedMirrors(manageMirrorList())
+      .map((mirror) => {
+        const health = healthOf(mirror);
+        const isPinned = pinned.indexOf(mirror.id) >= 0;
+        const isOff = disabled.indexOf(mirror.id) >= 0;
+        const ms = state.settings.speeds && state.settings.speeds[mirror.id];
+        const speed = typeof ms === 'number' ? (ms > 0 ? `${ms}ms` : '超时') : '';
+        const tag =
+          mirror.custom
+            ? `<span class="mtag">${escHtml(customTypeName(mirror.type))}${mirror.type !== 'api' && !mirror.base ? ' · 未配置' : ''}</span>`
+            : '';
+        return (
+          `<div class="mline${isOff ? ' off' : ''}">` +
+          `<span class="mdot ${health}"></span>` +
+          `<span class="mlabel">${escHtml(mirror.label)}${tag}</span>` +
+          `<span class="mspeed">${speed}</span>` +
+          `<button type="button" data-manage="pin" data-id="${escHtml(mirror.id)}" class="${isPinned ? 'on' : ''}">${isPinned ? '取消置顶' : '置顶'}</button>` +
+          `<button type="button" data-manage="disable" data-id="${escHtml(mirror.id)}" class="${isOff ? 'on' : ''}">${isOff ? '启用' : '禁用'}</button>` +
+          `</div>`
+        );
+      })
+      .join('');
     setHTML(manageList, manageHtml);
 
     const statsEl = byRole('stats');
@@ -2733,6 +3176,7 @@
       ctx && ctx.isFile ? 1 : 0,
       collectAssetLinks().length,
       state.settings.mirror,
+      customRoutesSignature(state.settings.customRoutes),
       githubLogin(),
     ].join('|');
   }
@@ -2742,11 +3186,11 @@
     if (type === 'site') return ' · 全站镜像';
     if (type === 'clone') return ' · 仅 Clone';
     if (type === 'template') return ' · URL 模板';
+    if (type === 'api') return ' · API 加速';
     return '';
   }
 
   function buildMirrorOptionsHTML() {
-    const customLabel = (state.settings.custom && state.settings.custom.label) || '自定义线路';
     const opt = (m) => {
       const ms = state.settings.speeds && state.settings.speeds[m.id];
       let suffix = '';
@@ -2754,15 +3198,17 @@
       const health = healthOf(m);
       const badge = health === 'ok' ? '✓ ' : health === 'bad' ? '✕ ' : '';
       const off = isMirrorDisabled(m.id) ? ' · 已禁用' : '';
-      return `<option value="${m.id}">${badge}${m.label}${suffix}${off}</option>`;
+      return `<option value="${escHtml(m.id)}">${badge}${escHtml(m.label)}${suffix}${off}</option>`;
     };
     const group = (type) => sortedMirrors(MIRRORS.filter((m) => m.type === type)).map(opt).join('');
+    const customList = sortedMirrors(customMirrorList()).map(opt).join('');
+    const customGroup = customList ? `<optgroup label="自定义线路">${customList}</optgroup>` : '';
     return `
       <optgroup label="下载代理（Raw / Release / Archive）">${group('proxy')}</optgroup>
       <optgroup label="URL 模板（Raw / 文件 CDN）">${group('template')}</optgroup>
       <optgroup label="全站镜像（可浏览网页）">${group('site')}</optgroup>
       <optgroup label="镜像 Clone">${group('clone')}</optgroup>
-      <option value="custom">${escHtml(customLabel)}…</option>
+      ${customGroup}
     `;
   }
 
@@ -2771,11 +3217,16 @@
       const health = healthOf(m);
       const badge = health === 'ok' ? '✓ ' : health === 'bad' ? '✕ ' : '';
       const off = isMirrorDisabled(m.id) ? ' · 已禁用' : '';
-      return `<option value="${m.id}">${badge}${m.label}${off}</option>`;
+      return `<option value="${escHtml(m.id)}">${badge}${escHtml(m.label)}${off}</option>`;
     };
     const head = '<option value="auto">跟随主线路</option>';
-    const customLabel = (state.settings.custom && state.settings.custom.label) || '自定义线路';
-    const tail = `<option value="custom">${escHtml(customLabel)}…</option>`;
+    // 自定义线路与内置线路一起按能力过滤、按测速结果排序
+    const customItems = sortedMirrors(
+      customMirrorList().filter((m) => mirrorCaps(m, need)),
+    )
+      .map(opt)
+      .join('');
+    const tail = customItems ? `<optgroup label="自定义线路">${customItems}</optgroup>` : '';
     if (need !== 'clone') {
       const list = sortedMirrors(MIRRORS.filter((m) => mirrorCaps(m, need))).map(opt).join('');
       return `${head}${list}${tail}`;
@@ -2794,8 +3245,20 @@
     );
   }
 
+  function buildApiOptionsHTML() {
+    const head = '<option value="off">关闭</option>';
+    const builtins = API_MIRRORS.map((m) => `<option value="${m.id}">${m.label}</option>`).join('');
+    const custom = sortedMirrors(apiMirrorList())
+      .map(
+        (m) =>
+          `<option value="${escHtml(m.id)}">${escHtml(m.label)}${isMirrorDisabled(m.id) ? ' · 已禁用' : ''}</option>`,
+      )
+      .join('');
+    return `${head}${builtins}${custom ? `<optgroup label="自定义线路">${custom}</optgroup>` : ''}`;
+  }
+
   function handleManageAction(action, id) {
-    if (!id || !MIRRORS.some((m) => m.id === id)) return;
+    if (!id || (!MIRRORS.some((m) => m.id === id) && !findCustomRoute(id))) return;
     const s = state.settings;
     if (action === 'pin') {
       const pinned = s.pinnedMirrors || [];
@@ -2811,11 +3274,12 @@
         if (s.mirror === id) {
           const next =
             MIRRORS.find((m) => !isMirrorDisabled(m.id) && m.type !== 'clone') || MIRRORS[0];
-          s.mirror = next ? next.id : 'custom';
+          s.mirror = next ? next.id : DEFAULTS.mirror;
         }
         ['mirrorRaw', 'mirrorDownloads', 'mirrorClone'].forEach((key) => {
           if (s[key] === id) s[key] = 'auto';
         });
+        if (s.apiMirror === id) s.apiMirror = 'off';
       }
     }
     saveSettings();
@@ -2978,7 +3442,8 @@
 
   async function runSpeedTest(toast) {
     const notify = toast || (state.toast || (() => { }));
-    const list = MIRRORS.filter(
+    // 自定义代理 / 全站镜像与内置线路一起参与测速与排序
+    const list = browsingMirrors().filter(
       (m) => !isMirrorDisabled(m.id) && (m.type === 'proxy' || m.type === 'site')
     );
     notify('测速中，请稍候…');
@@ -3001,7 +3466,7 @@
 
     if (okList.length) {
       const best = okList[0];
-      const mirror = MIRRORS.find((m) => m.id === best.id);
+      const mirror = mirrorById(best.id);
       notify(`已选择最快线路：${mirror ? mirror.label : best.id} ${best.ms}ms`);
     } else {
       notify('所有线路测速失败，请检查网络', true);
@@ -3045,7 +3510,7 @@
   async function runDiagnostics(toast) {
     const notify = toast || (state.toast || (() => { }));
     notify('正在诊断线路，请稍候…');
-    const list = MIRRORS.filter(
+    const list = browsingMirrors().filter(
       (m) => !isMirrorDisabled(m.id) && (m.type === 'proxy' || m.type === 'site')
     );
     const results = await Promise.all(list.map((m) => probeMirror(m, 4000)));
@@ -3055,6 +3520,18 @@
     const m = activeMirror();
     const ctx = getRepoContext();
     const csp = $('meta[http-equiv="Content-Security-Policy"]');
+    const apiRoute = findCustomRoute(s.apiMirror);
+    const apiBuiltin = API_MIRRORS.find((x) => x.id === s.apiMirror);
+    const apiName =
+      s.apiMirror === 'off'
+        ? '关闭'
+        : s.apiMirror === 'custom'
+          ? `自定义（${s.apiCustom || '未填写'}）`
+          : apiRoute
+            ? `${apiRoute.label || '自定义线路'}（${normalizeBase(apiRoute.base) || '未填写'}）`
+            : apiBuiltin
+              ? apiBuiltin.label
+              : s.apiMirror;
     const lines = [
       'GitHub 镜像加速诊断报告',
       `时间：${new Date().toLocaleString()}`,
@@ -3065,7 +3542,7 @@
       `主线路：${m ? `${m.label}（${describeType(m.type)}）` : '未配置'}`,
       `分用途线路：Raw=${s.mirrorRaw} / Downloads=${s.mirrorDownloads} / Clone=${s.mirrorClone}`,
       `自动降级：${s.autoFallback ? '开' : '关'} · 自动下载改写：${s.autoDownload ? '开' : '关'}`,
-      `API 加速：${s.apiMirror}${s.apiMirror === 'custom' ? `（${s.apiCustom || '未填写'}）` : ''}`,
+      `API 加速：${apiName}`,
       `Actions Token：${s.actionsToken ? '已配置' : '未配置（使用浏览器登录态）'}`,
       `静态资源 CDN：${s.staticCdn ? '开' : '关'}`,
       `禁用线路：${(s.disabledMirrors || []).join(', ') || '无'}`,
@@ -3078,7 +3555,7 @@
       '线路探测：',
     ];
     results.forEach((r) => {
-      const mirror = MIRRORS.find((x) => x.id === r.id);
+      const mirror = mirrorById(r.id);
       lines.push(
         `  ${r.ok ? '✓' : '✕'} ${mirror ? mirror.label : r.id} ${r.ok ? `${r.ms}ms` : '失败或超时'}`
       );
@@ -3432,7 +3909,7 @@
     });
     GM_registerMenuCommand('重置所有设置', () => {
       state.settings = Object.assign({}, DEFAULTS, {
-        custom: defaultCustom(),
+        customRoutes: [],
         fabPos: Object.assign({}, DEFAULTS.fabPos),
         disabledMirrors: [],
         pinnedMirrors: [],
@@ -3476,11 +3953,35 @@
   function initUi() {
     const s = state.settings;
     // 主线路被禁用或已不存在时，回退到第一条可用线路
-    if (s.mirror !== 'custom' && (!isKnownMirrorId(s.mirror) || isMirrorDisabled(s.mirror))) {
+    const customSelected = /^custom/.test(String(s.mirror || ''));
+    const mirrorMissing = customSelected
+      ? !customMirror(s.mirror) || isMirrorDisabled(s.mirror)
+      : !isKnownMirrorId(s.mirror) || isMirrorDisabled(s.mirror);
+    if (mirrorMissing) {
       const next = MIRRORS.find((m) => !isMirrorDisabled(m.id) && m.type !== 'clone');
       if (next) {
         s.mirror = next.id;
         saveSettings();
+      }
+    }
+    // 分用途线路指向已删除或不可用的自定义线路时回到 auto
+    ['mirrorRaw', 'mirrorDownloads', 'mirrorClone'].forEach((key) => {
+      const value = s[key];
+      if (/^custom/.test(String(value || '')) && !customMirror(value)) s[key] = 'auto';
+    });
+    // API 加速指向已删除、禁用或不再具备 API 能力的自定义线路时关闭
+    if (s.apiMirror !== 'off') {
+      if (s.apiMirror === 'custom') {
+        if (!normalizeBase(s.apiCustom)) {
+          s.apiMirror = 'off';
+          saveSettings();
+        }
+      } else if (!API_MIRRORS.some((m) => m.id === s.apiMirror)) {
+        const route = findCustomRoute(s.apiMirror);
+        if (!route || !isApiRoute(route) || isMirrorDisabled(route.id)) {
+          s.apiMirror = 'off';
+          saveSettings();
+        }
       }
     }
 

@@ -16,6 +16,8 @@
  *   https://<域名>/https://github.com/owner/repo/releases/download/v1/app.zip
  *   https://<域名>/https://raw.githubusercontent.com/owner/repo/main/README.md
  *   https://<域名>/https://github.com/owner/repo/archive/HEAD.zip
+ *   https://<域名>/https://github.com/owner/repo/blob/main/README.md   （自动转为 Raw）
+ *   https://<域名>/https:/github.com/...                    （Cloudflare 合并斜杠后的形式）
  *   https://<域名>/github.com/owner/repo/archive/HEAD.zip   （省略协议头的简写）
  *   git clone https://<域名>/https://github.com/owner/repo.git
  *
@@ -34,6 +36,7 @@
 const DEFAULT_HOSTS = [
   'github.com',
   'raw.githubusercontent.com',
+  'raw.github.com',
   'codeload.github.com',
   'objects.githubusercontent.com',
   'gist.githubusercontent.com',
@@ -64,7 +67,7 @@ const CORS_HEADERS = {
   'access-control-allow-methods': 'GET, HEAD, POST, OPTIONS',
   'access-control-allow-headers': '*',
   'access-control-max-age': '86400',
-  'access-control-expose-headers': 'content-length, content-range, content-disposition, etag',
+  'access-control-expose-headers': '*',
 };
 
 export default {
@@ -121,7 +124,10 @@ export default {
     const outHeaders = new Headers();
     upstream.headers.forEach((value, key) => {
       const k = key.toLowerCase();
-      if (k === 'set-cookie' || k === 'clear-site-data') return;
+      if (k === 'set-cookie') return;
+      if (k === 'clear-site-data') return;
+      if (k === 'content-security-policy') return;
+      if (k === 'content-security-policy-report-only') return;
       outHeaders.set(k, value);
     });
     Object.keys(CORS_HEADERS).forEach((k) => outHeaders.set(k, CORS_HEADERS[k]));
@@ -148,11 +154,16 @@ function allowedHosts(env) {
 /**
  * 解析出真正的上游地址：
  *   /https://github.com/...  →  https://github.com/...
+ *   /https:/github.com/...   →  https://github.com/...（Cloudflare 合并斜杠后的形式）
  *   /github.com/...          →  https://github.com/...（简写）
  *   /repos/...               →  https://api.github.com/repos/...（需 ENABLE_API=1）
  */
 function resolveTarget(requestUrl, env) {
-  const raw = requestUrl.pathname.replace(/^\/+/, '');
+  // 部分 Cloudflare 区域会启用 URL 规范化里的「合并斜杠」，把 /https://host/...
+  // 变成 /https:/host/...；这里还原协议头，保证「代理前缀」写法依然可用
+  const raw = requestUrl.pathname
+    .replace(/^\/+/, '')
+    .replace(/^(https?):\/(?!\/)/i, '$1://');
   if (!raw) return { error: '缺少目标地址' };
   const search = requestUrl.search || '';
   const hosts = allowedHosts(env);
@@ -184,6 +195,16 @@ function resolveTarget(requestUrl, env) {
   const host = target.hostname.toLowerCase();
   if (!hosts.has(host)) return { status: 403, error: `域名 ${host} 不在允许列表中` };
 
+  // 参考 gh-proxy 的处理：github.com/owner/repo/blob/ref/path 直接转为 Raw
+  if (target.hostname === 'github.com') {
+    const blob = target.pathname.match(/^\/([^/]+)\/([^/]+)\/blob\/(.+)$/);
+    if (blob) {
+      target = new URL(
+        `https://raw.githubusercontent.com/${blob[1]}/${blob[2]}/${blob[3]}${target.search}`
+      );
+    }
+  }
+
   return { target };
 }
 
@@ -197,7 +218,10 @@ function usage() {
       '  https://<本域名>/https://github.com/owner/repo/releases/download/v1/app.zip',
       '  https://<本域名>/https://raw.githubusercontent.com/owner/repo/main/README.md',
       '  https://<本域名>/https://github.com/owner/repo/archive/HEAD.zip',
+      '  https://<本域名>/https://github.com/owner/repo/blob/main/README.md  （自动转为 Raw）',
       '  git clone https://<本域名>/https://github.com/owner/repo.git',
+      '',
+      '提示：若域名开启了「合并斜杠」，/https:/github.com/... 形式同样兼容。',
       '',
       '在油猴脚本面板中选择「自定义线路」→「代理前缀」，前缀填写 https://<本域名>/',
     ].join('\n')
