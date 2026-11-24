@@ -8,7 +8,7 @@ const path = require('path');
 const SRC = path.join(__dirname, '..', 'github-mirror-accelerator.user.js');
 const src = fs.readFileSync(SRC, 'utf8');
 
-const S1_START = '  // 实测支持 git clone（Git Smart HTTP）的代理前缀线路；其余代理仅用于 Raw / 下载';
+const S1_START = '  function mirrorCaps(m, need) {';
 const S1_END = `  function chooseCloneMirror(silent) {
     return state.settings.autoFallback
       ? pickMirror('clone', silent)
@@ -30,10 +30,10 @@ console.log(`抽取代码 ${block.split('\n').length} 行\n`);
 
 // ---------- 线路样本 ----------
 const MIRRORS = [
-  { id: 'ghproxy', label: 'ghproxy.net', type: 'proxy', base: 'https://ghproxy.net/' },
-  { id: 'ghfast', label: 'ghfast.top', type: 'proxy', base: 'https://ghfast.top/' },
-  { id: 'ghproxycom', label: 'gh-proxy.com', type: 'proxy', base: 'https://gh-proxy.com/' },
-  { id: 'ghproxyorgv4', label: 'v4.gh-proxy.org', type: 'proxy', base: 'https://v4.gh-proxy.org/' },
+  { id: 'ghproxy', label: 'ghproxy.net', type: 'proxy', base: 'https://ghproxy.net/', caps: { clone: true } },
+  { id: 'ghfast', label: 'ghfast.top', type: 'proxy', base: 'https://ghfast.top/', caps: { clone: true } },
+  { id: 'ghproxycom', label: 'gh-proxy.com', type: 'proxy', base: 'https://gh-proxy.com/', caps: { clone: true } },
+  { id: 'ghproxyorgv4', label: 'v4.gh-proxy.org', type: 'proxy', base: 'https://v4.gh-proxy.org/', caps: { clone: true } },
   { id: 'ghproxynet', label: 'gh-proxy.net', type: 'proxy', base: 'https://gh-proxy.net/' },
   {
     id: 'jsdelivr',
@@ -136,6 +136,16 @@ console.log('Clone 线路能力');
 {
   const { mirrorCaps } = setup();
   eq(mirrorCaps(byId('ghproxy'), 'clone'), true, 'ghproxy.net 支持 Clone');
+  eq(
+    mirrorCaps({ id: 'custom', type: 'proxy', caps: { clone: true } }, 'clone'),
+    true,
+    '自定义代理标记 caps.clone 后支持 Clone',
+  );
+  eq(
+    mirrorCaps({ id: 'custom', type: 'proxy', caps: { clone: false } }, 'clone'),
+    false,
+    '自定义代理关闭 caps.clone 后不支持 Clone',
+  );
   eq(mirrorCaps(byId('ghproxyorgv4'), 'clone'), true, 'v4.gh-proxy.org 支持 Clone');
   eq(mirrorCaps(byId('ghproxynet'), 'clone'), false, '未实测代理不进入 Clone 列表');
   eq(mirrorCaps(byId('jsdelivr'), 'clone'), false, 'jsDelivr 模板不支持 Clone');

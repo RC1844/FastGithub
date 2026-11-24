@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub 镜像加速助手
 // @namespace    https://github.com/ghma
-// @version      1.7.9
+// @version      1.7.11
 // @description  镜像浏览 / Clone / Raw / Release / Archive 加速，多线路重试、按用途分线路、线路禁用置顶、浅克隆、Actions 制品登录态/Token 下载、Gist 支持、诊断报告、配置导入导出、浮动按钮拖动贴边
 // @author       ghma
 // @license      MIT
@@ -30,19 +30,33 @@
 
   // ---------------------------------------------------------------------------
   // 镜像线路表
-  //   type = proxy : 下载代理，镜像地址 = base + 原始 URL（支持 Raw/Release/Archive/Clone）
+  //   type = proxy : 下载代理，镜像地址 = base + 原始 URL（支持 Raw/Release/Archive；
+  //                  caps.clone = true 表示同时支持 git clone）
   //   type = site  : 全站镜像，可直接浏览网页
   //   type = clone : 仅用于 git clone 加速
+  // 私人线路请通过设置里的「自定义线路」填写，不要写进这张表
   // ---------------------------------------------------------------------------
   const MIRRORS = [
-    { id: 'ghproxy', label: 'ghproxy.net', type: 'proxy', base: 'https://ghproxy.net/' },
-    { id: 'ghfast', label: 'ghfast.top', type: 'proxy', base: 'https://ghfast.top/' },
-    { id: 'ghproxycom', label: 'gh-proxy.com', type: 'proxy', base: 'https://gh-proxy.com/' },
-    { id: 'ghproxyorg', label: 'gh-proxy.org', type: 'proxy', base: 'https://gh-proxy.org/' },
-    { id: 'ghproxyorgv4', label: 'v4.gh-proxy.org（推荐）', type: 'proxy', base: 'https://v4.gh-proxy.org/' },
-    { id: 'ghproxyorgv6', label: 'v6.gh-proxy.org', type: 'proxy', base: 'https://v6.gh-proxy.org/' },
-    { id: 'ghproxyorgcdn', label: 'cdn.gh-proxy.org', type: 'proxy', base: 'https://cdn.gh-proxy.org/' },
-    { id: 'ghproxyorgaxis', label: 'axisnow.gh-proxy.org', type: 'proxy', base: 'https://axisnow.gh-proxy.org/' },
+    { id: 'ghproxy', label: 'ghproxy.net', type: 'proxy', base: 'https://ghproxy.net/', caps: { clone: true } },
+    { id: 'ghfast', label: 'ghfast.top', type: 'proxy', base: 'https://ghfast.top/', caps: { clone: true } },
+    { id: 'ghproxycom', label: 'gh-proxy.com', type: 'proxy', base: 'https://gh-proxy.com/', caps: { clone: true } },
+    { id: 'ghproxyorg', label: 'gh-proxy.org', type: 'proxy', base: 'https://gh-proxy.org/', caps: { clone: true } },
+    {
+      id: 'ghproxyorgv4',
+      label: 'v4.gh-proxy.org（推荐）',
+      type: 'proxy',
+      base: 'https://v4.gh-proxy.org/',
+      caps: { clone: true },
+    },
+    { id: 'ghproxyorgv6', label: 'v6.gh-proxy.org', type: 'proxy', base: 'https://v6.gh-proxy.org/', caps: { clone: true } },
+    { id: 'ghproxyorgcdn', label: 'cdn.gh-proxy.org', type: 'proxy', base: 'https://cdn.gh-proxy.org/', caps: { clone: true } },
+    {
+      id: 'ghproxyorgaxis',
+      label: 'axisnow.gh-proxy.org',
+      type: 'proxy',
+      base: 'https://axisnow.gh-proxy.org/',
+      caps: { clone: true },
+    },
     { id: 'ghproxynet', label: 'gh-proxy.net', type: 'proxy', base: 'https://gh-proxy.net/' },
     { id: 'ghproxycn', label: 'gh-proxy.cn', type: 'proxy', base: 'https://gh-proxy.cn/github/' },
     {
@@ -125,14 +139,15 @@
   ];
 
   const STORE_KEY = 'ghma:settings';
-  const SCRIPT_VERSION = '1.7.9';
+  const SCRIPT_VERSION = '1.7.11';
+  const defaultCustom = () => ({ label: '', type: 'proxy', base: '', caps: { clone: true } });
   const DEFAULTS = {
     enabled: true,
     mirror: 'ghproxy',
     mirrorRaw: 'auto',
     mirrorDownloads: 'auto',
     mirrorClone: 'auto',
-    custom: { base: '', type: 'proxy' },
+    custom: defaultCustom(),
     disabledMirrors: [],
     pinnedMirrors: [],
     cloneDepth: 0,
@@ -170,6 +185,10 @@
     if (!/^https?:\/\//i.test(v)) v = 'https://' + v;
     if (!v.endsWith('/')) v += '/';
     return v;
+  }
+
+  function escHtml(text) {
+    return String(text).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
   }
 
   function copyText(text) {
@@ -221,7 +240,8 @@
       saved = null;
     }
     const merged = Object.assign({}, DEFAULTS, saved || {});
-    merged.custom = Object.assign({}, DEFAULTS.custom, (saved && saved.custom) || {});
+    const savedCustom = (saved && saved.custom) || {};
+    merged.custom = sanitizeCustom(savedCustom);
     merged.fabPos = Object.assign({}, DEFAULTS.fabPos, (saved && saved.fabPos) || {});
     merged.speeds = Object.assign({}, (saved && saved.speeds) || {});
     merged.disabledMirrors = Array.isArray(saved && saved.disabledMirrors)
@@ -725,35 +745,25 @@
     const type = c.type || 'proxy';
     const raw = String(c.base || '').trim();
     if (!raw) return null;
+    const label = c.label || (type === 'template' ? '自定义模板' : '自定义线路');
     if (type === 'template') {
-      return {
-        id: 'custom',
-        label: '自定义模板',
-        type: 'template',
-        template: raw,
-        caps: templateCaps(raw),
-      };
+      return { id: 'custom', label, type: 'template', template: raw, caps: templateCaps(raw) };
     }
-    return { id: 'custom', label: '自定义线路', type, base: normalizeBase(raw) };
+    return {
+      id: 'custom',
+      label,
+      type,
+      base: normalizeBase(raw),
+      caps: { clone: !c.caps || c.caps.clone !== false },
+    };
   }
-
-  // 实测支持 git clone（Git Smart HTTP）的代理前缀线路；其余代理仅用于 Raw / 下载
-  const CLONE_PROXY_IDS = [
-    'ghproxy',
-    'ghfast',
-    'ghproxycom',
-    'ghproxyorg',
-    'ghproxyorgv4',
-    'ghproxyorgv6',
-    'ghproxyorgcdn',
-    'ghproxyorgaxis',
-  ];
 
   function mirrorCaps(m, need) {
     if (!m) return false;
     if (need === 'clone') {
       if (m.type === 'template') return /\{(url|cloneUrl)\}/.test(String(m.template || ''));
-      if (m.type === 'proxy') return m.id === 'custom' || CLONE_PROXY_IDS.indexOf(m.id) >= 0;
+      // 代理线路统一用 caps.clone 标记，与 MIRRORS 中的写法一致
+      if (m.type === 'proxy') return !!(m.caps && m.caps.clone);
       return true;
     }
     if (m.type === 'clone') return false;
@@ -1456,6 +1466,25 @@
     return MIRRORS.some((m) => m.id === id);
   }
 
+  // 自定义线路按 MIRRORS 的字段结构归一化
+  function sanitizeCustom(input) {
+    const c = input && typeof input === 'object' ? input : {};
+    const type = ['proxy', 'site', 'template'].indexOf(c.type) >= 0 ? c.type : 'proxy';
+    let base = String(c.base || '').trim();
+    if (type === 'template') {
+      base = /^https?:\/\//i.test(base) ? base : '';
+    } else {
+      base = normalizeBase(base);
+    }
+    const caps = c.caps && typeof c.caps === 'object' ? c.caps : {};
+    return {
+      label: String(c.label || '').trim(),
+      type,
+      base,
+      caps: { clone: caps.clone !== false },
+    };
+  }
+
   // 导入配置时只接受已知字段，并逐项校验取值
   function sanitizeSettings(input) {
     const out = {
@@ -1464,7 +1493,7 @@
       mirrorRaw: DEFAULTS.mirrorRaw,
       mirrorDownloads: DEFAULTS.mirrorDownloads,
       mirrorClone: DEFAULTS.mirrorClone,
-      custom: Object.assign({}, DEFAULTS.custom),
+      custom: defaultCustom(),
       disabledMirrors: [],
       pinnedMirrors: [],
       cloneDepth: DEFAULTS.cloneDepth,
@@ -1495,15 +1524,7 @@
       if (value === 'auto' || validMirror(value)) out[key] = value;
     });
 
-    const custom = input.custom && typeof input.custom === 'object' ? input.custom : {};
-    const type = ['proxy', 'site', 'template'].indexOf(custom.type) >= 0 ? custom.type : 'proxy';
-    let base = String(custom.base || '').trim();
-    if (type === 'template') {
-      base = /^https?:\/\//i.test(base) ? base : '';
-    } else {
-      base = normalizeBase(base);
-    }
-    out.custom = { type, base };
+    out.custom = sanitizeCustom(input.custom);
 
     const disabled = Array.isArray(input.disabledMirrors) ? input.disabledMirrors : [];
     out.disabledMirrors = disabled
@@ -1911,10 +1932,14 @@
       border-radius: 6px; padding: 6px 8px; font: inherit; outline: none;
     }
     select:focus, input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:focus { border-color: #1f6feb; }
-    .custom { display: flex; gap: 6px; }
+    .custom-group { display: flex; flex-direction: column; gap: 6px; }
+    .custom-group[hidden] { display: none; }
+    .custom { display: flex; gap: 6px; align-items: center; }
     .custom[hidden] { display: none; }
     .custom input { flex: 1; min-width: 0; }
+    .custom input[type="checkbox"] { flex: none; width: auto; }
     .custom select { width: 108px; flex: none; }
+    .custom .cap { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; white-space: nowrap; }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .grid.tools { grid-template-columns: 1fr 1fr 1fr; }
     .grid.tools button, .grid.tools a { padding: 6px 4px; font-size: 12px; }
@@ -2063,13 +2088,19 @@
               <span>镜像线路</span>
               <select data-role="mirror"></select>
             </label>
-            <div class="custom" data-role="custom-row" hidden>
-              <input type="text" data-role="custom-base" placeholder="https://你的代理前缀/">
-              <select data-role="custom-type">
-                <option value="proxy">代理前缀</option>
-                <option value="site">全站镜像</option>
-                <option value="template">URL 模板</option>
-              </select>
+            <div class="custom-group" data-role="custom-row" hidden>
+              <div class="custom">
+                <input type="text" data-role="custom-label" placeholder="线路名称（可选）">
+                <label class="cap"><input type="checkbox" data-role="custom-clone"> 支持 Clone</label>
+              </div>
+              <div class="custom">
+                <input type="text" data-role="custom-base" placeholder="https://你的代理前缀/">
+                <select data-role="custom-type">
+                  <option value="proxy">代理前缀</option>
+                  <option value="site">全站镜像</option>
+                  <option value="template">URL 模板</option>
+                </select>
+              </div>
             </div>
             <p class="hint" data-role="custom-hint" hidden>
               模板变量：{url} {rawUrl} {owner} {repo} {ref} {path} {cloneUrl}
@@ -2146,8 +2177,10 @@
     const fab = shadow.querySelector('.fab');
     const toastEl = shadow.querySelector('.toast');
     const mirrorSel = byRole('mirror');
+    const customLabel = byRole('custom-label');
     const customBase = byRole('custom-base');
     const customType = byRole('custom-type');
+    const customClone = byRole('custom-clone');
     const apiSel = byRole('api-mirror');
     const apiCustom = byRole('api-custom');
 
@@ -2391,15 +2424,19 @@
     const saveCustom = debounce(() => {
       const type = customType.value;
       state.settings.custom = {
-        base: type === 'template' ? customBase.value.trim() : normalizeBase(customBase.value),
+        label: customLabel.value.trim(),
         type,
+        base: type === 'template' ? customBase.value.trim() : normalizeBase(customBase.value),
+        caps: { clone: customClone.checked },
       };
       saveSettings();
       refreshInjected();
       renderPanel();
     }, 400);
+    customLabel.addEventListener('input', saveCustom);
     customBase.addEventListener('input', saveCustom);
     customType.addEventListener('change', saveCustom);
+    customClone.addEventListener('change', saveCustom);
 
     apiSel.addEventListener('change', () => {
       state.settings.apiMirror = apiSel.value;
@@ -2505,10 +2542,15 @@
     });
 
     byRole('custom-row').hidden = s.mirror !== 'custom';
+    const labelInput = byRole('custom-label');
+    if (shadow.activeElement !== labelInput) labelInput.value = s.custom.label || '';
     const baseInput = byRole('custom-base');
     if (shadow.activeElement !== baseInput) baseInput.value = s.custom.base || '';
     const customType = byRole('custom-type');
     customType.value = s.custom.type || 'proxy';
+    const cloneBox = byRole('custom-clone');
+    cloneBox.checked = !s.custom.caps || s.custom.caps.clone !== false;
+    cloneBox.disabled = s.custom.type === 'template';
     baseInput.placeholder =
       s.custom.type === 'template'
         ? 'https://cdn.example.com/gh/{owner}/{repo}/{ref}/{path}'
@@ -2704,6 +2746,7 @@
   }
 
   function buildMirrorOptionsHTML() {
+    const customLabel = (state.settings.custom && state.settings.custom.label) || '自定义线路';
     const opt = (m) => {
       const ms = state.settings.speeds && state.settings.speeds[m.id];
       let suffix = '';
@@ -2719,7 +2762,7 @@
       <optgroup label="URL 模板（Raw / 文件 CDN）">${group('template')}</optgroup>
       <optgroup label="全站镜像（可浏览网页）">${group('site')}</optgroup>
       <optgroup label="镜像 Clone">${group('clone')}</optgroup>
-      <option value="custom">自定义线路…</option>
+      <option value="custom">${escHtml(customLabel)}…</option>
     `;
   }
 
@@ -2731,12 +2774,13 @@
       return `<option value="${m.id}">${badge}${m.label}${off}</option>`;
     };
     const head = '<option value="auto">跟随主线路</option>';
-    const tail = '<option value="custom">自定义线路…</option>';
+    const customLabel = (state.settings.custom && state.settings.custom.label) || '自定义线路';
+    const tail = `<option value="custom">${escHtml(customLabel)}…</option>`;
     if (need !== 'clone') {
       const list = sortedMirrors(MIRRORS.filter((m) => mirrorCaps(m, need))).map(opt).join('');
       return `${head}${list}${tail}`;
     }
-    // Clone 按能力分组：专用节点 / 实测支持的代理 / 全站镜像，避免选到不支持 git 的线路
+    // Clone 按能力分组：专用节点 / 标记 caps.clone 的代理 / 全站镜像，避免选到不支持 git 的线路
     const group = (label, list) => {
       const items = sortedMirrors(list).map(opt).join('');
       return items ? `<optgroup label="${label}">${items}</optgroup>` : '';
@@ -3388,7 +3432,7 @@
     });
     GM_registerMenuCommand('重置所有设置', () => {
       state.settings = Object.assign({}, DEFAULTS, {
-        custom: Object.assign({}, DEFAULTS.custom),
+        custom: defaultCustom(),
         fabPos: Object.assign({}, DEFAULTS.fabPos),
         disabledMirrors: [],
         pinnedMirrors: [],

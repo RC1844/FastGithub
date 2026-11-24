@@ -2,7 +2,7 @@
 
 一个单文件、零依赖的 Tampermonkey 用户脚本：在 GitHub 页面上提供镜像浏览、Clone、Raw、Release / Archive 下载、ZIP 快照、Actions 制品下载等加速能力，并附带一个可自建的 Cloudflare Worker 镜像。
 
-- 脚本版本：`1.7.9`
+- 脚本版本：`1.7.11`
 - 适用页面：`https://github.com/*`、`https://gist.github.com/*`
 - 运行时：Tampermonkey（推荐）/ Violentmonkey
 - 许可：MIT
@@ -59,10 +59,12 @@
 ### 面板：线路
 
 - **镜像线路**：主线路，用于浏览、Clone 与默认下载。
-- **自定义线路**：支持三种类型
-  - `代理前缀`：`https://你的前缀/` + 原始 GitHub 地址
+- **自定义线路**：按内置线路的字段结构配置，支持三种类型
+  - `代理前缀`：`https://你的前缀/` + 原始 GitHub 地址；勾选「支持 Clone」后可用于 `git clone`
   - `全站镜像`：`https://镜像站`
   - `URL 模板`：可用变量 `{url}` `{rawUrl}` `{cloneUrl}` `{owner}` `{repo}` `{ref}` `{path}` `{refPath}` `{host}`（`{cloneUrl}` 仅用于 Clone）
+  - 「线路名称」可选，会显示在线路下拉框中
+  - 私人部署的 Worker（如 `https://gh.example.com/`）请填在这里，不要写进脚本内置线路表
 - **分用途线路**：Raw / Release+Archive / Clone 可分别设为 `auto` 或指定线路。
 - **Clone 节点**：Clone 列表只显示支持 `git clone`（Git Smart HTTP）的线路，分为「Clone 专用节点」「支持 Clone 的代理」「全站镜像」三组；ghproxy.net、ghfast.top、gh-proxy.com、gh-proxy.org 系列等实测可用。选择 `auto` 时，如果主线路不支持 Clone（例如 jsDelivr、仅 Raw 模板），会自动改用可用的 Clone 节点。
 - **线路管理（禁用 / 置顶）**：展开后可查看全部线路、查看健康状态与测速结果，并单独禁用或置顶。
