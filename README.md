@@ -85,11 +85,11 @@
 
 在「设置」页的「自定义线路」区域可以添加多条线路，每条独立配置名称、类型、地址与能力开关：
 
-- `代理前缀`：`https://你的前缀/` + 原始 GitHub 地址；勾选「Clone」后可用于 `git clone`
-- `全站镜像`：`https://镜像站`
+- `代理前缀`：`https://你的前缀/` + 原始 GitHub 地址；勾选「Clone」后可用于 `git clone`，勾选「浏览」后可用于镜像浏览（如自建 Worker）
+- `全站镜像`：`https://镜像站`（默认启用「浏览」）
 - `URL 模板`：可用变量 `{url}` `{rawUrl}` `{cloneUrl}` `{owner}` `{repo}` `{ref}` `{path}` `{refPath}` `{host}`（`{cloneUrl}` 仅用于 Clone）
 - `API 加速`：填写 API 镜像地址（如 `https://api.example.com/`），保存后可在设置页的「API 加速」中选择
-- 每条线路可单独开关 `Raw`、`下载`、`Clone`、`API` 能力；模板线路的能力由模板变量自动推导，API 线路固定只用于 API
+- 每条线路可单独开关 `Raw`、`下载`、`Clone`、`API`、`浏览` 能力；模板线路的能力由模板变量自动推导，API 线路固定只用于 API
 - 自定义代理 / 全站镜像会与内置线路一起参与测速排序，并显示在「线路」页的「线路管理」中，可置顶或禁用
 - 「线路名称」可选；留空时在下拉框中显示为「自定义线路 1 / 2…」
 - 每条线路以卡片展示，左侧序号对应线路顺序，底部会提示类型或地址状态（未填写地址、格式错误等）
@@ -120,6 +120,24 @@
 | Clone 代理 | `ghproxy.net`、`ghfast.top`、`gh-proxy.com`、`gh-proxy.org` 系列 | 前缀拼接完整地址后 `git clone` |
 
 线路健康状态有 5 分钟缓存：测速或实际下载失败会被标记，自动降级时优先跳过。
+
+### 能力标记（caps）
+
+`MIRRORS` 中每条线路都用 `caps` 明确标注能力，不再依赖类型推断：
+
+| 标记 | 含义 |
+| --- | --- |
+| `caps.raw` | 可用于 Raw 文件加速 |
+| `caps.downloads` | 可用于 Release / Archive 下载加速 |
+| `caps.clone` | 可用于 `git clone` |
+| `caps.api` | 可作为 `api.github.com` 的加速入口（同时需要 `apiBase`） |
+| `caps.browse` | 可镜像浏览网页（全站镜像，或支持 HTML 的代理前缀） |
+
+- 下载代理通常为 `raw + downloads`，实测支持 Smart HTTP 的线路再追加 `clone`。
+- URL 模板由模板变量推导能力，`{cloneUrl}` / `{url}` 模板可额外支持 Clone。
+- 全站镜像 `kkgithub.com` / `bgithub.xyz` 标记 `browse`；其中 `kkgithub.com` 同时标记 `api` 并配置 `apiBase: https://api.kkgithub.com/`，是唯一内置的 API 加速线路。
+- 自定义「代理前缀」默认不勾选 `浏览`；自建 Worker 这类可以代理 `github.com` HTML 的前缀，可以在设置里手动勾选，之后「镜像浏览」也会使用它。
+- Clone 专用节点只标记 `clone`。内置 API 线路直接由 `caps.api === true` 且存在 `apiBase` 的条目派生，不再维护单独的 API 线路表。
 
 ## Actions 制品下载
 
@@ -174,10 +192,13 @@ https://<域名>/https://github.com/owner/repo/releases/download/v1/app.zip
 https://<域名>/https://raw.githubusercontent.com/owner/repo/main/README.md
 https://<域名>/https://github.com/owner/repo/archive/main.zip
 https://<域名>/https://github.com/owner/repo/blob/main/README.md   # 自动转为 Raw
+https://<域名>/https://github.com/owner/repo   # 代理 GitHub 页面 HTML（镜像浏览）
 https://<域名>/github.com/owner/repo/archive/main.zip   # 省略协议头
 https://<域名>/https:/github.com/owner/repo/archive/main.zip   # 合并斜杠后的形式
 git clone https://<域名>/https://github.com/owner/repo.git
 ```
+
+> Worker 也可以代理 `github.com` 的 HTML 页面。在自定义线路里勾选「浏览」后，「镜像浏览」会使用它；由于页面内的相对资源仍按原站路径请求，镜像浏览更适合查看页面内容，完整交互仍建议使用官方站点。
 
 > 若 Cloudflare 区域开启了 URL 规范化中的「合并斜杠」，`https://` 会被压缩为 `https:/`，Worker 已自动兼容这种形式，无需额外配置。
 
@@ -194,7 +215,7 @@ git clone https://<域名>/https://github.com/owner/repo.git
 ## 常见问题
 
 **下载失败或很慢？**
-打开「线路」页点「镜像测速」，或在脚本菜单执行「镜像测速并选择最快」；也可以禁用不稳定的线路。下载失败时会自动按顺序尝试其他线路，全部失败则回退为打开原链接。
+打开「线路」页点「镜像测速」，或在脚本菜单执行「镜像测速并选择最快」；也可以禁用不稳定的线路。测速会为每条线路统一下载同一份 256KB 样本，按实际下载耗时排序并显示 `KB/s`，不再只比较握手延迟，因此“延迟低”不会直接等同于“下载快”。下载失败时会自动按顺序尝试其他线路，全部失败则回退为打开原链接。
 
 **Clone 命令里的 `--branch`、`checkout` 和 `remote set-url` 是什么？**
 脚本会按当前页面自动补全 Clone 命令，复制后可直接执行：
@@ -224,7 +245,7 @@ git clone https://<域名>/https://github.com/owner/repo.git
 
 | 层 | 职责 | 主要成员 |
 | --- | --- | --- |
-| 1. 常量与默认值 | 内置线路、API 线路、默认设置 | `MIRRORS`、`API_MIRRORS`、`DEFAULTS` |
+| 1. 常量与默认值 | 内置线路与能力标记、默认设置 | `MIRRORS`、`DEFAULTS` |
 | 2. 通用工具 | DOM 查询、防抖、地址归一化、剪贴板 | `$`、`$$`、`debounce`、`normalizeBase`、`copyText`、`clamp`、`stripTrailingSlash`、`isCustomId` |
 | 3. 设置存储 | 读取、清洗、迁移与持久化 | `loadSettings`、`saveSettings`、`sanitizeSettings`、`migrateSettings` |
 | 4. 页面上下文 | 解析 GitHub / Gist 的仓库、分支、文件与归档地址 | `parseGitHubUrl`、`getRepoContext`、`zipUrl`、`buildArchiveUrl` |

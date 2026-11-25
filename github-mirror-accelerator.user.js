@@ -29,7 +29,7 @@
   if (!IS_GH && !IS_GIST) return;
 
   // 代码分层（自上而下，职责单一，后层只依赖前层）：
-  //   1. 常量与默认值     MIRRORS / API_MIRRORS / DEFAULTS
+  //   1. 常量与默认值     MIRRORS / DEFAULTS
   //   2. 通用工具         DOM 查询、防抖、地址归一化、剪贴板
   //   3. 设置存储         loadSettings / saveSettings / sanitize
   //   4. 页面上下文       parseGitHubUrl / getRepoContext / zipUrl
@@ -41,141 +41,152 @@
 
   // ---------------------------------------------------------------------------
   // 镜像线路表
-  //   type = proxy : 下载代理，镜像地址 = base + 原始 URL（支持 Raw/Release/Archive；
-  //                  caps.clone = true 表示同时支持 git clone）
-  //   type = site  : 全站镜像，可直接浏览网页
-  //   type = clone : 仅用于 git clone 加速
+  //   type = proxy    : 下载代理，镜像地址 = base + 原始 URL
+  //   type = site     : 全站镜像，可直接浏览网页
+  //   type = clone    : 仅用于 git clone 加速
+  //   type = template : URL 模板（能力由模板变量决定）
+  // 每条线路用 caps 明确标注能力：
+  //   caps.raw        提供 Raw 文件加速
+  //   caps.downloads  提供 Release / Archive 下载加速
+  //   caps.clone      可用于 git clone
+  //   caps.api        可作为 api.github.com 加速入口（需同时提供 apiBase）
+  //   caps.browse     可镜像浏览网页（全站镜像）
   // 私人线路请通过设置里的「自定义线路」填写，不要写进这张表
   // ---------------------------------------------------------------------------
   const MIRRORS = [
-    { id: 'ghproxy', label: 'ghproxy.net', type: 'proxy', base: 'https://ghproxy.net/', caps: { clone: true } },
-    { id: 'ghfast', label: 'ghfast.top', type: 'proxy', base: 'https://ghfast.top/', caps: { clone: true } },
-    { id: 'ghproxycom', label: 'gh-proxy.com', type: 'proxy', base: 'https://gh-proxy.com/', caps: { clone: true } },
-    { id: 'ghproxyorg', label: 'gh-proxy.org', type: 'proxy', base: 'https://gh-proxy.org/', caps: { clone: true } },
+    { id: 'ghproxy', label: 'ghproxy.net', type: 'proxy', base: 'https://ghproxy.net/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ghfast', label: 'ghfast.top', type: 'proxy', base: 'https://ghfast.top/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ghproxycom', label: 'gh-proxy.com', type: 'proxy', base: 'https://gh-proxy.com/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ghproxyorg', label: 'gh-proxy.org', type: 'proxy', base: 'https://gh-proxy.org/', caps: { raw: true, downloads: true, clone: true } },
     {
       id: 'ghproxyorgv4',
       label: 'v4.gh-proxy.org（推荐）',
       type: 'proxy',
       base: 'https://v4.gh-proxy.org/',
-      caps: { clone: true },
+      caps: { raw: true, downloads: true, clone: true },
     },
-    { id: 'ghproxyorgv6', label: 'v6.gh-proxy.org', type: 'proxy', base: 'https://v6.gh-proxy.org/', caps: { clone: true } },
-    { id: 'ghproxyorgcdn', label: 'cdn.gh-proxy.org', type: 'proxy', base: 'https://cdn.gh-proxy.org/', caps: { clone: true } },
+    { id: 'ghproxyorgv6', label: 'v6.gh-proxy.org', type: 'proxy', base: 'https://v6.gh-proxy.org/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ghproxyorgcdn', label: 'cdn.gh-proxy.org', type: 'proxy', base: 'https://cdn.gh-proxy.org/', caps: { raw: true, downloads: true, clone: true } },
     {
       id: 'ghproxyorgaxis',
       label: 'axisnow.gh-proxy.org',
       type: 'proxy',
       base: 'https://axisnow.gh-proxy.org/',
-      caps: { clone: true },
+      caps: { raw: true, downloads: true, clone: true },
     },
-    { id: 'ghproxynet', label: 'gh-proxy.net', type: 'proxy', base: 'https://gh-proxy.net/' },
-    { id: 'ghproxycn', label: 'gh-proxy.cn', type: 'proxy', base: 'https://gh-proxy.cn/github/' },
+    { id: 'ghproxynet', label: 'gh-proxy.net', type: 'proxy', base: 'https://gh-proxy.net/', caps: { raw: true, downloads: true } },
+    { id: 'ghproxycn', label: 'gh-proxy.cn', type: 'proxy', base: 'https://gh-proxy.cn/github/', caps: { raw: true, downloads: true } },
     {
       id: 'eo.ghproxycn',
       label: 'eo.gh-proxy.cn（仅 Raw）',
       type: 'template',
       template: 'https://eo.gh-proxy.cn/github/{rawUrl}',
-      caps: { raw: true, downloads: false },
+      caps: { raw: true, downloads: false, clone: false, api: false, browse: false },
     },
-    { id: 'ghproxycn2', label: 'ghproxy.cn', type: 'proxy', base: 'https://ghproxy.cn/' },
-    { id: 'ghproxycfd', label: 'ghproxy.cfd', type: 'proxy', base: 'https://ghproxy.cfd/' },
-    { id: 'gitproxyclick', label: 'gitproxy.click', type: 'proxy', base: 'https://gitproxy.click/' },
-    { id: 'cnxiaobai', label: 'github.cnxiaobai.com', type: 'proxy', base: 'https://github.cnxiaobai.com/' },
-    { id: 'monkeyray', label: 'ghproxy.monkeyray.net', type: 'proxy', base: 'https://ghproxy.monkeyray.net/' },
+    { id: 'ghproxycn2', label: 'ghproxy.cn', type: 'proxy', base: 'https://ghproxy.cn/', caps: { raw: true, downloads: true } },
+    { id: 'ghproxycfd', label: 'ghproxy.cfd', type: 'proxy', base: 'https://ghproxy.cfd/', caps: { raw: true, downloads: true } },
+    { id: 'gitproxyclick', label: 'gitproxy.click', type: 'proxy', base: 'https://gitproxy.click/', caps: { raw: true, downloads: true } },
+    { id: 'cnxiaobai', label: 'github.cnxiaobai.com', type: 'proxy', base: 'https://github.cnxiaobai.com/', caps: { raw: true, downloads: true } },
+    { id: 'monkeyray', label: 'ghproxy.monkeyray.net', type: 'proxy', base: 'https://ghproxy.monkeyray.net/', caps: { raw: true, downloads: true } },
     // 2026-11-20 批量实测通过（Raw + Archive），按延迟排序
-    { id: 'sakuramoe', label: 'ghproxy.sakuramoe.dev', type: 'proxy', base: 'https://ghproxy.sakuramoe.dev/' },
-    { id: 'gh996986', label: 'gh.996986.xyz', type: 'proxy', base: 'https://gh.996986.xyz/' },
-    { id: 'zzrbk', label: 'github.zzrbk.xyz', type: 'proxy', base: 'https://github.zzrbk.xyz/' },
-    { id: 'git951959483', label: 'git.951959483.xyz', type: 'proxy', base: 'https://git.951959483.xyz/' },
-    { id: 'git820828', label: 'git.820828.xyz', type: 'proxy', base: 'https://git.820828.xyz/' },
-    { id: 'shiina', label: 'gh.shiina-rimo.cafe', type: 'proxy', base: 'https://gh.shiina-rimo.cafe/' },
-    { id: 'gh39al', label: 'gh.39.al', type: 'proxy', base: 'https://gh.39.al/' },
-    { id: 'ihn', label: 'github.ihnic.com', type: 'proxy', base: 'https://github.ihnic.com/' },
-    { id: 'gp871201', label: 'gp.871201.xyz', type: 'proxy', base: 'https://gp.871201.xyz/' },
-    { id: 'chjina', label: 'gh.chjina.com', type: 'proxy', base: 'https://gh.chjina.com/' },
-    { id: 'tianrld', label: 'github.tianrld.top', type: 'proxy', base: 'https://github.tianrld.top/' },
-    { id: 'baguoyuyan', label: 'proxy.baguoyuyan.com', type: 'proxy', base: 'https://proxy.baguoyuyan.com/' },
-    { id: 'gh880824', label: 'github.880824.xyz', type: 'proxy', base: 'https://github.880824.xyz/' },
-    { id: 'padao', label: 'gh.padao.fun', type: 'proxy', base: 'https://gh.padao.fun/' },
-    { id: 'skybyte', label: 'ghproxy.mirror.skybyte.me', type: 'proxy', base: 'https://ghproxy.mirror.skybyte.me/' },
-    { id: 'imciel', label: 'ghproxy.imciel.com', type: 'proxy', base: 'https://ghproxy.imciel.com/' },
-    { id: 'love8yun', label: 'getgit.love8yun.eu.org', type: 'proxy', base: 'https://getgit.love8yun.eu.org/' },
-    { id: 'catmak', label: 'gh.catmak.name', type: 'proxy', base: 'https://gh.catmak.name/' },
-    { id: 'jiashu', label: 'jiashu.1win.eu.org', type: 'proxy', base: 'https://jiashu.1win.eu.org/' },
-    { id: 'fastgitcc', label: 'fastgit.cc', type: 'proxy', base: 'https://fastgit.cc/' },
-    { id: 'ghdpik', label: 'gh.dpik.top', type: 'proxy', base: 'https://gh.dpik.top/' },
-    { id: 'ddayh', label: 'hub.ddayh.com', type: 'proxy', base: 'https://hub.ddayh.com/' },
-    { id: 'ghm078465', label: 'ghm.078465.xyz', type: 'proxy', base: 'https://ghm.078465.xyz/' },
-    { id: 'gh1ms', label: 'github.1ms.xx.kg', type: 'proxy', base: 'https://github.1ms.xx.kg/' },
-    { id: 'ednovas', label: 'github.ednovas.xyz', type: 'proxy', base: 'https://github.ednovas.xyz/' },
-    { id: 'crdz', label: 'github.crdz.eu.org', type: 'proxy', base: 'https://github.crdz.eu.org/' },
-    { id: 'keleyaa', label: 'ghp.keleyaa.com', type: 'proxy', base: 'https://ghp.keleyaa.com/' },
-    { id: 'lsdfxdk', label: 'github.lsdfxdk.nyc.mn', type: 'proxy', base: 'https://github.lsdfxdk.nyc.mn/' },
-    { id: 'boringhex', label: 'github.boringhex.top', type: 'proxy', base: 'https://github.boringhex.top/' },
-    { id: 'monlor', label: 'gh.monlor.com', type: 'proxy', base: 'https://gh.monlor.com/' },
-    { id: 'gh198962', label: 'gh.198962.xyz', type: 'proxy', base: 'https://gh.198962.xyz/' },
-    { id: 'xzhouqd', label: 'ghproxy.xzhouqd.com', type: 'proxy', base: 'https://ghproxy.xzhouqd.com/' },
-    { id: 'kenyu', label: 'kenyu.ggff.net', type: 'proxy', base: 'https://kenyu.ggff.net/' },
-    { id: 'lixxing', label: 'github-proxy.lixxing.top', type: 'proxy', base: 'https://github-proxy.lixxing.top/' },
-    { id: 'gh788787', label: 'github.788787.xyz', type: 'proxy', base: 'https://github.788787.xyz/' },
-    { id: 'clwap', label: 'ggg.clwap.dpdns.org', type: 'proxy', base: 'https://ggg.clwap.dpdns.org/' },
-    { id: 'chenc', label: 'github.chenc.dev', type: 'proxy', base: 'https://github.chenc.dev/' },
-    { id: 'gitproxy127731', label: 'gitproxy.127731.xyz', type: 'proxy', base: 'https://gitproxy.127731.xyz/' },
-    { id: 'yaoyaoling', label: 'proxy.yaoyaoling.net', type: 'proxy', base: 'https://proxy.yaoyaoling.net/' },
-    { id: 'gitmirror', label: 'hub.gitmirror.com', type: 'proxy', base: 'https://hub.gitmirror.com/' },
-    { id: 'ghproxycc', label: 'ghproxy.cc', type: 'proxy', base: 'https://ghproxy.cc/' },
-    { id: 'llkk', label: 'gh.llkk.cc', type: 'proxy', base: 'https://gh.llkk.cc/' },
-    { id: 'moeyy', label: 'github.moeyy.xyz', type: 'proxy', base: 'https://github.moeyy.xyz/' },
+    { id: 'sakuramoe', label: 'ghproxy.sakuramoe.dev', type: 'proxy', base: 'https://ghproxy.sakuramoe.dev/', caps: { raw: true, downloads: true } },
+    { id: 'gh996986', label: 'gh.996986.xyz', type: 'proxy', base: 'https://gh.996986.xyz/', caps: { raw: true, downloads: true } },
+    { id: 'zzrbk', label: 'github.zzrbk.xyz', type: 'proxy', base: 'https://github.zzrbk.xyz/', caps: { raw: true, downloads: true } },
+    { id: 'git951959483', label: 'git.951959483.xyz', type: 'proxy', base: 'https://git.951959483.xyz/', caps: { raw: true, downloads: true } },
+    { id: 'git820828', label: 'git.820828.xyz', type: 'proxy', base: 'https://git.820828.xyz/', caps: { raw: true, downloads: true } },
+    { id: 'shiina', label: 'gh.shiina-rimo.cafe', type: 'proxy', base: 'https://gh.shiina-rimo.cafe/', caps: { raw: true, downloads: true } },
+    { id: 'gh39al', label: 'gh.39.al', type: 'proxy', base: 'https://gh.39.al/', caps: { raw: true, downloads: true } },
+    { id: 'ihn', label: 'github.ihnic.com', type: 'proxy', base: 'https://github.ihnic.com/', caps: { raw: true, downloads: true } },
+    { id: 'gp871201', label: 'gp.871201.xyz', type: 'proxy', base: 'https://gp.871201.xyz/', caps: { raw: true, downloads: true } },
+    { id: 'chjina', label: 'gh.chjina.com', type: 'proxy', base: 'https://gh.chjina.com/', caps: { raw: true, downloads: true } },
+    { id: 'tianrld', label: 'github.tianrld.top', type: 'proxy', base: 'https://github.tianrld.top/', caps: { raw: true, downloads: true } },
+    { id: 'baguoyuyan', label: 'proxy.baguoyuyan.com', type: 'proxy', base: 'https://proxy.baguoyuyan.com/', caps: { raw: true, downloads: true } },
+    { id: 'gh880824', label: 'github.880824.xyz', type: 'proxy', base: 'https://github.880824.xyz/', caps: { raw: true, downloads: true } },
+    { id: 'padao', label: 'gh.padao.fun', type: 'proxy', base: 'https://gh.padao.fun/', caps: { raw: true, downloads: true } },
+    { id: 'skybyte', label: 'ghproxy.mirror.skybyte.me', type: 'proxy', base: 'https://ghproxy.mirror.skybyte.me/', caps: { raw: true, downloads: true } },
+    { id: 'imciel', label: 'ghproxy.imciel.com', type: 'proxy', base: 'https://ghproxy.imciel.com/', caps: { raw: true, downloads: true } },
+    { id: 'love8yun', label: 'getgit.love8yun.eu.org', type: 'proxy', base: 'https://getgit.love8yun.eu.org/', caps: { raw: true, downloads: true } },
+    { id: 'catmak', label: 'gh.catmak.name', type: 'proxy', base: 'https://gh.catmak.name/', caps: { raw: true, downloads: true } },
+    { id: 'jiashu', label: 'jiashu.1win.eu.org', type: 'proxy', base: 'https://jiashu.1win.eu.org/', caps: { raw: true, downloads: true } },
+    { id: 'fastgitcc', label: 'fastgit.cc', type: 'proxy', base: 'https://fastgit.cc/', caps: { raw: true, downloads: true } },
+    { id: 'ghdpik', label: 'gh.dpik.top', type: 'proxy', base: 'https://gh.dpik.top/', caps: { raw: true, downloads: true } },
+    { id: 'ddayh', label: 'hub.ddayh.com', type: 'proxy', base: 'https://hub.ddayh.com/', caps: { raw: true, downloads: true } },
+    { id: 'ghm078465', label: 'ghm.078465.xyz', type: 'proxy', base: 'https://ghm.078465.xyz/', caps: { raw: true, downloads: true } },
+    { id: 'gh1ms', label: 'github.1ms.xx.kg', type: 'proxy', base: 'https://github.1ms.xx.kg/', caps: { raw: true, downloads: true } },
+    { id: 'ednovas', label: 'github.ednovas.xyz', type: 'proxy', base: 'https://github.ednovas.xyz/', caps: { raw: true, downloads: true } },
+    { id: 'crdz', label: 'github.crdz.eu.org', type: 'proxy', base: 'https://github.crdz.eu.org/', caps: { raw: true, downloads: true } },
+    { id: 'keleyaa', label: 'ghp.keleyaa.com', type: 'proxy', base: 'https://ghp.keleyaa.com/', caps: { raw: true, downloads: true } },
+    { id: 'lsdfxdk', label: 'github.lsdfxdk.nyc.mn', type: 'proxy', base: 'https://github.lsdfxdk.nyc.mn/', caps: { raw: true, downloads: true } },
+    { id: 'boringhex', label: 'github.boringhex.top', type: 'proxy', base: 'https://github.boringhex.top/', caps: { raw: true, downloads: true } },
+    { id: 'monlor', label: 'gh.monlor.com', type: 'proxy', base: 'https://gh.monlor.com/', caps: { raw: true, downloads: true } },
+    { id: 'gh198962', label: 'gh.198962.xyz', type: 'proxy', base: 'https://gh.198962.xyz/', caps: { raw: true, downloads: true } },
+    { id: 'xzhouqd', label: 'ghproxy.xzhouqd.com', type: 'proxy', base: 'https://ghproxy.xzhouqd.com/', caps: { raw: true, downloads: true } },
+    { id: 'kenyu', label: 'kenyu.ggff.net', type: 'proxy', base: 'https://kenyu.ggff.net/', caps: { raw: true, downloads: true } },
+    { id: 'lixxing', label: 'github-proxy.lixxing.top', type: 'proxy', base: 'https://github-proxy.lixxing.top/', caps: { raw: true, downloads: true } },
+    { id: 'gh788787', label: 'github.788787.xyz', type: 'proxy', base: 'https://github.788787.xyz/', caps: { raw: true, downloads: true } },
+    { id: 'clwap', label: 'ggg.clwap.dpdns.org', type: 'proxy', base: 'https://ggg.clwap.dpdns.org/', caps: { raw: true, downloads: true } },
+    { id: 'chenc', label: 'github.chenc.dev', type: 'proxy', base: 'https://github.chenc.dev/', caps: { raw: true, downloads: true } },
+    { id: 'gitproxy127731', label: 'gitproxy.127731.xyz', type: 'proxy', base: 'https://gitproxy.127731.xyz/', caps: { raw: true, downloads: true } },
+    { id: 'yaoyaoling', label: 'proxy.yaoyaoling.net', type: 'proxy', base: 'https://proxy.yaoyaoling.net/', caps: { raw: true, downloads: true } },
+    { id: 'gitmirror', label: 'hub.gitmirror.com', type: 'proxy', base: 'https://hub.gitmirror.com/', caps: { raw: true, downloads: true } },
+    { id: 'ghproxycc', label: 'ghproxy.cc', type: 'proxy', base: 'https://ghproxy.cc/', caps: { raw: true, downloads: true } },
+    { id: 'llkk', label: 'gh.llkk.cc', type: 'proxy', base: 'https://gh.llkk.cc/', caps: { raw: true, downloads: true } },
+    { id: 'moeyy', label: 'github.moeyy.xyz', type: 'proxy', base: 'https://github.moeyy.xyz/', caps: { raw: true, downloads: true } },
     // 2026-11-24 扫描 github.akams.cn 节点列表后实测通过（Raw + Archive），按实测延迟排序
-    { id: 'ak-777-z321-cc-cd', label: '777.z321.cc.cd', type: 'proxy', base: 'https://777.z321.cc.cd/' },
-    { id: 'ak-gh-meali-top', label: 'gh.meali.top', type: 'proxy', base: 'https://gh.meali.top/', caps: { clone: true } },
-    { id: 'ak-g-blfrp-cn', label: 'g.blfrp.cn', type: 'proxy', base: 'https://g.blfrp.cn/', caps: { clone: true } },
-    { id: 'ak-github-tbap-top', label: 'github.tbap.top', type: 'proxy', base: 'https://github.tbap.top/' },
-    { id: 'ak-gh-sixyin-com', label: 'gh.sixyin.com', type: 'proxy', base: 'https://gh.sixyin.com/', caps: { clone: true } },
-    { id: 'ak-ghgo-de5-net', label: 'ghgo.de5.net', type: 'proxy', base: 'https://ghgo.de5.net/', caps: { clone: true } },
-    { id: 'ak-githubproxy-gohj99-site', label: 'githubproxy.gohj99.site', type: 'proxy', base: 'https://githubproxy.gohj99.site/' },
-    { id: 'ak-github-xxlab-tech', label: 'github.xxlab.tech', type: 'proxy', base: 'https://github.xxlab.tech/', caps: { clone: true } },
-    { id: 'ak-mousegithubproxy-cc-cd', label: 'mousegithubproxy.cc.cd', type: 'proxy', base: 'https://mousegithubproxy.cc.cd/', caps: { clone: true } },
-    { id: 'ak-gh-qfmc0721-cc-cd', label: 'gh.qfmc0721.cc.cd', type: 'proxy', base: 'https://gh.qfmc0721.cc.cd/', caps: { clone: true } },
-    { id: 'ak-gh-noki-icu', label: 'gh.noki.icu', type: 'proxy', base: 'https://gh.noki.icu/' },
-    { id: 'ak-gh-07150721-xyz', label: 'gh.07150721.xyz', type: 'proxy', base: 'https://gh.07150721.xyz/', caps: { clone: true } },
-    { id: 'ak-github-ikgy-top', label: 'github.ikgy.top', type: 'proxy', base: 'https://github.ikgy.top/', caps: { clone: true } },
-    { id: 'ak-eogh-719831-xyz', label: 'eogh.719831.xyz', type: 'proxy', base: 'https://eogh.719831.xyz/' },
-    { id: 'ak-git-669966-xyz', label: 'git.669966.xyz', type: 'proxy', base: 'https://git.669966.xyz/', caps: { clone: true } },
-    { id: 'ak-down-mxw-xx-kg', label: 'down.mxw.xx.kg', type: 'proxy', base: 'https://down.mxw.xx.kg/', caps: { clone: true } },
-    { id: 'ak-gh-jjj-gv-uy', label: 'gh.jjj.gv.uy', type: 'proxy', base: 'https://gh.jjj.gv.uy/', caps: { clone: true } },
-    { id: 'ak-gh-acmsz-top', label: 'gh.acmsz.top', type: 'proxy', base: 'https://gh.acmsz.top/', caps: { clone: true } },
-    { id: 'ak-cdn-akaere-online', label: 'cdn.akaere.online', type: 'proxy', base: 'https://cdn.akaere.online/', caps: { clone: true } },
-    { id: 'ak-g-z321-cc-cd', label: 'g.z321.cc.cd', type: 'proxy', base: 'https://g.z321.cc.cd/', caps: { clone: true } },
-    { id: 'ak-cfgh-ikgy-top', label: 'cfgh.ikgy.top', type: 'proxy', base: 'https://cfgh.ikgy.top/', caps: { clone: true } },
-    { id: 'ak-gg-z321-cc-cd', label: 'gg.z321.cc.cd', type: 'proxy', base: 'https://gg.z321.cc.cd/', caps: { clone: true } },
-    { id: 'ak-gh-inkchills-cn', label: 'gh.inkchills.cn', type: 'proxy', base: 'https://gh.inkchills.cn/', caps: { clone: true } },
-    { id: 'ak-ghproxy-felicity-land', label: 'ghproxy.felicity.land', type: 'proxy', base: 'https://ghproxy.felicity.land/', caps: { clone: true } },
-    { id: 'ak-tvv-tw', label: 'tvv.tw', type: 'proxy', base: 'https://tvv.tw/', caps: { clone: true } },
-    { id: 'ak-ghproxy-icu', label: 'ghproxy.icu', type: 'proxy', base: 'https://ghproxy.icu/', caps: { clone: true } },
-    { id: 'ak-xsadwsd-kdns-fr', label: 'xsadwsd.kdns.fr', type: 'proxy', base: 'https://xsadwsd.kdns.fr/', caps: { clone: true } },
+    { id: 'ak-777-z321-cc-cd', label: '777.z321.cc.cd', type: 'proxy', base: 'https://777.z321.cc.cd/', caps: { raw: true, downloads: true } },
+    { id: 'ak-gh-meali-top', label: 'gh.meali.top', type: 'proxy', base: 'https://gh.meali.top/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-g-blfrp-cn', label: 'g.blfrp.cn', type: 'proxy', base: 'https://g.blfrp.cn/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-github-tbap-top', label: 'github.tbap.top', type: 'proxy', base: 'https://github.tbap.top/', caps: { raw: true, downloads: true } },
+    { id: 'ak-gh-sixyin-com', label: 'gh.sixyin.com', type: 'proxy', base: 'https://gh.sixyin.com/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-ghgo-de5-net', label: 'ghgo.de5.net', type: 'proxy', base: 'https://ghgo.de5.net/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-githubproxy-gohj99-site', label: 'githubproxy.gohj99.site', type: 'proxy', base: 'https://githubproxy.gohj99.site/', caps: { raw: true, downloads: true } },
+    { id: 'ak-github-xxlab-tech', label: 'github.xxlab.tech', type: 'proxy', base: 'https://github.xxlab.tech/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-mousegithubproxy-cc-cd', label: 'mousegithubproxy.cc.cd', type: 'proxy', base: 'https://mousegithubproxy.cc.cd/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-gh-qfmc0721-cc-cd', label: 'gh.qfmc0721.cc.cd', type: 'proxy', base: 'https://gh.qfmc0721.cc.cd/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-gh-noki-icu', label: 'gh.noki.icu', type: 'proxy', base: 'https://gh.noki.icu/', caps: { raw: true, downloads: true } },
+    { id: 'ak-gh-07150721-xyz', label: 'gh.07150721.xyz', type: 'proxy', base: 'https://gh.07150721.xyz/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-github-ikgy-top', label: 'github.ikgy.top', type: 'proxy', base: 'https://github.ikgy.top/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-eogh-719831-xyz', label: 'eogh.719831.xyz', type: 'proxy', base: 'https://eogh.719831.xyz/', caps: { raw: true, downloads: true } },
+    { id: 'ak-git-669966-xyz', label: 'git.669966.xyz', type: 'proxy', base: 'https://git.669966.xyz/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-down-mxw-xx-kg', label: 'down.mxw.xx.kg', type: 'proxy', base: 'https://down.mxw.xx.kg/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-gh-jjj-gv-uy', label: 'gh.jjj.gv.uy', type: 'proxy', base: 'https://gh.jjj.gv.uy/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-gh-acmsz-top', label: 'gh.acmsz.top', type: 'proxy', base: 'https://gh.acmsz.top/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-cdn-akaere-online', label: 'cdn.akaere.online', type: 'proxy', base: 'https://cdn.akaere.online/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-g-z321-cc-cd', label: 'g.z321.cc.cd', type: 'proxy', base: 'https://g.z321.cc.cd/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-cfgh-ikgy-top', label: 'cfgh.ikgy.top', type: 'proxy', base: 'https://cfgh.ikgy.top/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-gg-z321-cc-cd', label: 'gg.z321.cc.cd', type: 'proxy', base: 'https://gg.z321.cc.cd/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-gh-inkchills-cn', label: 'gh.inkchills.cn', type: 'proxy', base: 'https://gh.inkchills.cn/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-ghproxy-felicity-land', label: 'ghproxy.felicity.land', type: 'proxy', base: 'https://ghproxy.felicity.land/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-tvv-tw', label: 'tvv.tw', type: 'proxy', base: 'https://tvv.tw/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-ghproxy-icu', label: 'ghproxy.icu', type: 'proxy', base: 'https://ghproxy.icu/', caps: { raw: true, downloads: true, clone: true } },
+    { id: 'ak-xsadwsd-kdns-fr', label: 'xsadwsd.kdns.fr', type: 'proxy', base: 'https://xsadwsd.kdns.fr/', caps: { raw: true, downloads: true, clone: true } },
     {
       id: 'jsdelivr',
       label: 'jsDelivr（模板）',
       type: 'template',
       template: 'https://cdn.jsdelivr.net/gh/{owner}/{repo}@{ref}/{path}',
-      caps: { raw: true, downloads: false },
+      caps: { raw: true, downloads: false, clone: false, api: false, browse: false },
     },
     {
       id: 'statically',
       label: 'statically.io（模板）',
       type: 'template',
       template: 'https://cdn.statically.io/gh/{owner}/{repo}/{ref}/{path}',
-      caps: { raw: true, downloads: false },
+      caps: { raw: true, downloads: false, clone: false, api: false, browse: false },
     },
-    { id: 'kkgithub', label: 'kkgithub.com', type: 'site', base: 'https://kkgithub.com' },
-    { id: 'bgithub', label: 'bgithub.xyz', type: 'site', base: 'https://bgithub.xyz' },
-    { id: 'gitclone', label: 'gitclone.com', type: 'clone', base: 'https://gitclone.com/' },
+    { id: 'kkgithub', label: 'kkgithub.com', type: 'site', base: 'https://kkgithub.com', apiBase: 'https://api.kkgithub.com/', caps: { raw: true, downloads: true, clone: true, api: true, browse: true } },
+    { id: 'bgithub', label: 'bgithub.xyz', type: 'site', base: 'https://bgithub.xyz', caps: { raw: true, downloads: true, clone: true, api: false, browse: true } },
+    { id: 'gitclone', label: 'gitclone.com', type: 'clone', base: 'https://gitclone.com/', caps: { raw: false, downloads: false, clone: true, api: false, browse: false } },
   ];
 
-  const API_MIRRORS = [
-    { id: 'kkgithub', label: 'api.kkgithub.com', base: 'https://api.kkgithub.com/' },
-  ];
+  // 内置 API 线路：由 MIRRORS 的能力标记直接派生，避免再维护一份重复清单
+  function builtinApiList() {
+    return MIRRORS.filter((m) => m.caps && m.caps.api === true && !!m.apiBase);
+  }
+
+  function builtinApiById(id) {
+    return builtinApiList().find((m) => m.id === id) || null;
+  }
 
   const STORE_KEY = 'ghma:settings';
   const SCRIPT_VERSION = '1.10.0';
@@ -184,7 +195,7 @@
     label: '',
     type: 'proxy',
     base: '',
-    caps: { raw: true, downloads: true, clone: true, api: false },
+    caps: { raw: true, downloads: true, clone: true, api: false, browse: false },
   });
   const DEFAULTS = {
     enabled: true,
@@ -821,7 +832,7 @@
   }
 
   function defaultCustomCaps(type, base) {
-    if (type === 'api') return { raw: false, downloads: false, clone: false, api: true };
+    if (type === 'api') return { raw: false, downloads: false, clone: false, api: true, browse: false };
     if (type === 'template') {
       const caps = templateCaps(String(base || ''));
       return {
@@ -829,9 +840,11 @@
         downloads: !!caps.downloads,
         clone: /\{(url|cloneUrl)\}/.test(String(base || '')),
         api: false,
+        browse: false,
       };
     }
-    return { raw: true, downloads: true, clone: true, api: false };
+    // 全站镜像默认可浏览；代理前缀（如自建 Worker）可手动勾选「浏览」
+    return { raw: true, downloads: true, clone: true, api: false, browse: type === 'site' };
   }
 
   // 模板与 API 线路的能力由类型决定，代理 / 全站镜像可单独开关
@@ -846,6 +859,7 @@
       downloads: pick('downloads'),
       clone: pick('clone'),
       api: pick('api'),
+      browse: pick('browse'),
     };
   }
 
@@ -875,27 +889,35 @@
 
   function mirrorCaps(m, need) {
     if (!m) return false;
+    const caps = m.caps || {};
+    if (need === 'browse') {
+      if (typeof caps.browse === 'boolean') return caps.browse;
+      return m.type === 'site';
+    }
+    if (need === 'api') {
+      return typeof caps.api === 'boolean' ? caps.api : false;
+    }
     if (need === 'clone') {
       if (m.type === 'template') return /\{(url|cloneUrl)\}/.test(String(m.template || ''));
-      if (m.caps && typeof m.caps.clone === 'boolean') return m.caps.clone;
-      // 内置代理线路统一用 caps.clone 标记，未标记时视为不支持
+      if (typeof caps.clone === 'boolean') return caps.clone;
+      // 未标记能力的代理默认不支持 Clone，全站镜像默认支持
       if (m.type === 'proxy') return false;
-      return true;
+      return m.type !== 'template';
     }
     if (m.type === 'clone') return false;
-    if (m.caps && typeof m.caps[need] === 'boolean') return m.caps[need];
+    if (typeof caps[need] === 'boolean') return caps[need];
     if (m.type === 'template') {
-      const caps = m.caps || templateCaps(m.template);
-      return !!caps[need];
+      const derived = m.caps || templateCaps(m.template);
+      return !!derived[need];
     }
-    return true;
+    return m.type === 'proxy' || m.type === 'site';
   }
 
   function isMirrorDisabled(id) {
     return (state.settings.disabledMirrors || []).indexOf(id) >= 0;
   }
 
-  // 统一排序：禁用置底 → 置顶顺序 → 健康度 → 测速延迟 → 原始顺序
+  // 统一排序：禁用置底 → 置顶顺序 → 健康度 → 测速耗时 → 原始顺序
   function sortedMirrors(list) {
     const pinned = state.settings.pinnedMirrors || [];
     const order = new Map(MIRRORS.map((m, i) => [m.id, i]));
@@ -1145,8 +1167,17 @@
 
   function siteMirror() {
     const m = activeMirror();
-    if (m && m.type === 'site') return m;
-    return MIRRORS.find((x) => x.type === 'site') || null;
+    if (m && mirrorCaps(m, 'browse')) return m;
+    return browsingMirrors().find((x) => mirrorCaps(x, 'browse')) || null;
+  }
+
+  // 镜像浏览地址：全站镜像直接拼路径；代理前缀需拼完整 GitHub 地址（如自建 Worker）
+  function browseHref(m, pathname, search, hash) {
+    if (!m) return '';
+    const path = (pathname || location.pathname) + (search || location.search) + (hash || location.hash);
+    if (m.type === 'proxy') return normalizeBase(m.base) + location.origin + path;
+    if (m.type === 'site') return stripTrailingSlash(m.base) + path;
+    return '';
   }
 
   // 分支名含 shell 特殊字符时加单引号
@@ -1646,11 +1677,12 @@
         type === 'template' || type === 'api'
           ? defaults
           : {
-              raw: pick('raw'),
-              downloads: pick('downloads'),
-              clone: pick('clone'),
-              api: pick('api'),
-            },
+            raw: pick('raw'),
+            downloads: pick('downloads'),
+            clone: pick('clone'),
+            api: pick('api'),
+            browse: pick('browse'),
+          },
     };
   }
 
@@ -1752,7 +1784,7 @@
       .filter(validId)
       .filter((id, index, list) => list.indexOf(id) === index);
 
-    const apiIds = API_MIRRORS.map((m) => m.id);
+    const apiIds = builtinApiList().map((m) => m.id);
     const apiCustom = normalizeBase(input.apiCustom);
     if (apiCustom) out.apiCustom = apiCustom;
     if (input.apiMirror === 'custom') {
@@ -1989,8 +2021,8 @@
     const s = state.settings;
     if (!s.enabled || !s.apiMirror || s.apiMirror === 'off') return '';
     if (s.apiMirror === 'custom') return normalizeBase(s.apiCustom);
-    const found = API_MIRRORS.find((x) => x.id === s.apiMirror);
-    if (found) return found.base;
+    const found = builtinApiById(s.apiMirror);
+    if (found) return found.apiBase;
     return customApiBase(s.apiMirror);
   }
 
@@ -2408,8 +2440,8 @@
       color: var(--ghma-fg-muted); font-size: 9px;
     }
     .mline .mspeed {
-      flex: none; min-width: 40px; text-align: right;
-      color: var(--ghma-fg-muted); font-size: 11px; font-variant-numeric: tabular-nums;
+      flex: none; min-width: 68px; text-align: right;
+      color: var(--ghma-fg-muted); font-size: 10px; font-variant-numeric: tabular-nums;
     }
     .mline.off .mlabel { color: var(--ghma-fg-dim); text-decoration: line-through; }
     .mline button {
@@ -2536,6 +2568,7 @@
       ['downloads', '下载'],
       ['clone', 'Clone'],
       ['api', 'API'],
+      ['browse', '浏览'],
     ]
       .map(
         ([key, text]) =>
@@ -2582,9 +2615,7 @@
 
   function applyRouteTypeDefaults(route) {
     const type = route.type || 'proxy';
-    if (type === 'template') route.caps = defaultCustomCaps('template', route.base);
-    else if (type === 'api') route.caps = defaultCustomCaps('api');
-    else route.caps = { raw: true, downloads: true, clone: true, api: false };
+    route.caps = defaultCustomCaps(type, route.base);
   }
 
   function nextCustomRouteId(routes) {
@@ -2705,7 +2736,7 @@
             <details class="manage">
               <summary>
                 <span>线路管理（禁用 / 置顶）</span>
-                <button type="button" class="mini" data-act="speed" title="测试全部线路并重新排序">测速</button>
+                <button type="button" class="mini" data-act="speed" title="统一下载 256KB 样本，按实际耗时排序">测速</button>
               </summary>
               <div class="mline-list" data-role="manage-list"></div>
             </details>
@@ -3090,7 +3121,7 @@
 
     apiSel.addEventListener('change', () => {
       state.settings.apiMirror = apiSel.value;
-      if (apiSel.value === 'off' || API_MIRRORS.some((m) => m.id === apiSel.value)) {
+      if (apiSel.value === 'off' || builtinApiById(apiSel.value)) {
         state.settings.apiCustom = '';
       }
       saveSettings();
@@ -3279,14 +3310,12 @@
     const zipHref = hasZip && dmDl ? mirrorize(zipUrl(ctx), dmDl) : '';
     const site = siteMirror();
     const canBrowse = !(ctx && ctx.isGist) && !!site;
-    const browseHref = canBrowse
-      ? `${stripTrailingSlash(site.base)}${location.pathname}${location.search}${location.hash}`
-      : '';
+    const browseUrl = canBrowse ? browseHref(site) : '';
 
     setLink(rawBtn, rawHref, '通过镜像打开当前文件的 Raw', '请先打开一个文件（blob）页面');
     setLink(fileBtn, rawHref, '通过镜像下载当前文件', '请先打开一个文件（blob）页面');
     setLink(zipBtn, zipHref, '通过镜像下载仓库 ZIP', '当前页面没有可用的 ZIP 链接');
-    setLink(browseBtn, browseHref, '在全站镜像中打开当前页面', 'Gist 不支持全站镜像');
+    setLink(browseBtn, browseUrl, '在镜像中打开当前页面', 'Gist 不支持全站镜像');
     cloneBtn.disabled = !ctx;
 
     const assetCount = collectAssetLinks().length;
@@ -3311,7 +3340,7 @@
         const isPinned = pinned.indexOf(mirror.id) >= 0;
         const isOff = disabled.indexOf(mirror.id) >= 0;
         const ms = state.settings.speeds && state.settings.speeds[mirror.id];
-        const speed = typeof ms === 'number' ? (ms > 0 ? `${ms}ms` : '超时') : '';
+        const speed = typeof ms === 'number' ? speedText(ms) : '';
         const tag =
           mirror.custom
             ? `<span class="mtag">${escHtml(customTypeName(mirror.type))}${mirror.type !== 'api' && !mirror.base ? ' · 未配置' : ''}</span>`
@@ -3387,7 +3416,7 @@
     const opt = (m) => {
       const ms = state.settings.speeds && state.settings.speeds[m.id];
       let suffix = '';
-      if (typeof ms === 'number') suffix = ms > 0 ? ` · ${ms}ms` : ' · 超时';
+      if (typeof ms === 'number') suffix = ` · ${speedText(ms) || '超时'}`;
       const health = healthOf(m);
       const badge = health === 'ok' ? '✓ ' : health === 'bad' ? '✕ ' : '';
       const off = isMirrorDisabled(m.id) ? ' · 已禁用' : '';
@@ -3440,7 +3469,9 @@
 
   function buildApiOptionsHTML() {
     const head = '<option value="off">关闭</option>';
-    const builtins = API_MIRRORS.map((m) => `<option value="${m.id}">${m.label}</option>`).join('');
+    const builtins = builtinApiList()
+      .map((m) => `<option value="${m.id}">${m.label} · API</option>`)
+      .join('');
     const custom = sortedMirrors(apiMirrorList())
       .map(
         (m) =>
@@ -3567,9 +3598,8 @@
       if (ctx && ctx.isGist) return toast('Gist 不支持全站镜像', true);
       const site = siteMirror();
       if (!site) return toast('没有可用的全站镜像', true);
-      const path = location.pathname + location.search + location.hash;
-      openInNewTab(`${stripTrailingSlash(site.base)}${path}`);
-      if (!m || m.type !== 'site') toast(`当前线路不支持浏览，已使用 ${site.label}`);
+      openInNewTab(browseHref(site, location.pathname, location.search, location.hash));
+      if (!mirrorCaps(m, 'browse')) toast(`当前线路不支持浏览，已使用 ${site.label}`);
       return;
     }
 
@@ -3626,6 +3656,19 @@
     }
   }
 
+  // 测速样本：各线路统一下载同一份 256KB 内容，耗时越短代表实际下载越快；
+  // 只测握手延迟会把“响应快但带宽低”的线路误判为最快
+  const SPEED_SAMPLE_BYTES = 256 * 1024;
+  const SPEED_SAMPLE_URL = 'https://raw.githubusercontent.com/torvalds/linux/master/MAINTAINERS';
+
+  function speedText(ms) {
+    const n = Number(ms);
+    if (!Number.isFinite(n) || n === 0) return '';
+    if (n < 0) return '超时';
+    const kbps = SPEED_SAMPLE_BYTES / 1024 / (n / 1000);
+    return `${Math.round(kbps)} KB/s`;
+  }
+
   async function runSpeedTest(toast) {
     const notify = toast || (state.toast || (() => { }));
     // 自定义代理 / 全站镜像与内置线路一起参与测速与排序
@@ -3653,35 +3696,51 @@
     if (okList.length) {
       const best = okList[0];
       const mirror = mirrorById(best.id);
-      notify(`已选择最快线路：${mirror ? mirror.label : best.id} ${best.ms}ms`);
+      notify(`已选择最快线路：${mirror ? mirror.label : best.id} ${speedText(best.ms)}`);
     } else {
       notify('所有线路测速失败，请检查网络', true);
     }
   }
 
-  function probeMirror(m, timeout) {
-    const limit = timeout || 8000;
+  function probeMirror(m, timeout, sampleBytes) {
+    const limit = timeout || 12000;
+    const targetBytes = sampleBytes || SPEED_SAMPLE_BYTES;
     return new Promise((resolve) => {
       const started = Date.now();
       let finished = false;
+      let req = null;
       const done = (ok) => {
         if (finished) return;
         finished = true;
-        resolve({ id: m.id, ok, ms: Date.now() - started });
+        resolve({ id: m.id, ok, ms: ok ? Math.max(1, Date.now() - started) : -1 });
       };
-      const probeRaw = 'https://raw.githubusercontent.com/octocat/Hello-World/master/README';
       let url = '';
-      if (m.type === 'site') url = `${stripTrailingSlash(m.base)}/octocat/Hello-World/raw/master/README`;
-      else if (m.type === 'proxy') url = m.base + probeRaw;
-      else return done(true); // 模板线路无法统一探测，视为可用
+      if (m.type === 'site') {
+        url = `${stripTrailingSlash(m.base)}/torvalds/linux/raw/master/MAINTAINERS`;
+      } else if (m.type === 'proxy') {
+        url = normalizeBase(m.base) + SPEED_SAMPLE_URL;
+      } else {
+        return done(true); // 模板线路无法统一探测，视为可用
+      }
 
       if (typeof GM_xmlhttpRequest !== 'function') return done(false);
 
       try {
-        GM_xmlhttpRequest({
+        req = GM_xmlhttpRequest({
           method: 'GET',
           url,
           timeout: limit,
+          onprogress: (res) => {
+            const bytes = Number(res.responseLength || (res.responseText ? res.responseText.length : 0));
+            if (bytes >= targetBytes) {
+              done(true);
+              try {
+                if (req && typeof req.abort === 'function') req.abort();
+              } catch (e) {
+                /* 已中止，忽略 */
+              }
+            }
+          },
           onload: (res) => done(res.status >= 200 && res.status < 400),
           onerror: () => done(false),
           ontimeout: () => done(false),
@@ -3699,7 +3758,7 @@
     const list = browsingMirrors().filter(
       (m) => !isMirrorDisabled(m.id) && (m.type === 'proxy' || m.type === 'site')
     );
-    const results = await Promise.all(list.map((m) => probeMirror(m, 4000)));
+    const results = await Promise.all(list.map((m) => probeMirror(m, 4000, 16 * 1024)));
     results.forEach((r) => markHealth(r.id, r.ok));
 
     const s = state.settings;
@@ -3707,7 +3766,7 @@
     const ctx = getRepoContext();
     const csp = $('meta[http-equiv="Content-Security-Policy"]');
     const apiRoute = findCustomRoute(s.apiMirror);
-    const apiBuiltin = API_MIRRORS.find((x) => x.id === s.apiMirror);
+    const apiBuiltin = builtinApiById(s.apiMirror);
     const apiName =
       s.apiMirror === 'off'
         ? '关闭'
@@ -3716,7 +3775,7 @@
           : apiRoute
             ? `${apiRoute.label || '自定义线路'}（${normalizeBase(apiRoute.base) || '未填写'}）`
             : apiBuiltin
-              ? apiBuiltin.label
+              ? `${apiBuiltin.label}（${apiBuiltin.apiBase}）`
               : s.apiMirror;
     const lines = [
       'GitHub 镜像加速诊断报告',
@@ -3738,7 +3797,7 @@
       `页面 CSP：${csp ? String(csp.content || '').slice(0, 200) : '未检测到'}`,
       `User-Agent：${navigator.userAgent}`,
       '',
-      '线路探测：',
+      '线路探测（抽样 16KB，耗时含握手）：',
     ];
     results.forEach((r) => {
       const mirror = mirrorById(r.id);
@@ -3808,9 +3867,7 @@
     const zipLink = zipUrl(ctx);
     const zipHref = zipLink && dmDl ? mirrorize(zipLink, dmDl) : '';
     const rawHref = ctx.isFile && dmRaw ? mirrorizeRaw(getRawUrl(ctx), dmRaw) : '';
-    const siteHref = site
-      ? `${stripTrailingSlash(site.base)}${location.pathname}${location.search}`
-      : '';
+    const siteHref = site ? browseHref(site, location.pathname, location.search, '') : '';
     const sig = [
       ctx.owner,
       ctx.repo,
@@ -3883,7 +3940,7 @@
     if (action === 'site') {
       const site = siteMirror();
       if (!site) return notify('没有可用的全站镜像', true);
-      openInNewTab(`${stripTrailingSlash(site.base)}${location.pathname}${location.search}`);
+      openInNewTab(browseHref(site, location.pathname, location.search, ''));
     }
   }
 
@@ -4155,7 +4212,7 @@
           s.apiMirror = 'off';
           saveSettings();
         }
-      } else if (!API_MIRRORS.some((m) => m.id === s.apiMirror)) {
+      } else if (!builtinApiById(s.apiMirror)) {
         const route = findCustomRoute(s.apiMirror);
         if (!route || !isApiRoute(route) || isMirrorDisabled(route.id)) {
           s.apiMirror = 'off';
